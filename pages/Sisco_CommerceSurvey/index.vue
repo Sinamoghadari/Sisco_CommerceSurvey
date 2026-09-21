@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { useCommerceSurvey } from '~/composables/CommerceSurvey/useCommerceSurvey'
-import {
-  SURVEY_LINK_TABLES,
-  type SurveySelection
-} from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
 import CustomerSelector from '~/components/Sisco_CommerceSurvey/CustomerSelector.vue'
-import SurveyTable from '~/components/Sisco_CommerceSurvey/SurveyTable.vue'
+import ContactChannels from '~/components/Sisco_CommerceSurvey/ContactChannels.vue'
 import SurveyWizard from '~/components/Sisco_CommerceSurvey/SurveyWizard.vue'
 import SurveyComplete from '~/components/Sisco_CommerceSurvey/SurveyComplete.vue'
 
@@ -17,8 +14,8 @@ definePageMeta({
 
 /**
  * وضعیت صفحه (ماشین حالت سمت کلاینت) از کامپوزیبل اختصاصی مدیریت می‌شود:
- *  select   → فرم انتخاب گروه/نوع مشتری + جدول‌های شمش و گندله
- *  survey   → ویزارد چندمرحله‌ای (استپ «اطلاعات اولیه» عمداً حذف شده است)
+ *  select   → فرم انتخاب گروه/نوع مشتری + راه‌های ارتباطی
+ *  survey   → ویزارد چندمرحله‌ای (بخش «اطلاعات اولیه» حذف شده است)
  *  complete → صفحه‌ی تشکر
  */
 const {
@@ -28,7 +25,6 @@ const {
   runId,
   overallScore,
   startSurvey,
-  openSurveyFor,
   changeSelection,
   completeSurvey,
   restart
@@ -36,10 +32,6 @@ const {
 
 function onSelectorSubmit(sel: SurveySelection) {
   startSurvey(sel)
-}
-
-function onTableOpen(payload: { group: 'pellet' | 'billet'; type: 'domestic' | 'export' }) {
-  openSurveyFor(payload.group, payload.type)
 }
 </script>
 
@@ -56,21 +48,12 @@ function onTableOpen(payload: { group: 'pellet' | 'billet'; type: 'domestic' | '
     </div>
 
     <Transition name="phase" mode="out-in">
-      <!-- نمای انتخاب: فرم ورود + جدول‌های مدیریت لینک نظرسنجی -->
+      <!-- نمای انتخاب: فرم ورود + راه‌های ارتباطی -->
       <div v-if="phase === 'select'" key="select" class="space-y-6">
         <CustomerSelector :initial="selection" @submit="onSelectorSubmit" />
 
         <div class="mx-auto w-full max-w-4xl">
-          <div class="flex items-center gap-3 mb-4">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
-              دسترسی سریع به پرسشنامه‌ها
-            </h2>
-            <div class="flex-1 h-px bg-gradient-to-l from-primary-300/70 to-transparent dark:from-primary-700/70" />
-          </div>
-          <p class="text-xs text-muted-500 dark:text-muted-400 mb-4 leading-6">
-            در ستون «عملیات» هر جدول، با کلیک روی «لینک شمش» یا «لینک گندله» پرسشنامه‌ی همان محصول مستقیماً باز می‌شود.
-          </p>
-          <SurveyTable :tables="SURVEY_LINK_TABLES" @open="onTableOpen" />
+          <ContactChannels />
         </div>
       </div>
 

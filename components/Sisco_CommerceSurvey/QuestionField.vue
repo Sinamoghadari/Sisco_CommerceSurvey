@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { SurveyFollowUp, SurveyQuestion } from '~/composables/CommerceSurvey/useSurveyDefinition'
-import { followUpKey } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import { computed } from 'vue'
+import type { SurveyQuestion, SurveySubQuestion } from '~/composables/CommerceSurvey/useSurveyDefinition'
 import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import RatingGroup from './RatingGroup.vue'
 import ChoiceGroup from './ChoiceGroup.vue'
 
 /**
  * رندر یک سؤال بر اساس نوع آن (rating / score / single / multi / text / textarea)
- * و در صورت وجود، سؤال‌های پیگیر (Follow-up) زیر همان کارت.
+ * و در صورت وجود، سؤال‌های تکمیلیِ شرطی که فقط با امتیاز ۷ یا کمتر
+ * (showWhenScoreAtMost) بلافاصله نمایش داده می‌شوند.
  */
 const props = withDefaults(
   defineProps<{
@@ -15,15 +16,15 @@ const props = withDefaults(
     modelValue: AnswerValue
     index: number
     invalid?: boolean
-    /** پاسخ‌های فعلی (برای سؤال‌های پیگیر) */
+    /** پاسخ‌های فعلی (برای سؤال‌های تکمیلی) */
     answers?: SurveyAnswers
-    /** تشخیص بی‌پاسخ بودن سؤال پیگیر (شامل وضعیت showErrors) */
-    followUpInvalid?: (q: SurveyQuestion, fu: SurveyFollowUp) => boolean
+    /** تشخیص بی‌پاسخ بودن سؤال تکمیلی (شامل وضعیت showErrors) */
+    isSubInvalid?: (q: SurveyQuestion, sub: SurveySubQuestion) => boolean
   }>(),
   {
     invalid: false,
     answers: () => ({}),
-    followUpInvalid: undefined
+    isSubInvalid: undefined
   }
 )
 
@@ -36,14 +37,22 @@ function update(v: AnswerValue) {
   emit('update:modelValue', v)
 }
 
-function updateFollowUp(fu: SurveyFollowUp, v: AnswerValue) {
-  emit('answer', followUpKey(props.question.id, fu.id), v)
+function updateSub(sub: SurveySubQuestion, v: AnswerValue) {
+  emit('answer', sub.id, v)
 }
 
-function followUpValue(fu: SurveyFollowUp): number | null {
-  const v = props.answers[followUpKey(props.question.id, fu.id)]
-  return typeof v === 'number' ? v : null
+function subValue(sub: SurveySubQuestion): string | string[] | null {
+  const v = props.answers[sub.id]
+  if (v === null || v === undefined) return null
+  return Array.isArray(v) ? v : String(v)
 }
+
+/** شرط نمایش: امتیاز داده شده و <= آستانه‌ی سؤال تکمیلی */
+function isVisible(sub: SurveySubQuestion): boolean {
+  return typeof props.modelValue === 'number' && props.modelValue <= sub.showWhenScoreAtMost
+}
+
+const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s => isVisible(s)))
 </script>
 
 <template>
@@ -83,7 +92,7 @@ function followUpValue(fu: SurveyFollowUp): number | null {
     <RatingGroup
       v-if="question.type === 'rating' || question.type === 'score'"
       :model-value="(modelValue as number | null)"
-      :max="question.type === 'score' ? 10 : 5"
+      :max="10"
       :labels="question.scaleLabels"
       :invalid="invalid"
       :name="question.title"
@@ -127,63 +136,49 @@ function followUpValue(fu: SurveyFollowUp): number | null {
       </p>
     </Transition>
 
-    <!-- سؤال‌های پیگیر (Follow-ups) -->
-    <div
-      v-if="question.followUps?.length"
-      class="mt-5 pt-5 border-t border-dashed border-muted-200 dark:border-muted-700 space-y-4"
-    >
-      <p class="flex items-center gap-2 text-[11px] font-bold text-muted-500 dark:text-muted-400">
-        <Icon icon="lucide:git-branch" class="w-3.5 h-3.5 text-primary-500" />
-        شاخص‌های جزئی این سؤال
-      </p>
-
+    <!-- سؤال‌های تکمیلی شرطی (نمایش فقط با امتیاز <= آستانه) -->
+    <TransitionGroup v-if="visibleSubs.length" name="sub" tag="div" class="mt-5 space-y-4">
       <div
-        v-for="(fu, fi) in question.followUps"
-        :key="fu.id"
-        class="rounded-xl bg-muted-50 dark:bg-slate-900/80 border p-4 transition-colors duration-300"
+        v-for="sub in visibleSubs"
+        :key="sub.id"
+        class="rounded-xl border-2 border-dashed p-4 bg-amber-50/50 dark:bg-amber-900/10 transition-colors duration-300"
         :class="
-          followUpInvalid && followUpInvalid(question, fu)
-            ? 'border-red-300 dark:border-red-800'
-            : 'border-muted-200 dark:border-muted-800'
+          isSubInvalid && isSubInvalid(question, sub)
+            ? 'border-red-400 dark:border-red-700'
+            : 'border-amber-300 dark:border-amber-700'
         "
       >
         <div class="flex items-start gap-2.5 mb-3">
-          <span
-            class="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold transition-colors"
-            :class="
-              followUpValue(fu) !== null
-                ? 'bg-green-500 text-white'
-                : 'bg-muted-200 dark:bg-slate-800 text-muted-500 dark:text-muted-400'
-            "
-          >
-            {{ fi + 1 }}
+          <span class="flex-shrink-0 inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold leading-5">
+            <Icon icon="lucide:corner-down-left" class="w-3 h-3" />
+            سؤال تکمیلی
           </span>
           <label class="block text-sm font-bold text-gray-900 dark:text-white leading-6">
-            {{ fu.label }}
-            <span v-if="fu.required" class="text-red-500 font-bold">*</span>
+            {{ sub.title }}
+            <span v-if="sub.required" class="text-red-500 font-bold">*</span>
+            <span v-else class="text-xs font-normal text-muted-400 mr-1">(اختیاری)</span>
           </label>
         </div>
 
-        <RatingGroup
-          :model-value="followUpValue(fu)"
-          :max="5"
-          :labels="question.scaleLabels"
-          :invalid="Boolean(followUpInvalid && followUpInvalid(question, fu))"
-          :name="`${question.title} - ${fu.label}`"
-          @update:model-value="v => updateFollowUp(fu, v)"
+        <ChoiceGroup
+          :model-value="subValue(sub)"
+          :options="sub.options ?? []"
+          :multiple="sub.type === 'multi'"
+          :invalid="Boolean(isSubInvalid && isSubInvalid(question, sub))"
+          @update:model-value="v => updateSub(sub, v)"
         />
 
         <Transition name="slide">
           <p
-            v-if="followUpInvalid && followUpInvalid(question, fu)"
+            v-if="isSubInvalid && isSubInvalid(question, sub)"
             class="flex items-center gap-1.5 text-xs text-red-500 mt-2"
           >
             <Icon icon="lucide:alert-circle" class="w-4 h-4" />
-            پاسخ به این شاخص الزامی است.
+            پاسخ به این سؤال الزامی است.
           </p>
         </Transition>
       </div>
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -196,5 +191,21 @@ function followUpValue(fu: SurveyFollowUp): number | null {
 .slide-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* ورود/خروج سؤال تکمیلی شرطی */
+.sub-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+.sub-leave-active {
+  transition: all 0.18s ease;
+}
+.sub-enter-from {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+.sub-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SurveyFollowUp, SurveyQuestion, SurveyStep } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { SurveyQuestion, SurveyStep, SurveySubQuestion } from '~/composables/CommerceSurvey/useSurveyDefinition'
 import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import QuestionField from './QuestionField.vue'
 
@@ -12,15 +12,15 @@ const props = defineProps<{
   answers: SurveyAnswers
   showErrors: boolean
   isInvalid: (q: SurveyQuestion) => boolean
-  isFollowUpInvalid?: (q: SurveyQuestion, fu: SurveyFollowUp) => boolean
+  isSubInvalid?: (q: SurveyQuestion, sub: SurveySubQuestion) => boolean
 }>()
 
 const emit = defineEmits<{ (e: 'answer', id: string, value: AnswerValue): void }>()
 
-/** نسخه‌ی نهایی تشخیص خطای سؤال‌های پیگیر (ترکیب با showErrors) */
-const checkFollowUpInvalid = computed(() => {
-  if (!props.isFollowUpInvalid) return undefined
-  return (q: SurveyQuestion, fu: SurveyFollowUp) => props.showErrors && props.isFollowUpInvalid!(q, fu)
+/** نسخه‌ی نهایی تشخیص خطای سؤال‌های تکمیلی (ترکیب با showErrors) */
+const checkSubInvalid = computed(() => {
+  if (!props.isSubInvalid) return undefined
+  return (q: SurveyQuestion, sub: SurveySubQuestion) => props.showErrors && props.isSubInvalid!(q, sub)
 })
 
 interface QuestionGroup {
@@ -59,7 +59,7 @@ const groups = computed<QuestionGroup[]>(() => {
           :model-value="answers[item.q.id] ?? null"
           :invalid="showErrors && isInvalid(item.q)"
           :answers="answers"
-          :follow-up-invalid="checkFollowUpInvalid"
+          :is-sub-invalid="checkSubInvalid"
           @update:model-value="v => emit('answer', item.q.id, v)"
           @answer="(id, v) => emit('answer', id, v)"
         />

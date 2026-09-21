@@ -9,10 +9,10 @@ import {
 import { useSurveyWizard, type SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import SurveyStepper from './SurveyStepper.vue'
 import SurveyStepPanel from './SurveyStepPanel.vue'
-import QualityStep from './QualityStep.vue'
 
 /**
  * ویزارد چندمرحله‌ای نظرسنجی – استپ‌ها به‌صورت داینامیک بر اساس انتخاب کاربر ساخته می‌شوند.
+ * سؤال‌های تکمیلی شرطی (امتیاز <= ۷) در شمارش و اعتبارسنجی لحاظ می‌شوند.
  */
 const props = defineProps<{
   selection: SurveySelection
@@ -28,23 +28,36 @@ const wizard = useSurveyWizard(() => steps.value)
 
 const isConfirmOpen = ref(false)
 
-/** تعداد پاسخ‌های داده‌شده (سؤال‌های اصلی + پیگیرها) */
+/** تعداد پاسخ‌های داده‌شده (سؤال‌های اصلی + سؤال‌های تکمیلیِ نمایان) */
 const answeredCount = computed(() =>
   steps.value.reduce(
     (acc, s) =>
       acc +
-      s.questions.reduce(
-        (qAcc, q) =>
-          qAcc +
-          (wizard.isAnswered(q) ? 1 : 0) +
-          (q.followUps ?? []).filter(fu => wizard.isFollowUpAnswered(q, fu)).length,
-        0
-      ),
+      s.questions.reduce((qAcc, q) => {
+        let n = wizard.isAnswered(q) ? 1 : 0
+        for (const sub of q.subQuestions ?? []) {
+          if (wizard.isSubQuestionVisible(q, sub) && wizard.isSubAnswered(q, sub)) n++
+        }
+        return qAcc + n
+      }, 0),
     0
   )
 )
+
+/** تعداد کل (سؤال‌های اصلی + سؤال‌های تکمیلیِ نمایان) */
 const totalQuestions = computed(() =>
-  steps.value.reduce((acc, s) => acc + s.questions.reduce((qAcc, q) => qAcc + 1 + (q.followUps?.length ?? 0), 0), 0)
+  steps.value.reduce(
+    (acc, s) =>
+      acc +
+      s.questions.reduce((qAcc, q) => {
+        let n = 1
+        for (const sub of q.subQuestions ?? []) {
+          if (wizard.isSubQuestionVisible(q, sub)) n++
+        }
+        return qAcc + n
+      }, 0),
+    0
+  )
 )
 
 function onNext() {
@@ -135,23 +148,12 @@ function confirmSubmit() {
       <div class="px-6 sm:px-8 py-6">
         <Transition :name="wizard.direction.value === 'forward' ? 'step-forward' : 'step-backward'" mode="out-in">
           <div :key="wizard.currentStep.value.id">
-            <QualityStep
-              v-if="wizard.currentStep.value.id === 'quality'"
-              :step="wizard.currentStep.value"
-              :group="selection.group"
-              :answers="wizard.answers"
-              :show-errors="wizard.showErrors.value"
-              :is-invalid="wizard.isQuestionInvalid"
-              :is-follow-up-invalid="wizard.isFollowUpInvalid"
-              @answer="wizard.setAnswer"
-            />
             <SurveyStepPanel
-              v-else
               :step="wizard.currentStep.value"
               :answers="wizard.answers"
               :show-errors="wizard.showErrors.value"
               :is-invalid="wizard.isQuestionInvalid"
-              :is-follow-up-invalid="wizard.isFollowUpInvalid"
+              :is-sub-invalid="wizard.isSubInvalid"
               @answer="wizard.setAnswer"
             />
           </div>

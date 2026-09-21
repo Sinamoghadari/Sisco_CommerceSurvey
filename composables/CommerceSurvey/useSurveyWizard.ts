@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import { followUpKey, type SurveyFollowUp, type SurveyQuestion, type SurveyStep } from './useSurveyDefinition'
+import type { SurveyQuestion, SurveyStep, SurveySubQuestion } from './useSurveyDefinition'
 
 export type AnswerValue = number | string | string[] | null
 
@@ -9,7 +9,13 @@ export interface SurveyAnswers {
 
 /**
  * مدیریت وضعیت ویزارد نظرسنجی: پاسخ‌ها، استپ فعلی، اعتبارسنجی و ناوبری.
- * اعتبارسنجی شامل سؤال‌های پیگیر (Follow-up) نیز می‌شود.
+ *
+ * سؤال‌های تکمیلی (شرطی):
+ * - فقط وقتی «نمایان» هستند که پاسخ سؤال اصلی عددی <= آستانه‌ی سؤال تکمیلی باشد.
+ * - اعتبارسنجی فقط روی سؤال‌های نمایان اعمال می‌شود.
+ * - با تغییر امتیاز سؤال اصلی به بالاتر از آستانه، پاسخِ ذخیره‌شده‌ی
+ *   سؤال تکمیلی به‌طور خودکار پاک می‌شود (مدیریت وضعیت تمیز).
+ *
  * کاملاً سمت کلاینت و بدون هیچ‌گونه فراخوانی API.
  */
 export function useSurveyWizard(steps: () => SurveyStep[]) {
@@ -26,13 +32,22 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     stepList.value.length ? Math.round(((currentIndex.value + 1) / stepList.value.length) * 100) : 0
   )
 
+  // نگاشت شناسه‌ی سؤال به تعریف آن (برای دسترسی سریع به سؤال‌های تکمیلی)
+  const questionIndex = computed<Record<string, SurveyQuestion>>(() => {
+    const map: Record<string, SurveyQuestion> = {}
+    for (const step of stepList.value) {
+      for (const q of step.questions) map[q.id] = q
+    }
+    return map
+  })
+
   // اگر ساختار استپ‌ها تغییر کند (مثلاً تغییر محصول) پاسخ‌ها ریست می‌شوند
   watch(
     () => stepList.value.map(s => s.id).join('|'),
     () => reset()
   )
 
-  function isAnswered(q: SurveyQuestion): boolean {
+  function isAnswered(q: Pick<SurveyQuestion, 'id'>): boolean {
     const v = answers[q.id]
     if (v === null || v === undefined) return false
     if (Array.isArray(v)) return v.length > 0
@@ -40,26 +55,32 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     return true
   }
 
-  function isFollowUpAnswered(q: SurveyQuestion, fu: SurveyFollowUp): boolean {
-    return isAnswered({ ...q, id: followUpKey(q.id, fu.id) })
+  /** آیا سؤال تکمیلیِ مشخص‌شده باید نمایش داده شود؟ (امتیاز والد <= آستانه) */
+  function isSubQuestionVisible(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
+    const v = answers[q.id]
+    return typeof v === 'number' && v <= sub.showWhenScoreAtMost
   }
 
-  /** آیا خودِ سؤال اصلی (نه پیگیرهایش) بی‌پاسخ است؟ */
+  function isSubAnswered(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
+    return isAnswered({ id: sub.id })
+  }
+
+  /** آیا خودِ سؤال اصلی بی‌پاسخ است؟ */
   function isQuestionInvalid(q: SurveyQuestion): boolean {
     return Boolean(q.required) && !isAnswered(q)
   }
 
-  /** آیا سؤال پیگیرِ مشخص‌شده بی‌پاسخ است؟ */
-  function isFollowUpInvalid(q: SurveyQuestion, fu: SurveyFollowUp): boolean {
-    return Boolean(fu.required) && !isFollowUpAnswered(q, fu)
+  /** سؤال تکمیلی فقط وقتی الزامی است که نمایان باشد */
+  function isSubInvalid(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
+    return Boolean(sub.required) && isSubQuestionVisible(q, sub) && !isSubAnswered(q, sub)
   }
 
-  /** تمام کلیدهای بی‌پاسخِ یک سؤال (سؤال اصلی + پیگیرها) */
+  /** تمام کلیدهای بی‌پاسخِ یک سؤال (سؤال اصلی + سؤال‌های تکمیلی نمایان) */
   function questionInvalidKeys(q: SurveyQuestion): string[] {
     const keys: string[] = []
     if (isQuestionInvalid(q)) keys.push(q.id)
-    for (const fu of q.followUps ?? []) {
-      if (isFollowUpInvalid(q, fu)) keys.push(followUpKey(q.id, fu.id))
+    for (const sub of q.subQuestions ?? []) {
+      if (isSubInvalid(q, sub)) keys.push(sub.id)
     }
     return keys
   }
@@ -80,6 +101,16 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
 
   function setAnswer(id: string, value: AnswerValue) {
     answers[id] = value
+
+    // پاک‌سازی پاسخ سؤال‌های تکمیلیِ شرطی که با تغییر امتیاز والد نمایان نیستند
+    const parent = questionIndex.value[id]
+    if (parent?.subQuestions?.length) {
+      for (const sub of parent.subQuestions) {
+        if (sub.id in answers && !isSubQuestionVisible(parent, sub)) {
+          delete answers[sub.id]
+        }
+      }
+    }
   }
 
   function next(): boolean {
@@ -158,9 +189,10 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     currentErrors,
     showErrors,
     isAnswered,
-    isFollowUpAnswered,
+    isSubQuestionVisible,
+    isSubAnswered,
+    isSubInvalid,
     isQuestionInvalid,
-    isFollowUpInvalid,
     questionInvalidKeys,
     stepStatus,
     setAnswer,
