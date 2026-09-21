@@ -44,7 +44,7 @@ const groups = computed<QuestionGroup[]>(() => {
   <div class="space-y-8">
     <section v-for="(g, gi) in groups" :key="gi" class="space-y-4">
       <div v-if="g.title" class="flex items-center gap-3">
-        <h3 class="text-sm sm:text-base font-bold text-dark-600 dark:text-white whitespace-nowrap">
+        <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white whitespace-nowrap">
           {{ g.title }}
         </h3>
         <div class="flex-1 h-px bg-gradient-to-l from-primary-300/70 to-transparent dark:from-primary-700/70" />

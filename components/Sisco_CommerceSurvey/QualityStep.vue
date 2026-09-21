@@ -52,7 +52,7 @@ const productMeta = computed(() => {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-xs text-muted-500 dark:text-muted-400">محصول مورد ارزیابی</p>
-          <h4 class="text-lg font-bold text-dark-600 dark:text-white">{{ groupLabel(group) }}</h4>
+          <h4 class="text-lg font-bold text-gray-900 dark:text-white">{{ groupLabel(group) }}</h4>
         </div>
       </div>
       <div class="relative grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">

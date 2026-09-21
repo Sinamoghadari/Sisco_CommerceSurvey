@@ -109,7 +109,7 @@ function confirmSubmit() {
               <Icon :icon="wizard.currentStep.value.icon" class="w-5 h-5" />
             </span>
             <div>
-              <h2 class="text-lg sm:text-xl font-bold text-dark-600 dark:text-white">
+              <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 {{ wizard.currentStep.value.title }}
               </h2>
               <p class="text-sm text-muted-500 dark:text-muted-400 mt-0.5">

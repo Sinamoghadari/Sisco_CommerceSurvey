@@ -34,7 +34,7 @@ function rowCounter(tableIndex: number, rowIndex: number) {
           <img :src="table.icon" :alt="table.productLabel" class="w-7 h-7 table-product-icon" />
         </div>
         <div class="flex-1 min-w-0">
-          <h3 class="text-base font-bold text-dark-600 dark:text-white flex items-center gap-2">
+          <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
             جدول نظرسنجی محصول: {{ table.productLabel }}
           </h3>
           <p class="text-xs text-muted-500 dark:text-muted-400 mt-0.5 leading-5">

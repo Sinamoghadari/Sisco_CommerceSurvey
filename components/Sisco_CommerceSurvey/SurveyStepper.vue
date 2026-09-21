@@ -56,7 +56,7 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
 
         <span
           class="mt-2.5 text-[11px] lg:text-xs font-bold transition-colors leading-5 px-1"
-          :class="status(i) === 'active' ? 'text-primary-600 dark:text-primary-400' : status(i) === 'pending' ? 'text-muted-400' : 'text-dark-600 dark:text-muted-200'"
+          :class="status(i) === 'active' ? 'text-primary-600 dark:text-primary-400' : status(i) === 'pending' ? 'text-muted-400' : 'text-gray-900 dark:text-muted-200'"
         >
           {{ step.title }}
         </span>
@@ -72,7 +72,7 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
             <Icon :icon="steps[currentIndex]?.icon" class="w-4 h-4" />
           </span>
           <div>
-            <p class="text-sm font-bold text-dark-600 dark:text-white">{{ steps[currentIndex]?.title }}</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ steps[currentIndex]?.title }}</p>
             <p class="text-[11px] text-muted-400">مرحله {{ currentIndex + 1 }} از {{ steps.length }}</p>
           </div>
         </div>

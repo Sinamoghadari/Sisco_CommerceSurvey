@@ -62,7 +62,7 @@ function onTableOpen(payload: { group: 'pellet' | 'billet'; type: 'domestic' | '
 
         <div class="mx-auto w-full max-w-4xl">
           <div class="flex items-center gap-3 mb-4">
-            <h2 class="text-lg font-bold text-dark-600 dark:text-white whitespace-nowrap">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
               دسترسی سریع به پرسشنامه‌ها
             </h2>
             <div class="flex-1 h-px bg-gradient-to-l from-primary-300/70 to-transparent dark:from-primary-700/70" />

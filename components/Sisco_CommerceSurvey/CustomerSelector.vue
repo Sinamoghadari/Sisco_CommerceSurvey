@@ -42,7 +42,7 @@ function submit() {
             <Icon icon="lucide:sliders-horizontal" class="w-6 h-6" />
           </div>
           <div>
-            <h2 class="text-lg font-bold text-dark-600 dark:text-white">انتخاب پارامترهای نظرسنجی</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">انتخاب پارامترهای نظرسنجی</h2>
             <p class="text-sm text-muted-500 dark:text-muted-400 mt-1">
               لطفاً گروه و نوع مشتری را مشخص کنید تا پرسشنامه‌ی متناسب بارگذاری شود.
             </p>
@@ -161,7 +161,7 @@ function submit() {
 <style scoped>
 .option-card {
   @apply relative flex items-center gap-4 p-4 rounded-2xl border-2 text-right transition-all duration-300
-    bg-white dark:bg-slate-900 border-muted-200 dark:border-muted-700 text-dark-600 dark:text-white
+    bg-white dark:bg-slate-900 border-muted-200 dark:border-muted-700 text-gray-900 dark:text-white
     hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5
     focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30;
 }

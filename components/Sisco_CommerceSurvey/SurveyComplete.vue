@@ -23,7 +23,7 @@ const emit = defineEmits<{ (e: 'restart'): void }>()
         <div class="mx-auto w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl shadow-green-500/30 success-badge">
           <Icon icon="lucide:check" class="w-10 h-10" />
         </div>
-        <h2 class="mt-6 text-2xl font-bold text-dark-600 dark:text-white">از همراهی شما سپاسگزاریم</h2>
+        <h2 class="mt-6 text-2xl font-bold text-gray-900 dark:text-white">از همراهی شما سپاسگزاریم</h2>
         <p class="mt-2 text-sm text-muted-500 dark:text-muted-400 leading-7">
           نظرات ارزشمند شما به بهبود مستمر محصولات و خدمات فولاد سیرجان ایرانیان کمک می‌کند.
         </p>
@@ -33,11 +33,11 @@ const emit = defineEmits<{ (e: 'restart'): void }>()
         <div class="grid grid-cols-3 gap-3 mb-8">
           <div class="rounded-xl border border-muted-200 dark:border-muted-800 py-4">
             <p class="text-[11px] text-muted-400 mb-1">گروه مشتری</p>
-            <p class="font-bold text-dark-600 dark:text-white">{{ groupLabel(selection.group) }}</p>
+            <p class="font-bold text-gray-900 dark:text-white">{{ groupLabel(selection.group) }}</p>
           </div>
           <div class="rounded-xl border border-muted-200 dark:border-muted-800 py-4">
             <p class="text-[11px] text-muted-400 mb-1">نوع مشتری</p>
-            <p class="font-bold text-dark-600 dark:text-white">{{ typeLabel(selection.type) }}</p>
+            <p class="font-bold text-gray-900 dark:text-white">{{ typeLabel(selection.type) }}</p>
           </div>
           <div class="rounded-xl border border-muted-200 dark:border-muted-800 py-4">
             <p class="text-[11px] text-muted-400 mb-1">امتیاز کلی</p>

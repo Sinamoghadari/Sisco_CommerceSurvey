@@ -158,7 +158,7 @@ function followUpValue(fu: SurveyFollowUp): number | null {
           >
             {{ fi + 1 }}
           </span>
-          <label class="block text-sm font-bold text-dark-600 dark:text-white leading-6">
+          <label class="block text-sm font-bold text-gray-900 dark:text-white leading-6">
             {{ fu.label }}
             <span v-if="fu.required" class="text-red-500 font-bold">*</span>
           </label>
