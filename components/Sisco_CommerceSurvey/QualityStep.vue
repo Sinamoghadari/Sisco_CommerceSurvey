@@ -3,15 +3,16 @@ import { computed } from 'vue'
 import {
   groupLabel,
   type CustomerGroup,
+  type SurveyFollowUp,
   type SurveyQuestion,
   type SurveyStep
-} from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import type { AnswerValue, SurveyAnswers } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
+} from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import SurveyStepPanel from './SurveyStepPanel.vue'
 
 /**
  * استپ کیفیت محصول – نسخه‌ی اختصاصی با بنر معرفی محصول انتخاب‌شده
- * (سؤال‌های فیزیکی/متالورژیکی به‌صورت داینامیک برای شمش یا گندله تولید می‌شوند)
+ * (سؤال‌های q7_* و پیگیرهایشان به‌صورت داینامیک برای شمش یا گندله تولید می‌شوند)
  */
 const props = defineProps<{
   step: SurveyStep
@@ -19,23 +20,23 @@ const props = defineProps<{
   answers: SurveyAnswers
   showErrors: boolean
   isInvalid: (q: SurveyQuestion) => boolean
+  isFollowUpInvalid?: (q: SurveyQuestion, fu: SurveyFollowUp) => boolean
 }>()
 
 const emit = defineEmits<{ (e: 'answer', id: string, value: AnswerValue): void }>()
 
-const productMeta = computed(() =>
-  props.group === 'billet'
-    ? {
-        icon: '/img/icons/Sisco_CommerceSurvey/billet.svg',
-        physical: 'ابعاد، ترک سطحی، حباب، زنگ‌زدگی، فرم فیزیکی',
-        metallurgical: 'درصد منگنز (Mn)، کربن (C)، مس (Cu)، نیکل (Ni)، کروم (Cr) و ...'
-      }
-    : {
-        icon: '/img/icons/Sisco_CommerceSurvey/pellet.svg',
-        physical: 'دانه‌بندی، تخلخل، استحکام فشاری (CCS)',
-        metallurgical: 'درصد Fe، درصد FeO، درصد S'
-      }
-)
+/** شاخص‌های بنر محصول، مستقیماً از تعریف سؤال‌ها (followUps) استخراج می‌شود */
+const productMeta = computed(() => {
+  const icon = `/img/Sisco_CommerceSurvey/${props.group === 'billet' ? 'billet' : 'pellet'}.svg`
+  const [physicalQ, metQ] = props.step.questions
+  const joinLabels = (q?: SurveyQuestion) =>
+    (q?.followUps ?? []).map(f => f.label).join('، ') || '—'
+  return {
+    icon,
+    physical: joinLabels(physicalQ),
+    metallurgical: joinLabels(metQ)
+  }
+})
 </script>
 
 <template>
@@ -71,6 +72,7 @@ const productMeta = computed(() =>
       :answers="answers"
       :show-errors="showErrors"
       :is-invalid="isInvalid"
+      :is-follow-up-invalid="isFollowUpInvalid"
       @answer="(id, v) => emit('answer', id, v)"
     />
   </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SurveyQuestion, SurveyStep } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import type { AnswerValue, SurveyAnswers } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
+import type { SurveyFollowUp, SurveyQuestion, SurveyStep } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import QuestionField from './QuestionField.vue'
 
 /**
@@ -12,9 +12,16 @@ const props = defineProps<{
   answers: SurveyAnswers
   showErrors: boolean
   isInvalid: (q: SurveyQuestion) => boolean
+  isFollowUpInvalid?: (q: SurveyQuestion, fu: SurveyFollowUp) => boolean
 }>()
 
 const emit = defineEmits<{ (e: 'answer', id: string, value: AnswerValue): void }>()
+
+/** نسخه‌ی نهایی تشخیص خطای سؤال‌های پیگیر (ترکیب با showErrors) */
+const checkFollowUpInvalid = computed(() => {
+  if (!props.isFollowUpInvalid) return undefined
+  return (q: SurveyQuestion, fu: SurveyFollowUp) => props.showErrors && props.isFollowUpInvalid!(q, fu)
+})
 
 interface QuestionGroup {
   title: string | null
@@ -51,7 +58,10 @@ const groups = computed<QuestionGroup[]>(() => {
           :index="item.index"
           :model-value="answers[item.q.id] ?? null"
           :invalid="showErrors && isInvalid(item.q)"
+          :answers="answers"
+          :follow-up-invalid="checkFollowUpInvalid"
           @update:model-value="v => emit('answer', item.q.id, v)"
+          @answer="(id, v) => emit('answer', id, v)"
         />
       </TransitionGroup>
     </section>

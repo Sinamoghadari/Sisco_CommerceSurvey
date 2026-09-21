@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SurveyStep } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
+import type { SurveyStep } from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
  * نوار استپر افقی (دسکتاپ) + نوار پیشرفت فشرده (موبایل)

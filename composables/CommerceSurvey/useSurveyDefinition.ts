@@ -2,6 +2,9 @@
  * تعریف ساختار پرسشنامه VOC (صدای مشتری) – امور بازرگانی فولاد سیرجان ایرانیان
  * این فایل صرفاً «اسکیمای پرسشنامه» است (نه داده‌ی ساختگی) و به صورت داینامیک
  * بر اساس گروه مشتری (گندله / شمش) و نوع مشتری (داخلی / خارجی) تولید می‌شود.
+ *
+ * نکته: مرحله‌ی اول سند اصلی (اطلاعات اولیه) به‌طور کامل حذف شده است؛
+ * هیچ فیلد تاریخ، نام شرکت یا اطلاعات هویتی مشتری دریافت نمی‌شود.
  */
 
 export type CustomerGroup = 'pellet' | 'billet'
@@ -9,7 +12,7 @@ export type CustomerType = 'domestic' | 'export'
 
 export type QuestionType =
   | 'rating'        // امتیاز ۱ تا ۵
-  | 'score'         // امتیاز ۱ تا ۱۰ (امتیاز کلی)
+  | 'score'         // امتیاز ۱ تا ۱۰ (امتیاز کلی / NPS)
   | 'single'        // تک‌انتخابی
   | 'multi'         // چندانتخابی
   | 'text'          // ورودی تک‌خطی
@@ -18,6 +21,14 @@ export type QuestionType =
 export interface QuestionOption {
   value: string
   label: string
+}
+
+/** سؤال پیگیر (Follow-up) – ردیف امتیازدهی زیر یک سؤال اصلی */
+export interface SurveyFollowUp {
+  id: string
+  label: string
+  hint?: string
+  required?: boolean
 }
 
 export interface SurveyQuestion {
@@ -33,6 +44,8 @@ export interface SurveyQuestion {
   scaleLabels?: { min: string; max: string }
   /** مقدار جایگزین (Tag) برای نمایش گروه‌بندی سؤال‌ها در یک استپ */
   group?: string
+  /** سؤال‌های پیگیر (شاخص‌های جزئی) که زیر همین کارت امتیازدهی می‌شوند */
+  followUps?: SurveyFollowUp[]
 }
 
 export interface SurveyStep {
@@ -50,6 +63,10 @@ export interface SurveySelection {
   type: CustomerType
 }
 
+/* -------------------------------------------------------------------------- */
+/*                           گزینه‌های فرم ورود (استپ ۰)                       */
+/* -------------------------------------------------------------------------- */
+
 export const CUSTOMER_GROUP_OPTIONS: Array<{
   value: CustomerGroup
   label: string
@@ -57,16 +74,16 @@ export const CUSTOMER_GROUP_OPTIONS: Array<{
   icon: string
 }> = [
   {
+    value: 'billet',
+    label: 'شمش',
+    description: 'شمش فولادی – محصول نهایی واحد فولادسازی و ریخته‌گری',
+    icon: '/img/Sisco_CommerceSurvey/billet.svg'
+  },
+  {
     value: 'pellet',
     label: 'گندله',
     description: 'گندله سنگ‌آهن – خوراک واحدهای احیای مستقیم',
-    icon: '/img/icons/Sisco_CommerceSurvey/pellet.svg'
-  },
-  {
-    value: 'billet',
-    label: 'شمش',
-    description: 'شمش فولادی – محصول نهایی واحد فولادسازی',
-    icon: '/img/icons/Sisco_CommerceSurvey/billet.svg'
+    icon: '/img/Sisco_CommerceSurvey/pellet.svg'
   }
 ]
 
@@ -101,53 +118,150 @@ export const RATING_SCALE = [
 export const groupLabel = (g: CustomerGroup) => (g === 'pellet' ? 'گندله' : 'شمش')
 export const typeLabel = (t: CustomerType) => (t === 'domestic' ? 'داخلی' : 'خارجی')
 
+/** کلید پاسخ سؤال‌های پیگیر: `{شناسه سؤال اصلی}__{شناسه پیگیر}` */
+export const followUpKey = (parentId: string, followUpId: string) => `${parentId}__${followUpId}`
+
+/* -------------------------------------------------------------------------- */
+/*                    جدول‌های مدیریت لینک نظرسنجی (شمش/گندله)                 */
+/* -------------------------------------------------------------------------- */
+
+export interface SurveyLinkRow {
+  id: string
+  type: CustomerType
+  title: string
+  description: string
+}
+
+export interface SurveyLinkTable {
+  id: CustomerGroup
+  productLabel: string
+  /** برچسب اکشن ستون «عملیات» */
+  actionLabel: string
+  actionIcon: string
+  icon: string
+  description: string
+  rows: SurveyLinkRow[]
+}
+
+export const SURVEY_LINK_TABLES: SurveyLinkTable[] = [
+  {
+    id: 'billet',
+    productLabel: 'شمش',
+    actionLabel: 'لینک شمش',
+    actionIcon: 'lucide:link',
+    icon: '/img/Sisco_CommerceSurvey/billet.svg',
+    description: 'نظرسنجی کیفیت محصول شمش فولادی – شاخص‌های ظاهری، فیزیکی و متالورژیکی',
+    rows: [
+      {
+        id: 'billet-domestic',
+        type: 'domestic',
+        title: 'VOC مشتریان داخلی – شمش',
+        description: 'نسخه‌ی مشتریان بازار داخل برای محصول شمش'
+      },
+      {
+        id: 'billet-export',
+        type: 'export',
+        title: 'VOC مشتریان خارجی – شمش',
+        description: 'نسخه‌ی مشتریان صادراتی برای محصول شمش'
+      }
+    ]
+  },
+  {
+    id: 'pellet',
+    productLabel: 'گندله',
+    actionLabel: 'لینک گندله',
+    actionIcon: 'lucide:link',
+    icon: '/img/Sisco_CommerceSurvey/pellet.svg',
+    description: 'نظرسنجی کیفیت محصول گندله سنگ‌آهن – شاخص‌های ظاهری، فیزیکی و متالورژیکی',
+    rows: [
+      {
+        id: 'pellet-domestic',
+        type: 'domestic',
+        title: 'VOC مشتریان داخلی – گندله',
+        description: 'نسخه‌ی مشتریان بازار داخل برای محصول گندله'
+      },
+      {
+        id: 'pellet-export',
+        type: 'export',
+        title: 'VOC مشتریان خارجی – گندله',
+        description: 'نسخه‌ی مشتریان صادراتی برای محصول گندله'
+      }
+    ]
+  }
+]
+
 /* -------------------------------------------------------------------------- */
 /*                               سازنده‌ی استپ‌ها                              */
 /* -------------------------------------------------------------------------- */
 
 const ratingLabels = { min: 'خیلی ضعیف', max: 'عالی' }
 
+/**
+ * استپ ۲ سند VOC – کیفیت محصول.
+ * سؤال‌های اختصاصی هر محصول (q7_*) به همراه سؤال‌های پیگیر آن‌ها.
+ */
 function buildQualityStep(group: CustomerGroup): SurveyStep {
   const isBillet = group === 'billet'
 
-  const physical: SurveyQuestion = isBillet
+  const applicationPhysical: SurveyQuestion = isBillet
     ? {
-        id: 'q_physical',
+        id: 'q7_billet_app_phys',
         type: 'rating',
         group: 'ارزیابی اختصاصی شمش',
-        title: 'کیفیت فیزیکی و ظاهری شمش',
-        hint: 'ابعاد، ترک سطحی، حباب، زنگ‌زدگی و فرم فیزیکی',
+        title: 'رضایت از کیفیت ظاهری و فیزیکی شمش',
+        hint: 'ارزیابی کلی؛ سپس شاخص‌های جزئی زیر را امتیاز دهید.',
         required: true,
-        scaleLabels: ratingLabels
+        scaleLabels: ratingLabels,
+        followUps: [
+          { id: 'dims', label: 'ابعاد شمش', required: true },
+          { id: 'crack', label: 'ترک روی سطح', required: true },
+          { id: 'bubble', label: 'حباب‌دار بودن', required: true },
+          { id: 'rust', label: 'زنگ‌زدگی سطح', required: true },
+          { id: 'form', label: 'فرم فیزیکی', required: true }
+        ]
       }
     : {
-        id: 'q_physical',
+        id: 'q7_pellet_app_phys',
         type: 'rating',
         group: 'ارزیابی اختصاصی گندله',
-        title: 'کیفیت فیزیکی و ظاهری گندله',
-        hint: 'دانه‌بندی، تخلخل و استحکام فشاری (CCS)',
+        title: 'رضایت از کیفیت ظاهری و فیزیکی گندله',
+        hint: 'ارزیابی کلی؛ سپس شاخص‌های جزئی زیر را امتیاز دهید.',
         required: true,
-        scaleLabels: ratingLabels
+        scaleLabels: ratingLabels,
+        followUps: [
+          { id: 'sizing', label: 'دانه‌بندی', required: true },
+          { id: 'porosity', label: 'تخلخل', required: true },
+          { id: 'ccs', label: 'استحکام فشاری (CCS)', required: true }
+        ]
       }
 
   const metallurgical: SurveyQuestion = isBillet
     ? {
-        id: 'q_metallurgical',
+        id: 'q7_billet_met',
         type: 'rating',
         group: 'ارزیابی اختصاصی شمش',
-        title: 'کیفیت متالورژیکی و آنالیز شیمیایی شمش',
-        hint: 'درصد منگنز، کربن، مس، نیکل، کروم و سایر عناصر',
+        title: 'رضایت از کیفیت متالورژیکی و آنالیز شیمیایی شمش',
+        hint: 'انطباق عناصر آلیاژی با آنالیز قرارداد / گواهی کیفیت',
         required: true,
-        scaleLabels: ratingLabels
+        scaleLabels: ratingLabels,
+        followUps: [
+          { id: 'mn', label: 'درصد منگنز (Mn)', required: true },
+          { id: 'c', label: 'درصد کربن (C)', required: true }
+        ]
       }
     : {
-        id: 'q_metallurgical',
+        id: 'q7_pellet_met',
         type: 'rating',
         group: 'ارزیابی اختصاصی گندله',
-        title: 'کیفیت متالورژیکی و آنالیز شیمیایی گندله',
-        hint: 'درصد Fe، درصد FeO و درصد S (گوگرد)',
+        title: 'رضایت از کیفیت متالورژیکی و آنالیز شیمیایی گندله',
+        hint: 'انطباق عناصر با آنالیز قرارداد / گواهی کیفیت',
         required: true,
-        scaleLabels: ratingLabels
+        scaleLabels: ratingLabels,
+        followUps: [
+          { id: 'fe', label: 'درصد Fe', required: true },
+          { id: 'feo', label: 'درصد FeO', required: true },
+          { id: 's', label: 'درصد S (گوگرد)', required: true }
+        ]
       }
 
   return {
@@ -156,40 +270,11 @@ function buildQualityStep(group: CustomerGroup): SurveyStep {
     title: 'کیفیت محصول',
     subtitle: `ارزیابی کیفیت ${groupLabel(group)} دریافتی از فولاد سیرجان ایرانیان`,
     icon: 'lucide:badge-check',
-    questions: [
-      physical,
-      metallurgical,
-      {
-        id: 'q_reliability',
-        type: 'rating',
-        group: 'ابعاد عمومی کیفیت',
-        title: 'قابلیت اطمینان و یکنواختی کیفی در طول زمان',
-        hint: 'میزان ثبات کیفیت در محموله‌های مختلف',
-        required: true,
-        scaleLabels: ratingLabels
-      },
-      {
-        id: 'q_compliance',
-        type: 'rating',
-        group: 'ابعاد عمومی کیفیت',
-        title: 'میزان مطابقت محصول با سفارش و استانداردهای درخواستی',
-        hint: 'تطابق آنالیز، ابعاد و مشخصات فنی با قرارداد',
-        required: true,
-        scaleLabels: ratingLabels
-      },
-      {
-        id: 'q_feedback',
-        type: 'textarea',
-        group: 'ابعاد عمومی کیفیت',
-        title: 'پیشنهادات و انتقادات کیفی',
-        hint: 'اختیاری – هرگونه نکته‌ی کیفی که مایل به اشتراک آن هستید',
-        placeholder: 'نظر خود را در خصوص کیفیت محصول بنویسید...',
-        required: false
-      }
-    ]
+    questions: [applicationPhysical, metallurgical]
   }
 }
 
+/** استپ ۳ – کیفیت خدمات (مشترک بین همه‌ی محصولات) */
 function buildServiceStep(type: CustomerType): SurveyStep {
   const questions: SurveyQuestion[] = [
     {
@@ -309,11 +394,12 @@ function buildServiceStep(type: CustomerType): SurveyStep {
   }
 }
 
+/** استپ ۴ – قیمت و ارزش (مشترک) */
 function buildPricingStep(type: CustomerType): SurveyStep {
   return {
     id: 'pricing',
     order: 4,
-    title: 'قیمت و شرایط مالی',
+    title: 'قیمت و ارزش',
     subtitle: 'ارزیابی رقابت‌پذیری قیمت و شرایط پرداخت',
     icon: 'lucide:coins',
     questions: [
@@ -344,14 +430,23 @@ function buildPricingStep(type: CustomerType): SurveyStep {
   }
 }
 
+/** استپ ۵ – وفاداری و NPS (مشترک) */
 function buildLoyaltyStep(group: CustomerGroup): SurveyStep {
   return {
     id: 'loyalty',
     order: 5,
-    title: 'وفاداری و آینده',
+    title: 'وفاداری و NPS',
     subtitle: 'جایگاه ما در میان رقبا و چشم‌انداز همکاری آتی',
     icon: 'lucide:heart-handshake',
     questions: [
+      {
+        id: 'l_nps',
+        type: 'score',
+        title: 'احتمال توصیه‌ی فولاد سیرجان ایرانیان به سایر همکاران (NPS)',
+        hint: 'از ۱ (به هیچ وجه) تا ۱۰ (قطعاً توصیه می‌کنم)',
+        required: true,
+        scaleLabels: { min: 'به هیچ وجه', max: 'قطعاً توصیه می‌کنم' }
+      },
       {
         id: 'l_competitors',
         type: 'textarea',
@@ -389,17 +484,6 @@ function buildLoyaltyStep(group: CustomerGroup): SurveyStep {
         ]
       },
       {
-        id: 'l_future_trend',
-        type: 'single',
-        title: 'پیش‌بینی شما از میزان نیاز آتی به این محصول',
-        required: true,
-        options: [
-          { value: 'increase', label: 'افزایش می‌یابد' },
-          { value: 'same', label: 'ثابت می‌ماند' },
-          { value: 'decrease', label: 'کاهش می‌یابد' }
-        ]
-      },
-      {
         id: 'l_future_needs',
         type: 'textarea',
         title: 'نیازمندی‌ها و انتظارات آتی شما',
@@ -411,11 +495,12 @@ function buildLoyaltyStep(group: CustomerGroup): SurveyStep {
   }
 }
 
+/** استپ ۶ – تصویر برند (مشترک) */
 function buildBrandStep(): SurveyStep {
   return {
     id: 'brand',
     order: 6,
-    title: 'تصویر برند و اعتماد',
+    title: 'تصویر برند',
     subtitle: 'ادراک شما از برند فولاد سیرجان ایرانیان',
     icon: 'lucide:shield-check',
     questions: [
@@ -451,12 +536,13 @@ function buildBrandStep(): SurveyStep {
   }
 }
 
+/** استپ ۷ – ارزیابی کلی (مشترک) */
 function buildSummaryStep(): SurveyStep {
   return {
     id: 'summary',
     order: 7,
-    title: 'امتیاز کلی و جمع‌بندی',
-    subtitle: 'ارزیابی نهایی و پیشنهادات شما',
+    title: 'ارزیابی کلی',
+    subtitle: 'امتیاز نهایی و پیشنهادات شما',
     icon: 'lucide:flag',
     questions: [
       {
@@ -492,7 +578,10 @@ function buildSummaryStep(): SurveyStep {
   }
 }
 
-/** تولید داینامیک کل پرسشنامه بر اساس انتخاب کاربر (استپ ۱ به‌طور کامل حذف شده است) */
+/**
+ * تولید داینامیک کل پرسشنامه بر اساس انتخاب کاربر.
+ * استپ ۱ سند اصلی («اطلاعات اولیه») به‌طور کامل حذف شده است.
+ */
 export function buildSurveySteps(selection: SurveySelection): SurveyStep[] {
   return [
     buildQualityStep(selection.group),

@@ -3,7 +3,7 @@ import {
   groupLabel,
   typeLabel,
   type SurveySelection
-} from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
+} from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
  * صفحه‌ی پایان نظرسنجی – صرفاً نمایش تشکر (بدون هیچ ارسال به سرور)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RATING_SCALE } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
+import { RATING_SCALE } from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
  * گروه امتیازدهی – برای مقیاس ۱ تا ۵ (rating) و ۱ تا ۱۰ (score)

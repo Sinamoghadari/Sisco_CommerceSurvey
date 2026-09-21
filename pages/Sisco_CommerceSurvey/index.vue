@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { SurveySelection } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import type { SurveyAnswers } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
+import { useCommerceSurvey } from '~/composables/CommerceSurvey/useCommerceSurvey'
+import {
+  SURVEY_LINK_TABLES,
+  type SurveySelection
+} from '~/composables/CommerceSurvey/useSurveyDefinition'
 import CustomerSelector from '~/components/Sisco_CommerceSurvey/CustomerSelector.vue'
+import SurveyTable from '~/components/Sisco_CommerceSurvey/SurveyTable.vue'
 import SurveyWizard from '~/components/Sisco_CommerceSurvey/SurveyWizard.vue'
 import SurveyComplete from '~/components/Sisco_CommerceSurvey/SurveyComplete.vue'
 
@@ -13,41 +16,30 @@ definePageMeta({
 })
 
 /**
- * ماشین حالت صفحه:
- *  select   → انتخاب گروه/نوع مشتری
- *  survey   → ویزارد چندمرحله‌ای
+ * وضعیت صفحه (ماشین حالت سمت کلاینت) از کامپوزیبل اختصاصی مدیریت می‌شود:
+ *  select   → فرم انتخاب گروه/نوع مشتری + جدول‌های شمش و گندله
+ *  survey   → ویزارد چندمرحله‌ای (استپ «اطلاعات اولیه» عمداً حذف شده است)
  *  complete → صفحه‌ی تشکر
  */
-type Phase = 'select' | 'survey' | 'complete'
+const {
+  phase,
+  selection,
+  completion,
+  runId,
+  overallScore,
+  startSurvey,
+  openSurveyFor,
+  changeSelection,
+  completeSurvey,
+  restart
+} = useCommerceSurvey()
 
-const phase = ref<Phase>('select')
-const selection = ref<SurveySelection | null>(null)
-const result = ref<{ selection: SurveySelection; answers: SurveyAnswers } | null>(null)
-
-const overallScore = computed(() => {
-  const v = result.value?.answers?.o_score
-  return typeof v === 'number' ? v : null
-})
-
-function startSurvey(sel: SurveySelection) {
-  selection.value = sel
-  phase.value = 'survey'
+function onSelectorSubmit(sel: SurveySelection) {
+  startSurvey(sel)
 }
 
-function changeSelection() {
-  phase.value = 'select'
-}
-
-function completeSurvey(payload: { selection: SurveySelection; answers: SurveyAnswers }) {
-  // ارسال به سرور در محدوده‌ی این فاز نیست؛ نتیجه فقط در حافظه‌ی کلاینت نگهداری می‌شود.
-  result.value = payload
-  phase.value = 'complete'
-}
-
-function restart() {
-  result.value = null
-  selection.value = null
-  phase.value = 'select'
+function onTableOpen(payload: { group: 'pellet' | 'billet'; type: 'domestic' | 'export' }) {
+  openSurveyFor(payload.group, payload.type)
 }
 </script>
 
@@ -64,25 +56,38 @@ function restart() {
     </div>
 
     <Transition name="phase" mode="out-in">
-      <CustomerSelector
-        v-if="phase === 'select'"
-        key="select"
-        :initial="selection"
-        @submit="startSurvey"
-      />
+      <!-- نمای انتخاب: فرم ورود + جدول‌های مدیریت لینک نظرسنجی -->
+      <div v-if="phase === 'select'" key="select" class="space-y-6">
+        <CustomerSelector :initial="selection" @submit="onSelectorSubmit" />
 
+        <div class="mx-auto w-full max-w-4xl">
+          <div class="flex items-center gap-3 mb-4">
+            <h2 class="text-lg font-bold text-dark-600 dark:text-white whitespace-nowrap">
+              دسترسی سریع به پرسشنامه‌ها
+            </h2>
+            <div class="flex-1 h-px bg-gradient-to-l from-primary-300/70 to-transparent dark:from-primary-700/70" />
+          </div>
+          <p class="text-xs text-muted-500 dark:text-muted-400 mb-4 leading-6">
+            در ستون «عملیات» هر جدول، با کلیک روی «لینک شمش» یا «لینک گندله» پرسشنامه‌ی همان محصول مستقیماً باز می‌شود.
+          </p>
+          <SurveyTable :tables="SURVEY_LINK_TABLES" @open="onTableOpen" />
+        </div>
+      </div>
+
+      <!-- نمای پرسشنامه -->
       <SurveyWizard
         v-else-if="phase === 'survey' && selection"
-        :key="`survey-${selection.group}-${selection.type}`"
+        :key="`survey-${selection.group}-${selection.type}-${runId}`"
         :selection="selection"
         @complete="completeSurvey"
         @change-selection="changeSelection"
       />
 
+      <!-- نمای پایان -->
       <SurveyComplete
-        v-else-if="phase === 'complete' && result"
+        v-else-if="phase === 'complete' && completion"
         key="complete"
-        :selection="result.selection"
+        :selection="completion.selection"
         :overall-score="overallScore"
         @restart="restart"
       />

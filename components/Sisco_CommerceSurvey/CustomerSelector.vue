@@ -6,7 +6,7 @@ import {
   type CustomerGroup,
   type CustomerType,
   type SurveySelection
-} from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
+} from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
  * صفحه‌ی ورود: انتخاب گروه مشتری (گندله/شمش) و نوع مشتری (داخلی/خارجی)
@@ -29,12 +29,6 @@ function submit() {
   submitted.value = true
   if (!isValid.value) return
   emit('submit', { group: group.value!, type: type.value! })
-}
-
-/** میان‌بر: شروع مستقیم نظرسنجی برای یک محصول (نوع مشتری باید انتخاب شده باشد) */
-function quickStart(g: CustomerGroup) {
-  group.value = g
-  submit()
 }
 </script>
 
@@ -141,16 +135,10 @@ function quickStart(g: CustomerGroup) {
       <!-- اکشن‌ها -->
       <div class="px-8 py-6">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-2 text-xs text-muted-500 dark:text-muted-400 order-2 sm:order-1">
-            <span>شروع سریع:</span>
-            <button type="button" class="quick-link" :disabled="!type" @click="quickStart('billet')">
-              نظرسنجی شمش
-            </button>
-            <span class="text-muted-300">|</span>
-            <button type="button" class="quick-link" :disabled="!type" @click="quickStart('pellet')">
-              نظرسنجی گندله
-            </button>
-          </div>
+          <p class="flex items-center gap-2 text-xs text-muted-500 dark:text-muted-400 order-2 sm:order-1 leading-6">
+            <Icon icon="lucide:info" class="w-4 h-4 flex-shrink-0" />
+            پرسشنامه بر اساس انتخاب شما به‌صورت داینامیک ساخته می‌شود.
+          </p>
 
           <BaseButton
             type="submit"
@@ -203,10 +191,6 @@ function quickStart(g: CustomerGroup) {
 }
 .option-card--active .product-icon {
   filter: invert(100%);
-}
-.quick-link {
-  @apply font-bold text-primary-600 dark:text-primary-400 underline-offset-4 hover:underline transition-colors
-    disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline;
 }
 .slide-enter-active,
 .slide-leave-active {
