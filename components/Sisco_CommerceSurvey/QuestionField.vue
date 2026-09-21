@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import type { SurveyQuestion } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import type { AnswerValue } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
+import type { SurveyFollowUp, SurveyQuestion } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import { followUpKey } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import RatingGroup from './RatingGroup.vue'
 import ChoiceGroup from './ChoiceGroup.vue'
 
 /**
  * رندر یک سؤال بر اساس نوع آن (rating / score / single / multi / text / textarea)
+ * و در صورت وجود، سؤال‌های پیگیر (Follow-up) زیر همان کارت.
  */
 const props = withDefaults(
   defineProps<{
@@ -13,14 +15,34 @@ const props = withDefaults(
     modelValue: AnswerValue
     index: number
     invalid?: boolean
+    /** پاسخ‌های فعلی (برای سؤال‌های پیگیر) */
+    answers?: SurveyAnswers
+    /** تشخیص بی‌پاسخ بودن سؤال پیگیر (شامل وضعیت showErrors) */
+    followUpInvalid?: (q: SurveyQuestion, fu: SurveyFollowUp) => boolean
   }>(),
-  { invalid: false }
+  {
+    invalid: false,
+    answers: () => ({}),
+    followUpInvalid: undefined
+  }
 )
 
-const emit = defineEmits<{ (e: 'update:modelValue', v: AnswerValue): void }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', v: AnswerValue): void
+  (e: 'answer', id: string, v: AnswerValue): void
+}>()
 
 function update(v: AnswerValue) {
   emit('update:modelValue', v)
+}
+
+function updateFollowUp(fu: SurveyFollowUp, v: AnswerValue) {
+  emit('answer', followUpKey(props.question.id, fu.id), v)
+}
+
+function followUpValue(fu: SurveyFollowUp): number | null {
+  const v = props.answers[followUpKey(props.question.id, fu.id)]
+  return typeof v === 'number' ? v : null
 }
 </script>
 
@@ -104,6 +126,64 @@ function update(v: AnswerValue) {
         پاسخ به این سؤال الزامی است.
       </p>
     </Transition>
+
+    <!-- سؤال‌های پیگیر (Follow-ups) -->
+    <div
+      v-if="question.followUps?.length"
+      class="mt-5 pt-5 border-t border-dashed border-muted-200 dark:border-muted-700 space-y-4"
+    >
+      <p class="flex items-center gap-2 text-[11px] font-bold text-muted-500 dark:text-muted-400">
+        <Icon icon="lucide:git-branch" class="w-3.5 h-3.5 text-primary-500" />
+        شاخص‌های جزئی این سؤال
+      </p>
+
+      <div
+        v-for="(fu, fi) in question.followUps"
+        :key="fu.id"
+        class="rounded-xl bg-muted-50 dark:bg-slate-900/80 border p-4 transition-colors duration-300"
+        :class="
+          followUpInvalid && followUpInvalid(question, fu)
+            ? 'border-red-300 dark:border-red-800'
+            : 'border-muted-200 dark:border-muted-800'
+        "
+      >
+        <div class="flex items-start gap-2.5 mb-3">
+          <span
+            class="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold transition-colors"
+            :class="
+              followUpValue(fu) !== null
+                ? 'bg-green-500 text-white'
+                : 'bg-muted-200 dark:bg-slate-800 text-muted-500 dark:text-muted-400'
+            "
+          >
+            {{ fi + 1 }}
+          </span>
+          <label class="block text-sm font-bold text-dark-600 dark:text-white leading-6">
+            {{ fu.label }}
+            <span v-if="fu.required" class="text-red-500 font-bold">*</span>
+          </label>
+        </div>
+
+        <RatingGroup
+          :model-value="followUpValue(fu)"
+          :max="5"
+          :labels="question.scaleLabels"
+          :invalid="Boolean(followUpInvalid && followUpInvalid(question, fu))"
+          :name="`${question.title} - ${fu.label}`"
+          @update:model-value="v => updateFollowUp(fu, v)"
+        />
+
+        <Transition name="slide">
+          <p
+            v-if="followUpInvalid && followUpInvalid(question, fu)"
+            class="flex items-center gap-1.5 text-xs text-red-500 mt-2"
+          >
+            <Icon icon="lucide:alert-circle" class="w-4 h-4" />
+            پاسخ به این شاخص الزامی است.
+          </p>
+        </Transition>
+      </div>
+    </div>
   </div>
 </template>
 

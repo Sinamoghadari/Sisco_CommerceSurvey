@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import type { SurveyQuestion, SurveyStep } from './useSurveyDefinition'
+import { followUpKey, type SurveyFollowUp, type SurveyQuestion, type SurveyStep } from './useSurveyDefinition'
 
 export type AnswerValue = number | string | string[] | null
 
@@ -9,6 +9,7 @@ export interface SurveyAnswers {
 
 /**
  * مدیریت وضعیت ویزارد نظرسنجی: پاسخ‌ها، استپ فعلی، اعتبارسنجی و ناوبری.
+ * اعتبارسنجی شامل سؤال‌های پیگیر (Follow-up) نیز می‌شود.
  * کاملاً سمت کلاینت و بدون هیچ‌گونه فراخوانی API.
  */
 export function useSurveyWizard(steps: () => SurveyStep[]) {
@@ -39,12 +40,32 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     return true
   }
 
+  function isFollowUpAnswered(q: SurveyQuestion, fu: SurveyFollowUp): boolean {
+    return isAnswered({ ...q, id: followUpKey(q.id, fu.id) })
+  }
+
+  /** آیا خودِ سؤال اصلی (نه پیگیرهایش) بی‌پاسخ است؟ */
   function isQuestionInvalid(q: SurveyQuestion): boolean {
     return Boolean(q.required) && !isAnswered(q)
   }
 
+  /** آیا سؤال پیگیرِ مشخص‌شده بی‌پاسخ است؟ */
+  function isFollowUpInvalid(q: SurveyQuestion, fu: SurveyFollowUp): boolean {
+    return Boolean(fu.required) && !isFollowUpAnswered(q, fu)
+  }
+
+  /** تمام کلیدهای بی‌پاسخِ یک سؤال (سؤال اصلی + پیگیرها) */
+  function questionInvalidKeys(q: SurveyQuestion): string[] {
+    const keys: string[] = []
+    if (isQuestionInvalid(q)) keys.push(q.id)
+    for (const fu of q.followUps ?? []) {
+      if (isFollowUpInvalid(q, fu)) keys.push(followUpKey(q.id, fu.id))
+    }
+    return keys
+  }
+
   function stepErrors(step: SurveyStep): string[] {
-    return step.questions.filter(isQuestionInvalid).map(q => q.id)
+    return step.questions.flatMap(questionInvalidKeys)
   }
 
   const currentErrors = computed(() => stepErrors(currentStep.value))
@@ -137,7 +158,10 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     currentErrors,
     showErrors,
     isAnswered,
+    isFollowUpAnswered,
     isQuestionInvalid,
+    isFollowUpInvalid,
+    questionInvalidKeys,
     stepStatus,
     setAnswer,
     next,

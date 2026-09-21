@@ -5,8 +5,8 @@ import {
   groupLabel,
   typeLabel,
   type SurveySelection
-} from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import { useSurveyWizard, type SurveyAnswers } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
+} from '~/composables/CommerceSurvey/useSurveyDefinition'
+import { useSurveyWizard, type SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
 import SurveyStepper from './SurveyStepper.vue'
 import SurveyStepPanel from './SurveyStepPanel.vue'
 import QualityStep from './QualityStep.vue'
@@ -28,10 +28,24 @@ const wizard = useSurveyWizard(() => steps.value)
 
 const isConfirmOpen = ref(false)
 
+/** تعداد پاسخ‌های داده‌شده (سؤال‌های اصلی + پیگیرها) */
 const answeredCount = computed(() =>
-  steps.value.reduce((acc, s) => acc + s.questions.filter(q => wizard.isAnswered(q)).length, 0)
+  steps.value.reduce(
+    (acc, s) =>
+      acc +
+      s.questions.reduce(
+        (qAcc, q) =>
+          qAcc +
+          (wizard.isAnswered(q) ? 1 : 0) +
+          (q.followUps ?? []).filter(fu => wizard.isFollowUpAnswered(q, fu)).length,
+        0
+      ),
+    0
+  )
 )
-const totalQuestions = computed(() => steps.value.reduce((acc, s) => acc + s.questions.length, 0))
+const totalQuestions = computed(() =>
+  steps.value.reduce((acc, s) => acc + s.questions.reduce((qAcc, q) => qAcc + 1 + (q.followUps?.length ?? 0), 0), 0)
+)
 
 function onNext() {
   if (wizard.isLast.value) {
@@ -113,7 +127,7 @@ function confirmSubmit() {
           class="mx-6 sm:mx-8 mt-4 flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-300"
         >
           <Icon icon="lucide:alert-triangle" class="w-4 h-4 flex-shrink-0" />
-          لطفاً به {{ wizard.currentErrors.value.length }} سؤال الزامی باقی‌مانده در این مرحله پاسخ دهید.
+          لطفاً به {{ wizard.currentErrors.value.length }} پاسخ الزامی باقی‌مانده در این مرحله پاسخ دهید.
         </div>
       </Transition>
 
@@ -128,6 +142,7 @@ function confirmSubmit() {
               :answers="wizard.answers"
               :show-errors="wizard.showErrors.value"
               :is-invalid="wizard.isQuestionInvalid"
+              :is-follow-up-invalid="wizard.isFollowUpInvalid"
               @answer="wizard.setAnswer"
             />
             <SurveyStepPanel
@@ -136,6 +151,7 @@ function confirmSubmit() {
               :answers="wizard.answers"
               :show-errors="wizard.showErrors.value"
               :is-invalid="wizard.isQuestionInvalid"
+              :is-follow-up-invalid="wizard.isFollowUpInvalid"
               @answer="wizard.setAnswer"
             />
           </div>

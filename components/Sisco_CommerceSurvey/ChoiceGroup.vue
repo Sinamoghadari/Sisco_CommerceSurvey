@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { QuestionOption } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
+import type { QuestionOption } from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
  * گروه انتخاب – تک‌انتخابی (radio) یا چندانتخابی (checkbox) با ظاهر چیپ/کارت
