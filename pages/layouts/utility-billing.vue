@@ -1,0 +1,645 @@
+<script setup lang="ts">
+definePageMeta({
+  title: 'SaaS صورتحساب',
+  preview: {
+    title: 'صورت‌حساب SaaS',
+    description: 'برای طرح‌های صورت‌حساب SaaS',
+    categories: ['چیدمان‌ها'],
+    src: '/img/screens/layouts-subpages-billing.png',
+    srcDark: '/img/screens/layouts-subpages-billing-dark.png',
+    order: 84,
+  },
+})
+
+const customRadio = ref('enterprise')
+
+const plans = [
+  {
+    name: 'starter',
+    description:
+      'لورم ایپسوم متنی ساختگی است که معمولاً در صنعت چاپ و طراحی استفاده می‌شود.',
+    price: {
+      monthly: 9,
+      yearly: 99,
+    },
+    features: ['۳ صندلی', '۲۰ پروژه', '۲۰ گیگابایت حافظه ذخیره‌سازی'],
+    benefits: [
+      'پشتیبانی رایگان یک‌ساله',
+      'به‌روزرسانی رایگان یک‌ساله',
+      'میزبانی رایگان یک‌ساله',
+    ],
+  },
+  {
+    name: 'freelancer',
+    description:
+      'لورم ایپسوم متنی ساختگی است که معمولاً در صنعت چاپ و طراحی استفاده می‌شود.',
+    price: {
+      monthly: 19,
+      yearly: 199,
+    },
+    features: ['۸ صندلی', '۱۵۰ پروژه', '۱۰۰ گیگابایت فضای ذخیره‌سازی'],
+    benefits: ['پشتیبانی یک‌ساله', 'به‌روزرسانی یک‌ساله', 'میزبانی یک‌ساله'],
+  },
+  {
+    name: 'business',
+    description:
+      'لورم ایپسوم متنی ساختگی است که معمولاً در صنعت چاپ و طراحی استفاده می‌شود.',
+    price: {
+      monthly: 29,
+      yearly: 299,
+    },
+    features: ['۲۰ صندلی', 'پروژه‌های نامحدود', '۵۰۰ گیگابایت فضای ذخیره‌سازی'],
+    benefits: ['پشتیبانی یک‌ساله', 'به‌روزرسانی یک‌ساله', 'میزبانی یک‌ساله'],
+  },
+  {
+    name: 'enterprise',
+    description:
+      'لورم ایپسوم متنی ساختگی است که معمولاً در صنعت چاپ و طراحی استفاده می‌شود.',
+    price: {
+      monthly: 49,
+      yearly: 399,
+    },
+    features: ['۴۰ صندلی', 'پروژه‌های نامحدود', 'فضای ذخیره‌سازی نامحدود'],
+    benefits: ['پشتیبانی یک‌ساله', 'به‌روزرسانی یک‌ساله', 'میزبانی یک‌ساله'],
+  },
+]
+
+const selectedPlan = computed(() => {
+  return plans.find(plan => plan.name === customRadio.value)
+})
+
+const planColor = computed(() => {
+  switch (customRadio.value) {
+    case 'starter':
+      return 'text-success-500'
+    case 'freelancer':
+      return 'text-yellow-400'
+    case 'business':
+      return 'text-indigo-500'
+    case 'enterprise':
+      return 'text-primary-500'
+  }
+})
+
+const cardInfo = ref({
+  name: undefined,
+  number: undefined,
+  expiryYear: undefined,
+  expiryMonth: undefined,
+  cvc: undefined,
+})
+
+const billingCycles = ref('monthly')
+</script>
+
+<template>
+  <form
+    action=""
+    method="POST"
+    class="mx-auto w-full max-w-4xl pb-16"
+    @submit.prevent
+  >
+    <!-- Header -->
+    <div class="mb-8 flex flex-col justify-between md:flex-row md:items-center">
+      <div
+        class="ltablet:max-w-full flex max-w-[425px] flex-col items-center gap-4 text-center md:flex-row md:text-start lg:max-w-full"
+      >
+        <BaseAvatar src="/img/avatars/2.svg" size="lg" />
+        <div>
+          <BaseHeading
+            as="h2"
+            size="xl"
+            weight="light"
+            lead="tight"
+            class="text-muted-800 dark:text-white"
+          >
+            <span>مدیریت پلن</span>
+          </BaseHeading>
+          <BaseParagraph>
+            <span class="text-muted-500">
+              برنامه و اطلاعات صورتحساب خود را مدیریت کنید
+            </span>
+          </BaseParagraph>
+        </div>
+      </div>
+      <div
+        class="mt-4 flex items-center justify-center gap-2 md:mt-0 md:justify-start"
+      >
+        <BaseButton type="submit" color="primary">
+          <span>ذخیره برای</span>
+          <span class="font-semibold">{{ selectedPlan?.price.monthly }} تومان</span>
+          <span>/ در ماه</span>
+        </BaseButton>
+      </div>
+    </div>
+    <!-- plans -->
+    <div
+      class="dark:border-muted-800 mb-10 grid gap-4 border-b border-gray-200 pb-10 md:grid-cols-2 xl:gap-8"
+    >
+      <div class="grid grid-cols-2 gap-2 xl:gap-6">
+        <BaseRadioHeadless
+          v-model="customRadio"
+          name="radio_custom"
+          value="starter"
+        >
+          <BaseCard
+            rounded="sm"
+            class="text-muted-400/50 peer-checked:!border-success-500 peer-checked:text-success-500 group relative p-6 text-center peer-checked:[&_.child]:!opacity-100"
+          >
+            <div
+              class="child border-muted-200 dark:border-muted-700 dark:bg-muted-800 absolute end-3 top-3 flex size-7 items-center justify-center rounded-full border bg-white opacity-0"
+            >
+              <Icon name="lucide:check" class="size-3 text-current" />
+            </div>
+            <TairoLogo class="mx-auto mb-2 size-9" />
+            <BaseHeading
+              as="h4"
+              size="sm"
+              weight="medium"
+              class="text-muted-800 dark:text-white"
+            >
+              مبتدی
+            </BaseHeading>
+            <BaseText
+              size="xs"
+              lead="tight"
+              class="text-muted-400"
+            >
+              یک برنامه پایه برای شروع سریع
+            </BaseText>
+          </BaseCard>
+        </BaseRadioHeadless>
+        <BaseRadioHeadless
+          v-model="customRadio"
+          name="radio_custom"
+          value="freelancer"
+        >
+          <BaseCard
+            rounded="sm"
+            class="text-muted-400/50 group relative p-6 text-center peer-checked:!border-yellow-400 peer-checked:text-yellow-400 peer-checked:[&_.child]:!opacity-100"
+          >
+            <div
+              class="child border-muted-200 dark:border-muted-700 dark:bg-muted-800 absolute end-3 top-3 flex size-7 items-center justify-center rounded-full border bg-white opacity-0"
+            >
+              <Icon name="lucide:check" class="size-3 text-current" />
+            </div>
+            <TairoLogo class="mx-auto mb-2 size-9" />
+            <BaseHeading
+              as="h4"
+              size="sm"
+              weight="medium"
+              class="text-muted-800 dark:text-white"
+            >
+              فریلنسر
+            </BaseHeading>
+            <BaseText
+              size="xs"
+              lead="tight"
+              class="text-muted-400"
+            >
+              پلن برای فریلنسرهای پرتلاش
+            </BaseText>
+          </BaseCard>
+        </BaseRadioHeadless>
+        <BaseRadioHeadless
+          v-model="customRadio"
+          name="radio_custom"
+          value="business"
+        >
+          <BaseCard
+            rounded="sm"
+            class="text-muted-400/50 group relative p-6 text-center peer-checked:!border-indigo-500 peer-checked:text-indigo-500 peer-checked:[&_.child]:!opacity-100"
+          >
+            <div
+              class="child border-muted-200 dark:border-muted-700 dark:bg-muted-800 absolute end-3 top-3 flex size-7 items-center justify-center rounded-full border bg-white opacity-0"
+            >
+              <Icon name="lucide:check" class="size-3 text-current" />
+            </div>
+            <TairoLogo class="mx-auto mb-2 size-9" />
+            <BaseHeading
+              as="h4"
+              size="sm"
+              weight="medium"
+              class="text-muted-800 dark:text-white"
+            >
+              کسب‌وکار
+            </BaseHeading>
+            <BaseText
+              size="xs"
+              lead="tight"
+              class="text-muted-400"
+            >
+              یک طرح کسب‌وکار متوسط و مقرون‌به‌صرفه
+            </BaseText>
+          </BaseCard>
+        </BaseRadioHeadless>
+        <BaseRadioHeadless
+          v-model="customRadio"
+          name="radio_custom"
+          value="enterprise"
+        >
+          <BaseCard
+            rounded="sm"
+            class="text-muted-400/50 peer-checked:!border-primary-500 peer-checked:text-primary-500 group relative p-6 text-center peer-checked:[&_.child]:!opacity-100"
+          >
+            <div
+              class="child border-muted-200 dark:border-muted-700 dark:bg-muted-800 absolute end-3 top-3 flex size-7 items-center justify-center rounded-full border bg-white opacity-0"
+            >
+              <Icon name="lucide:check" class="size-3 text-current" />
+            </div>
+            <TairoLogo class="mx-auto mb-2 size-9" />
+            <BaseHeading
+              as="h4"
+              size="sm"
+              weight="medium"
+              class="text-muted-800 dark:text-white"
+            >
+              شرکت
+            </BaseHeading>
+            <BaseText
+              size="xs"
+              lead="tight"
+              class="text-muted-400"
+            >
+              یک برنامه شرکتی کامل
+            </BaseText>
+          </BaseCard>
+        </BaseRadioHeadless>
+      </div>
+      <div>
+        <BaseCard rounded="sm" class="flex h-full flex-col p-8">
+          <div class="flex gap-12">
+            <TairoLogo class="size-12 shrink-0" :class="planColor" />
+            <div>
+              <BaseText
+                size="md"
+                lead="tight"
+                weight="semibold"
+              >
+                {{ selectedPlan?.price.monthly }} تومان
+                <span class="text-muted-400 font-normal">/ در ماه</span>
+              </BaseText>
+              <BaseText
+                size="xs"
+                lead="tight"
+                class="mb-2"
+                :class="planColor"
+              >
+                به مبلغ {{ selectedPlan?.price.yearly }} تومان به صورت سالانه صورتحساب شده است.
+              </BaseText>
+              <BaseParagraph
+                size="xs"
+                class="text-muted-500 dark:text-muted-400"
+              >
+                {{ selectedPlan?.description }}
+              </BaseParagraph>
+            </div>
+          </div>
+          <div class="my-8">
+            <BaseParagraph
+              size="sm"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              تایرو ویژگی‌های فوق‌العاده‌ای دارد و هر پلن به‌خوبی با شرکت شما، چه کسب‌وکار کوچک باشد یا بزرگ، سازگار می‌شود. تایرو همچنین می‌تواند با رشد کسب‌وکار شما به‌راحتی مقیاس‌بندی شود.
+            </BaseParagraph>
+          </div>
+          <div class="grid grid-cols-2 gap-6 font-sans text-xs">
+            <div>
+              <ul>
+                <li
+                  v-for="item in selectedPlan?.features"
+                  :key="item"
+                  class="flex items-center gap-2"
+                  :class="planColor"
+                >
+                  <Icon name="lucide:check" class="size-3 text-current" />
+                  <span class="text-muted-400">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <ul>
+                <li
+                  v-for="item in selectedPlan?.benefits"
+                  :key="item"
+                  class="flex items-center gap-2"
+                  :class="planColor"
+                >
+                  <Icon name="lucide:check" class="size-3 text-current" />
+                  <span class="text-muted-400">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
+    <!-- Controls -->
+    <div class="grid grid-cols-12 gap-6">
+      <div class="ltablet:col-span-7 col-span-12 sm:col-span-6 lg:col-span-7">
+        <div class="flex flex-col gap-6">
+          <BaseCard class="p-6">
+            <div class="mb-4 flex items-center justify-between">
+              <BaseHeading
+                as="h4"
+                size="sm"
+                weight="semibold"
+              >
+                صندلی‌های استفاده شده
+              </BaseHeading>
+              <div>
+                <BaseText
+                  size="xs"
+                  lead="tight"
+                  class="text-muted-400"
+                >
+                  6/8 مانده
+                </BaseText>
+              </div>
+            </div>
+            <div
+              class="xs:flex-wrap ptablet:flex-wrap ltablet:justify-between flex items-center gap-2 lg:justify-between"
+            >
+              <div
+                class="xs:flex-wrap ptablet:flex-wrap flex items-center gap-2"
+              >
+                <BaseAvatar
+                  src="/img/avatars/2.svg"
+                  size="sm"
+                  data-nui-tooltip="مایا ر."
+                />
+                <BaseAvatar
+                  src="/img/avatars/10.svg"
+                  size="sm"
+                  data-nui-tooltip="کندرا و."
+                />
+                <BaseAvatar
+                  size="sm"
+                  text="OD"
+                  data-nui-tooltip="Oliver D."
+                  :class="getRandomColor()"
+                />
+                <BaseAvatar
+                  src="/img/avatars/16.svg"
+                  size="sm"
+                  data-nui-tooltip="هرمان م."
+                />
+                <BaseAvatar
+                  size="sm"
+                  text="MC"
+                  data-nui-tooltip="Matteus C."
+                  :class="getRandomColor()"
+                />
+                <BaseAvatar
+                  size="sm"
+                  text="GM"
+                  data-nui-tooltip="Gorav M."
+                  :class="getRandomColor()"
+                />
+              </div>
+              <div>
+                <button
+                  type="button"
+                  class="border-muted-200 dark:border-muted-700 hover:border-primary-500 dark:hover:border-primary-500 text-muted-400 dark:text-muted-600 hover:text-primary-500 dark:hover:text-primary-500 size-10 rounded-full border-2 border-dashed transition-all duration-300 hover:border-solid"
+                  data-nui-tooltip="مدیریت صندلی‌های طرح"
+                >
+                  <Icon name="lucide:edit-3" class="size-4" />
+                </button>
+              </div>
+            </div>
+          </BaseCard>
+          <BaseCard class="p-6">
+            <div class="mb-8 flex items-center justify-between">
+              <BaseHeading
+                as="h4"
+                size="sm"
+                weight="semibold"
+              >
+                گزینه‌های صورتحساب
+              </BaseHeading>
+              <div>
+                <BaseText
+                  size="xs"
+                  lead="tight"
+                  class="text-muted-400"
+                />
+              </div>
+            </div>
+            <div class="space-y-6">
+              <BaseSwitchBall
+                id="billing-ball-1"
+                :model-value="false"
+                label="صدور فاکتور"
+                sublabel="فاکتورهای جدید را به صندوق ورودی من ارسال کنید"
+                color="primary"
+              />
+              <BaseSwitchBall
+                id="billing-ball-2"
+                :model-value="true"
+                label="هشدارها"
+                sublabel="قبل از پایان دوره صورت‌حساب به من هشدار دهید"
+                color="primary"
+              />
+              <BaseSwitchBall
+                id="billing-ball-3"
+                :model-value="true"
+                label="گزارش‌ها"
+                sublabel="گزارش‌های ماهانه را به صندوق ورودی من ارسال کنید"
+                color="primary"
+              />
+            </div>
+          </BaseCard>
+          <BaseCard class="p-6">
+            <div class="mb-8 flex items-center justify-between">
+              <BaseHeading
+                as="h4"
+                size="sm"
+                weight="semibold"
+              >
+                چرخه صورتحساب
+              </BaseHeading>
+              <div>
+                <NuxtLink
+                  class="text-primary-500 font-sans text-xs underline underline-offset-4"
+                >
+                  فاکتورهای من
+                </NuxtLink>
+              </div>
+            </div>
+            <div class="flex items-center gap-6">
+              <BaseRadio
+                id="demo-cycle-1"
+                v-model="billingCycles"
+                name="monthly_billing"
+                label="ماهانه"
+                value="monthly"
+                color="primary"
+              />
+
+              <BaseRadio
+                id="demo-cycle-2"
+                v-model="billingCycles"
+                name="semestral_billing"
+                label="نیم‌سالانه"
+                value="semestral"
+                color="primary"
+              />
+
+              <BaseRadio
+                id="demo-cycle-3"
+                v-model="billingCycles"
+                name="yearly_billing"
+                label="سالانه"
+                value="yearly"
+                color="primary"
+              />
+            </div>
+          </BaseCard>
+        </div>
+      </div>
+      <div class="ltablet:col-span-5 col-span-12 sm:col-span-6 lg:col-span-5">
+        <BaseCard class="p-6">
+          <div class="mb-4">
+            <BaseHeading
+              as="h4"
+              size="sm"
+              weight="semibold"
+            >
+              اطلاعات پرداخت
+            </BaseHeading>
+          </div>
+          <DemoCreditCardReal
+            :name="cardInfo.name"
+            :number="cardInfo.number"
+            :expiry-month="cardInfo.expiryMonth"
+            :expiry-year="cardInfo.expiryMonth"
+            :cvc="cardInfo.cvc"
+          />
+          <div class="mt-5">
+            <form>
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12">
+                  <BaseInput
+                    v-model="cardInfo.name"
+                    label="نام روی کارت"
+                    placeholder="مثال: قاسم قاسمی"
+                  />
+                </div>
+                <div class="col-span-12">
+                  <BaseInput
+                    v-model="cardInfo.number"
+                    label="شماره کارت"
+                    placeholder="مثال: ۴۲۴۲ ۴۲۴۲ ۴۲۴۲ ۴۲۴۲"
+                  />
+                </div>
+                <div class="col-span-12">
+                  <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <BaseSelect
+                        v-model="cardInfo.expiryMonth"
+                        label="ماه انقضا"
+                      >
+                        <option value="">
+                          ماه
+                        </option>
+                        <option value="01">
+                          01
+                        </option>
+                        <option value="02">
+                          02
+                        </option>
+                        <option value="03">
+                          03
+                        </option>
+                        <option value="04">
+                          04
+                        </option>
+                        <option value="05">
+                          05
+                        </option>
+                        <option value="06">
+                          06
+                        </option>
+                        <option value="07">
+                          07
+                        </option>
+                        <option value="08">
+                          08
+                        </option>
+                        <option value="09">
+                          09
+                        </option>
+                        <option value="10">
+                          10
+                        </option>
+                        <option value="11">
+                          11
+                        </option>
+                        <option value="12">
+                          12
+                        </option>
+                      </BaseSelect>
+                    </div>
+                    <div>
+                      <BaseSelect
+                        v-model="cardInfo.expiryYear"
+                        label="سال انقضا"
+                      >
+                        <option value="">
+                          سال
+                        </option>
+                        <option value="03">
+                          03
+                        </option>
+                        <option value="04">
+                          04
+                        </option>
+                        <option value="05">
+                          05
+                        </option>
+                        <option value="06">
+                          06
+                        </option>
+                        <option value="07">
+                          07
+                        </option>
+                        <option value="08">
+                          08
+                        </option>
+                        <option value="09">
+                          09
+                        </option>
+                        <option value="10">
+                          10
+                        </option>
+                      </BaseSelect>
+                    </div>
+                    <div>
+                      <BaseInput
+                        v-model="cardInfo.cvc"
+                        label="CVC"
+                        placeholder="مثال: ۲۳۹"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
+    <TairoFormSave>
+      <BaseButton
+        type="submit"
+        color="primary"
+        class="w-full"
+      >
+        <span>ذخیره برای</span>
+        <span class="font-semibold">{{ selectedPlan?.price.monthly }} تومان</span>
+        <span>/ در ماه</span>
+      </BaseButton>
+    </TairoFormSave>
+  </form>
+</template>

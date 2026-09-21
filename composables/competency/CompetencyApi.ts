@@ -1,0 +1,220 @@
+export function CompetencyApi() {
+  const api = useApi()
+
+  // ===== نوع وظیفه =====
+  const OrganizationNewDutyType = async (_title: any, _status: any) => {
+    try {
+      const response = await api('/OrganizationNewDutyType', { method: 'POST', body: { title: _title, status: _status } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: e } }
+  }
+
+  const OrganizationGetDutyTypes = async () => {
+    try {
+      const response = await api('/OrganizationGetDutyTypes', { method: 'POST' })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateDutyType = async (_id: any, _title: any, _status: any) => {
+    try {
+      const response = await api('/OrganizationUpdateDutyType', { method: 'POST', body: { _id, title: _title, status: _status } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== وظیفه =====
+  const OrganizationNewDuty = async (_title: any, _type: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationNewDuty', { method: 'POST', body: { title: _title, type: _type, status: _status, description: _description } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationGetDuties = async () => {
+    try {
+      const response = await api('/OrganizationGetDuties', { method: 'POST' })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateDuty = async (_id: any, _title: any, _type: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationUpdateDuty', { method: 'POST', body: { _id, title: _title, type: _type, status: _status, description: _description } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== تکلیف =====
+  const OrganizationGetTasks = async (_duty_code: any) => {
+    try {
+      const response = await api('/OrganizationGetTasks', { method: 'POST', body: { duty_code: _duty_code } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationNewTask = async (_duty_code: any, _title: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationNewTask', { method: 'POST', body: { duty_code: _duty_code, title: _title, status: _status, description: _description } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateTask = async (_id: any, _duty_code: any, _title: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationUpdateTask', { method: 'POST', body: { _id, duty_code: _duty_code, title: _title, status: _status, description: _description } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== فعالیت =====
+  const OrganizationGetActivities = async (_task_code: any) => {
+    try {
+      const response = await api('/OrganizationGetActivities', { method: 'POST', body: { task_code: _task_code } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationNewActivity = async (_task_code: any, _title: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationNewActivity', { method: 'POST', body: { task_code: _task_code, title: _title, status: _status, description: _description } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateActivity = async (_id: any, _task_code: any, _title: any, _status: any, _description: any) => {
+    try {
+      const response = await api('/OrganizationUpdateActivity', { method: 'POST', body: { _id, task_code: _task_code, title: _title, status: _status, description: _description } })
+      return { result: true, response }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== نوع شایستگی =====
+  const OrganizationNewCompetencyType = async (_title: any, _status: any) => {
+    try {
+      const response = await api('/OrganizationNewCompetencyType', { method: 'POST', body: { title: _title, status: _status } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationGetCompetencyTypes = async () => {
+    try {
+      const response = await api('/OrganizationGetCompetencyTypes', { method: 'POST' })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateCompetencyType = async (_id: any, _title: any, _status: any) => {
+    try {
+      const response = await api('/OrganizationUpdateCompetencyType', { method: 'POST', body: { _id, title: _title, status: _status } })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== سطح شایستگی =====
+  const OrganizationGetCompetencyLevel = async () => {
+    try {
+      const response = await api('/OrganizationGetCompetencyLevel', { method: 'POST' })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationNewCompetencyLevel = async (_code: number, _title: string, _status: boolean) => {
+    try {
+      const response = await api('/OrganizationNewCompetencyLevel', { 
+        method: 'POST', 
+        body: { code: _code, title: _title, status: _status } 
+      })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateCompetencyLevel = async (_id: string, _code: number, _title: string, _status: boolean) => {
+    try {
+      const response = await api('/OrganizationUpdateCompetencyLevel', { 
+        method: 'POST', 
+        body: { _id, code: _code, title: _title, status: _status } 
+      })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  // ===== شایستگی =====
+  const OrganizationGetCompetency = async () => {
+    try {
+      const response = await api('/OrganizationGetCompetency', { method: 'POST' })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationNewCompetency = async (
+    _title: string,
+    _type: string,
+    _level: string,
+    _description: string,
+    _status: boolean
+  ) => {
+    try {
+      const response = await api('/OrganizationNewCompetency', { 
+        method: 'POST', 
+        body: { title: _title, type: _type, level: _level, description: _description, status: _status } 
+      })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  const OrganizationUpdateCompetency = async (
+    _id: string,
+    _title: string,
+    _type: string,
+    _level: string,
+    _description: string,
+    _status: boolean
+  ) => {
+    try {
+      const response = await api('/OrganizationUpdateCompetency', { 
+        method: 'POST', 
+        body: { _id, title: _title, type: _type, level: _level, description: _description, status: _status } 
+      })
+      if (response.result === 'OK') return { result: true, response }
+      return { result: false, msg: response.msg_description }
+    } catch (e) { return { result: false, msg: 'خطا در ارتباط با سرور' } }
+  }
+
+  return {
+    OrganizationNewDutyType,
+    OrganizationGetDutyTypes,
+    OrganizationUpdateDutyType,
+    OrganizationNewDuty,
+    OrganizationGetDuties,
+    OrganizationUpdateDuty,
+    OrganizationGetTasks,
+    OrganizationNewTask,
+    OrganizationUpdateTask,
+    OrganizationGetActivities,
+    OrganizationNewActivity,
+    OrganizationUpdateActivity,
+    OrganizationNewCompetencyType,
+    OrganizationGetCompetencyTypes,
+    OrganizationUpdateCompetencyType,
+    OrganizationNewCompetencyLevel,
+    OrganizationGetCompetencyLevel,
+    OrganizationUpdateCompetencyLevel,
+    OrganizationGetCompetency,
+    OrganizationNewCompetency,
+    OrganizationUpdateCompetency
+  }
+}

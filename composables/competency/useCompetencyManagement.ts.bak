@@ -1,0 +1,235 @@
+import { ref, computed } from 'vue'
+import Swal from 'sweetalert2'
+
+export const useCompetencyManagement = () => {
+  const competencyTypes = ref<any[]>([])
+  const competencyLvls = ref<any[]>([])
+  const competencies = ref<any[]>([])
+  const competencySearchQuery = ref('')
+
+  const isCompTypeModalOpen = ref(false)
+  const isCompTypeEditMode = ref(false)
+  const compTypeForm = ref({ _id: '', name: '' })
+
+  const isCompLvlModalOpen = ref(false)
+  const isCompLvlEditMode = ref(false)
+  const compLvlForm = ref({ _id: '', code: null as number | null, name: '' })
+
+  const isCompModalOpen = ref(false)
+  const isCompEditMode = ref(false)
+  const compForm = ref({ _id: '', title: '', typeId: '', lvlId: '', description: '', isActive: true })
+
+  const filteredCompetencies = computed(() => {
+    let list = competencies.value
+    if (competencySearchQuery.value.trim()) {
+      list = list.filter(c =>
+        c.title?.toLowerCase().includes(competencySearchQuery.value.toLowerCase())
+      )
+    }
+    return list
+  })
+
+  const openNewCompTypeModal = () => {
+    isCompTypeEditMode.value = false
+    compTypeForm.value = { _id: 'type_' + Date.now(), name: '' }
+    isCompTypeModalOpen.value = true
+  }
+
+  const selectCompTypeForEdit = (type: any) => {
+    isCompTypeEditMode.value = true
+    compTypeForm.value = { ...type }
+  }
+
+  const saveCompType = async (loadData: () => Promise<void>) => {
+    if (!compTypeForm.value.name.trim()) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: 'نوع شایستگی الزامی است.' })
+      return
+    }
+    try {
+      const action = isCompTypeEditMode.value ? 'update' : 'create'
+      await $fetch('/api/competencyTypes', { method: 'POST', body: { action, competencyType: compTypeForm.value } })
+      Swal.fire({
+        icon: 'success',
+        title: 'موفقیت‌آمیز',
+        text: 'نوع شایستگی با موفقیت ثبت شد.',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      compTypeForm.value = { _id: 'type_' + Date.now(), name: '' }
+      isCompTypeEditMode.value = false
+      await loadData()
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: err.message })
+    }
+  }
+
+  const deleteCompType = async (type: any, loadData: () => Promise<void>) => {
+    Swal.fire({
+      title: 'آیا مطمئن هستید؟',
+      text: `آیا از حذف "${type.name}" مطمئن هستید؟`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#EF4444',
+      confirmButtonText: 'بله',
+      cancelButtonText: 'خیر'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await $fetch('/api/competencyTypes', { method: 'POST', body: { action: 'delete', competencyType: type } })
+        Swal.fire('حذف شد!', 'نوع شایستگی با موفقیت حذف گردید.', 'success')
+        await loadData()
+      }
+    })
+  }
+
+  const openNewCompLvlModal = () => {
+    isCompLvlEditMode.value = false
+    compLvlForm.value = { _id: 'lvl_' + Date.now(), code: null, name: '' }
+    isCompLvlModalOpen.value = true
+  }
+
+  const selectCompLvlForEdit = (lvl: any) => {
+    isCompLvlEditMode.value = true
+    compLvlForm.value = { ...lvl }
+  }
+
+  const saveCompLvl = async (loadData: () => Promise<void>) => {
+    if (compLvlForm.value.code === null || compLvlForm.value.code === undefined || !compLvlForm.value.name.trim()) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: 'کد سطح و تعریف سطح الزامی است.' })
+      return
+    }
+
+    const isDuplicate = competencyLvls.value.some(
+      lvl => Number(lvl.code) === Number(compLvlForm.value.code) && lvl._id !== compLvlForm.value._id
+    )
+    if (isDuplicate) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: `کد سطح "${compLvlForm.value.code}" قبلاً ثبت شده است.` })
+      return
+    }
+
+    try {
+      const action = isCompLvlEditMode.value ? 'update' : 'create'
+      await $fetch('/api/competencyLvls', { method: 'POST', body: { action, competencyLvl: compLvlForm.value } })
+      Swal.fire({
+        icon: 'success',
+        title: 'موفقیت‌آمیز',
+        text: 'سطح شایستگی با موفقیت ثبت شد.',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      compLvlForm.value = { _id: 'lvl_' + Date.now(), code: null, name: '' }
+      isCompLvlEditMode.value = false
+      await loadData()
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: err.message })
+    }
+  }
+
+  const deleteCompLvl = async (lvl: any, loadData: () => Promise<void>) => {
+    Swal.fire({
+      title: 'آیا مطمئن هستید؟',
+      text: `آیا از حذف "${lvl.name}" مطمئن هستید؟`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#EF4444',
+      confirmButtonText: 'بله',
+      cancelButtonText: 'خیر'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await $fetch('/api/competencyLvls', { method: 'POST', body: { action: 'delete', competencyLvl: lvl } })
+        Swal.fire('حذف شد!', 'سطح شایستگی با موفقیت حذف گردید.', 'success')
+        await loadData()
+      }
+    })
+  }
+
+  const openNewCompModal = () => {
+    isCompEditMode.value = false
+    compForm.value = {
+      _id: 'comp_' + Date.now(),
+      title: '',
+      typeId: competencyTypes.value[0]?.name || '',
+      lvlId: competencyLvls.value[0]?.name || '',
+      description: '',
+      isActive: true
+    }
+    isCompModalOpen.value = true
+  }
+
+  const openEditCompModal = (comp: any) => {
+    isCompEditMode.value = true
+    compForm.value = { ...comp }
+    isCompModalOpen.value = true
+  }
+
+  const saveCompetency = async (loadData: () => Promise<void>) => {
+    if (!compForm.value.title.trim() || !compForm.value.typeId || !compForm.value.lvlId) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: 'شرح، نوع و سطح شایستگی الزامی هستند.' })
+      return
+    }
+    try {
+      const action = isCompEditMode.value ? 'update' : 'create'
+      await $fetch('/api/competencies', { method: 'POST', body: { action, competency: compForm.value } })
+      Swal.fire({
+        icon: 'success',
+        title: 'موفقیت‌آمیز',
+        text: 'شایستگی ذخیره شد.',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      isCompModalOpen.value = false
+      await loadData()
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'خطا', text: err.message })
+    }
+  }
+
+  const deleteCompetency = async (comp: any, loadData: () => Promise<void>) => {
+    Swal.fire({
+      title: 'آیا مطمئن هستید؟',
+      text: `حذف شایستگی "${comp.title}"`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#EF4444',
+      confirmButtonText: 'بله',
+      cancelButtonText: 'خیر'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await $fetch('/api/competencies', { method: 'POST', body: { action: 'delete', competency: comp } })
+        Swal.fire('حذف شد!', 'شایستگی با موفقیت حذف گردید.', 'success')
+        await loadData()
+      }
+    })
+  }
+
+  return {
+    competencyTypes,
+    competencyLvls,
+    competencies,
+    competencySearchQuery,
+    isCompTypeModalOpen,
+    isCompTypeEditMode,
+    compTypeForm,
+    isCompLvlModalOpen,
+    isCompLvlEditMode,
+    compLvlForm,
+    isCompModalOpen,
+    isCompEditMode,
+    compForm,
+    filteredCompetencies,
+    openNewCompTypeModal,
+    selectCompTypeForEdit,
+    saveCompType,
+    deleteCompType,
+    openNewCompLvlModal,
+    selectCompLvlForEdit,
+    saveCompLvl,
+    deleteCompLvl,
+    openNewCompModal,
+    openEditCompModal,
+    saveCompetency,
+    deleteCompetency
+  }
+}

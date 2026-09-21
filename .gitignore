@@ -1,0 +1,17 @@
+node_modules
+.nuxt
+pages/Competency
+pages/dashboard.vue
+pages/home.vue
+pages/index.vue
+pages/layouts.vue
+pages/starter-collapse.vue
+pages/starter-sidebar.vue
+pages/test-error.vue
+pages/test.vue
+pages/wizard.vue
+pages/wizard
+public
+Requirements
+server/api
+server/utils
