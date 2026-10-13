@@ -6,7 +6,7 @@ import {
   useSurveyWizard,
   type SurveyCompletionPayload
 } from '~/composables/CommerceSurvey/useSurveyWizard'
-import { groupLabel, typeLabel, type SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
 import SurveyStepper from './SurveyStepper.vue'
 import SurveyStepPanel from './SurveyStepPanel.vue'
 
@@ -147,22 +147,12 @@ function confirmSubmit() {
         <p v-if="surveyDescription" class="text-sm text-muted-500 dark:text-muted-400 mt-1 leading-7">{{ surveyDescription }}</p>
       </div>
 
-      <!-- نوار خلاصه انتخاب -->
+      <!-- نوار پیشرفت: بدون تکرار انتخاب‌های فرم ورود (تمیز و متمرکز بر پرسشنامه) -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="chip">
-            <Icon icon="lucide:package" class="w-3.5 h-3.5" />
-            گروه: <b>{{ groupLabel(selection.group) }}</b>
-          </span>
-          <span class="chip">
-            <Icon :icon="selection.type === 'export' ? 'lucide:globe' : 'lucide:map-pin'" class="w-3.5 h-3.5" />
-            نوع: <b>{{ typeLabel(selection.type) }}</b>
-          </span>
-          <span class="chip chip--muted">
-            <Icon icon="lucide:list-checks" class="w-3.5 h-3.5" />
-            {{ wizard.answeredCount.value }} / {{ wizard.totalAnswerable.value }} پاسخ
-          </span>
-        </div>
+        <span class="chip chip--muted">
+          <Icon icon="lucide:list-checks" class="w-3.5 h-3.5" />
+          {{ wizard.answeredCount.value }} / {{ wizard.totalAnswerable.value }} پاسخ
+        </span>
         <button
           type="button"
           class="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline underline-offset-4 flex items-center gap-1"

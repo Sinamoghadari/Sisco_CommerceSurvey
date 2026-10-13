@@ -4,8 +4,9 @@ import { computed, ref } from 'vue'
 /**
  * گروه امتیازدهی داینامیک – طیف عددی بین range_min و range_max
  * (مثلاً ۰ تا ۱۰، ۱ تا ۱۰، یا بازه‌های منفی مثل ۲۰- تا ۲۰+).
- * هر دو سر بازه و مقادیر میانی به‌صورت دکمه رندر می‌شوند؛ برای بازه‌های پهن
- * چیدمان فشرده + اسکرول افقی فعال می‌شود.
+ * چیدمان راست‌به‌چپ (RTL): کمترین مقدار (range_min) در سمت راست و
+ * بیشترین مقدار (range_max) در سمت چپ قرار می‌گیرد.
+ * برای بازه‌های پهن چیدمان فشرده + اسکرول افقی فعال می‌شود.
  */
 const props = withDefaults(
   defineProps<{
@@ -94,7 +95,7 @@ function onKey(e: KeyboardEvent) {
           compact ? 'min-w-max' : 'w-full justify-between gap-0.5',
           invalid ? 'border-red-300 bg-red-50/40 dark:border-red-800 dark:bg-red-900/10' : 'border-transparent'
         ]"
-        dir="ltr"
+        dir="rtl"
       >
         <button
           v-for="n in items"
