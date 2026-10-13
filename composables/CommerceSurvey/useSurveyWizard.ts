@@ -1,120 +1,202 @@
 import { computed, reactive, ref, watch } from 'vue'
-import type { SurveyQuestion, SurveyStep, SurveySubQuestion } from './useSurveyDefinition'
+import type { SurveyCategoryGroup, SurveyQuestion } from './useSurveyApi'
+import type { SurveySelection } from './useSurveyDefinition'
 
-export type AnswerValue = number | string | string[] | null
+export type AnswerValue = number | string | null
+export type FollowUpAnswer = number | string
 
-export interface SurveyAnswers {
-  [questionId: string]: AnswerValue
+/** خروجی نهایی نظرسنجی (فقط در حافظه‌ی کلاینت نگهداری می‌شود) */
+export interface SurveyCompletionPayload {
+  selection: SurveySelection
+  categories: Array<{
+    id: string
+    title: string
+    questions: Array<{ _id: string; text: string; selected: AnswerValue }>
+  }>
+  followUps: Record<string, FollowUpAnswer>
+  completedAt: number
 }
 
 /**
- * مدیریت وضعیت ویزارد نظرسنجی: پاسخ‌ها، استپ فعلی، اعتبارسنجی و ناوبری.
- *
- * سؤال‌های تکمیلی (شرطی):
- * - فقط وقتی «نمایان» هستند که پاسخ سؤال اصلی عددی <= آستانه‌ی سؤال تکمیلی باشد.
- * - اعتبارسنجی فقط روی سؤال‌های نمایان اعمال می‌شود.
- * - با تغییر امتیاز سؤال اصلی به بالاتر از آستانه، پاسخِ ذخیره‌شده‌ی
- *   سؤال تکمیلی به‌طور خودکار پاک می‌شود (مدیریت وضعیت تمیز).
- *
- * کاملاً سمت کلاینت و بدون هیچ‌گونه فراخوانی API.
+ * ارزیابی شرط نمایش سؤال تکمیلی بر اساس امتیاز انتخاب‌شده.
+ * عملگرهای استاندارد عددی را پشتیبانی می‌کند:
+ *   less_than (<) ، less_than_or_equal (<=) ، greater_than (>) ،
+ *   greater_than_or_equal (>=) ، equal (==)
+ * تابع خالص است و هم در کامپوزیبل و هم در کامپوننت سؤال استفاده می‌شود.
  */
-export function useSurveyWizard(steps: () => SurveyStep[]) {
-  const currentIndex = ref(0)
-  const answers = reactive<SurveyAnswers>({})
-  const touchedSteps = reactive<Record<string, boolean>>({})
-  const direction = ref<'forward' | 'backward'>('forward')
+export function isFollowUpConditionMet(
+  q: Pick<SurveyQuestion, 'selected' | 'conditional_follow_up'>
+): boolean {
+  const fu = q.conditional_follow_up
+  if (!fu || !fu.enabled) return false
+  const v = q.selected
+  if (typeof v !== 'number' || !Number.isFinite(v)) return false
+  switch (fu.operator) {
+    case 'less_than':
+      return v < fu.threshold
+    case 'less_than_or_equal':
+      return v <= fu.threshold
+    case 'greater_than':
+      return v > fu.threshold
+    case 'greater_than_or_equal':
+      return v >= fu.threshold
+    case 'equal':
+      return v === fu.threshold
+    default:
+      return false
+  }
+}
 
-  const stepList = computed(() => steps())
-  const currentStep = computed(() => stepList.value[currentIndex.value])
+/**
+ * موتور وضعیت ویزارد پرسشنامه‌ی داینامیک.
+ * ورودی، گروه‌های دسته‌بندی دریافت‌شده از API است؛ پاسخ‌ها روی فیلد
+ * `selected` هر سؤال و پاسخ سؤال‌های تکمیلی در نگه‌دارنده‌ی جداگانه
+ * (کلید: _id سؤال) ذخیره می‌شود.
+ * کاملاً سمت کلاینت و بدون هیچ فراخوانی ثبت (endpoint ثبت در این فاز تعریف نشده است).
+ */
+export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
+  const currentIndex = ref(0)
+  const direction = ref<'forward' | 'backward'>('forward')
+  const touchedGroups = reactive<Record<string, boolean>>({})
+  /** پاسخ سؤال‌های تکمیلی: کلید = _id سؤال اصلی */
+  const followUps = reactive<Record<string, FollowUpAnswer>>({})
+
+  /** گروه‌های نمایشی: حذف سؤال‌های غیرفعال/حذف‌شده + مرتب‌سازی صعودی بر اساس order */
+  const displayGroups = computed<SurveyCategoryGroup[]>(() =>
+    (groups() ?? []).map(g => ({
+      category: g.category,
+      questions: (g.questions ?? [])
+        .filter(q => q.status !== false && q.delete !== true)
+        .slice()
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    }))
+  )
+
+  const stepList = computed(() => displayGroups.value)
+  const currentGroup = computed(() => stepList.value[currentIndex.value])
   const isFirst = computed(() => currentIndex.value === 0)
   const isLast = computed(() => currentIndex.value === stepList.value.length - 1)
   const progress = computed(() =>
     stepList.value.length ? Math.round(((currentIndex.value + 1) / stepList.value.length) * 100) : 0
   )
 
-  // نگاشت شناسه‌ی سؤال به تعریف آن (برای دسترسی سریع به سؤال‌های تکمیلی)
-  const questionIndex = computed<Record<string, SurveyQuestion>>(() => {
-    const map: Record<string, SurveyQuestion> = {}
-    for (const step of stepList.value) {
-      for (const q of step.questions) map[q.id] = q
-    }
-    return map
-  })
+  /** استپ‌های استپر بالا – کاملاً از داده‌ی API ساخته می‌شوند */
+  const stepperSteps = computed(() =>
+    stepList.value.map((g, i) => ({
+      id: g.category?.strategy_node_id || `group-${i}`,
+      title: g.category?.strategy_node_title || `بخش ${i + 1}`
+    }))
+  )
 
-  // اگر ساختار استپ‌ها تغییر کند (مثلاً تغییر محصول) پاسخ‌ها ریست می‌شوند
+  const totalDisplayQuestions = computed(() =>
+    stepList.value.reduce((acc, g) => acc + g.questions.length, 0)
+  )
+
+  // با جایگزینی داده (refetch) وضعیت ویزارد از صفر ساخته می‌شود
   watch(
-    () => stepList.value.map(s => s.id).join('|'),
+    () => stepList.value.map(g => g.category?.strategy_node_id ?? '').join('|'),
     () => reset()
   )
 
-  function isAnswered(q: Pick<SurveyQuestion, 'id'>): boolean {
-    const v = answers[q.id]
+  /* ------------------------------- پاسخ‌ها ------------------------------- */
+
+  function isQuestionAnswered(q: SurveyQuestion): boolean {
+    const v = q.selected
     if (v === null || v === undefined) return false
-    if (Array.isArray(v)) return v.length > 0
+    if (typeof v === 'number') return Number.isFinite(v)
     if (typeof v === 'string') return v.trim().length > 0
-    return true
+    return false
   }
 
-  /** آیا سؤال تکمیلیِ مشخص‌شده باید نمایش داده شود؟ (امتیاز والد <= آستانه) */
-  function isSubQuestionVisible(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
-    const v = answers[q.id]
-    return typeof v === 'number' && v <= sub.showWhenScoreAtMost
-  }
-
-  function isSubAnswered(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
-    return isAnswered({ id: sub.id })
-  }
-
-  /** آیا خودِ سؤال اصلی بی‌پاسخ است؟ */
   function isQuestionInvalid(q: SurveyQuestion): boolean {
-    return Boolean(q.required) && !isAnswered(q)
+    return Boolean(q.required) && !isQuestionAnswered(q)
+  }
+
+  const isFollowUpVisible = (q: SurveyQuestion) => isFollowUpConditionMet(q)
+
+  function isFollowUpAnswered(q: SurveyQuestion): boolean {
+    const v = followUps[q._id]
+    if (v === null || v === undefined) return false
+    if (typeof v === 'number') return Number.isFinite(v)
+    return String(v).trim().length > 0
   }
 
   /** سؤال تکمیلی فقط وقتی الزامی است که نمایان باشد */
-  function isSubInvalid(q: SurveyQuestion, sub: SurveySubQuestion): boolean {
-    return Boolean(sub.required) && isSubQuestionVisible(q, sub) && !isSubAnswered(q, sub)
+  function isFollowUpInvalid(q: SurveyQuestion): boolean {
+    const fu = q.conditional_follow_up
+    return Boolean(fu?.enabled && fu.required) && isFollowUpVisible(q) && !isFollowUpAnswered(q)
   }
 
-  /** تمام کلیدهای بی‌پاسخِ یک سؤال (سؤال اصلی + سؤال‌های تکمیلی نمایان) */
+  /** تمام کلیدهای بی‌پاسخِ یک سؤال (سؤال اصلی + سؤال تکمیلیِ نمایان) */
   function questionInvalidKeys(q: SurveyQuestion): string[] {
     const keys: string[] = []
-    if (isQuestionInvalid(q)) keys.push(q.id)
-    for (const sub of q.subQuestions ?? []) {
-      if (isSubInvalid(q, sub)) keys.push(sub.id)
-    }
+    if (isQuestionInvalid(q)) keys.push(q._id)
+    if (isFollowUpInvalid(q)) keys.push(`${q._id}__follow_up`)
     return keys
   }
 
-  function stepErrors(step: SurveyStep): string[] {
-    return step.questions.flatMap(questionInvalidKeys)
+  function groupErrors(g: SurveyCategoryGroup): string[] {
+    return (g.questions ?? []).flatMap(questionInvalidKeys)
   }
 
-  const currentErrors = computed(() => stepErrors(currentStep.value))
-  const showErrors = computed(() => Boolean(touchedSteps[currentStep.value?.id]))
+  const currentErrors = computed(() => (currentGroup.value ? groupErrors(currentGroup.value) : []))
+  const showErrors = computed(() => {
+    const id = currentGroup.value?.category?.strategy_node_id
+    return id ? Boolean(touchedGroups[id]) : false
+  })
 
   function stepStatus(index: number): 'done' | 'active' | 'pending' | 'error' {
-    const step = stepList.value[index]
+    const group = stepList.value[index]
     if (index === currentIndex.value) return 'active'
-    if (index < currentIndex.value) return stepErrors(step).length ? 'error' : 'done'
+    if (index < currentIndex.value) return groupErrors(group).length ? 'error' : 'done'
     return 'pending'
   }
 
-  function setAnswer(id: string, value: AnswerValue) {
-    answers[id] = value
-
-    // پاک‌سازی پاسخ سؤال‌های تکمیلیِ شرطی که با تغییر امتیاز والد نمایان نیستند
-    const parent = questionIndex.value[id]
-    if (parent?.subQuestions?.length) {
-      for (const sub of parent.subQuestions) {
-        if (sub.id in answers && !isSubQuestionVisible(parent, sub)) {
-          delete answers[sub.id]
-        }
-      }
+  function setAnswer(q: SurveyQuestion, value: AnswerValue) {
+    q.selected = value
+    // اگر با تغییر امتیاز، سؤال تکمیلی دیگر نمایان نیست، پاسخ قدیمی آن پاک می‌شود
+    if (q._id in followUps && !isFollowUpVisible(q)) {
+      delete followUps[q._id]
     }
   }
 
+  function setFollowUp(q: SurveyQuestion, value: FollowUpAnswer) {
+    followUps[q._id] = value
+  }
+
+  /* ------------------------------- شمارنده‌ها ----------------------------- */
+
+  const answeredCount = computed(() =>
+    stepList.value.reduce(
+      (acc, g) =>
+        acc +
+        g.questions.reduce(
+          (qAcc, q) =>
+            qAcc +
+            (isQuestionAnswered(q) ? 1 : 0) +
+            (isFollowUpVisible(q) && isFollowUpAnswered(q) ? 1 : 0),
+          0
+        ),
+      0
+    )
+  )
+
+  const totalAnswerable = computed(() =>
+    stepList.value.reduce(
+      (acc, g) =>
+        acc +
+        g.questions.reduce(
+          (qAcc, q) => qAcc + 1 + (isFollowUpVisible(q) ? 1 : 0),
+          0
+        ),
+      0
+    )
+  )
+
+  /* ------------------------------- ناوبری -------------------------------- */
+
   function next(): boolean {
-    touchedSteps[currentStep.value.id] = true
+    touchCurrent()
     if (currentErrors.value.length) return false
     if (!isLast.value) {
       direction.value = 'forward'
@@ -131,13 +213,19 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
     scrollTop()
   }
 
+  function touchCurrent() {
+    const id = currentGroup.value?.category?.strategy_node_id
+    if (id) touchedGroups[id] = true
+  }
+
   function goTo(index: number) {
-    // فقط پیمایش به استپ‌های قبلی یا استپ‌های تکمیل‌شده مجاز است
+    // فقط پیمایش به بخش‌های قبلی یا تکمیل‌شده مجاز است
     if (index < 0 || index >= stepList.value.length) return
     if (index > currentIndex.value) {
       for (let i = currentIndex.value; i < index; i++) {
-        touchedSteps[stepList.value[i].id] = true
-        if (stepErrors(stepList.value[i]).length) {
+        const id = stepList.value[i].category?.strategy_node_id
+        if (id) touchedGroups[id] = true
+        if (groupErrors(stepList.value[i]).length) {
           currentIndex.value = i
           scrollTop()
           return
@@ -151,9 +239,10 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
 
   function validateAll(): boolean {
     let firstInvalid = -1
-    stepList.value.forEach((s, i) => {
-      touchedSteps[s.id] = true
-      if (firstInvalid === -1 && stepErrors(s).length) firstInvalid = i
+    stepList.value.forEach((g, i) => {
+      const id = g.category?.strategy_node_id
+      if (id) touchedGroups[id] = true
+      if (firstInvalid === -1 && groupErrors(g).length) firstInvalid = i
     })
     if (firstInvalid !== -1) {
       direction.value = firstInvalid > currentIndex.value ? 'forward' : 'backward'
@@ -165,10 +254,31 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
   }
 
   function reset() {
-    Object.keys(answers).forEach(k => delete answers[k])
-    Object.keys(touchedSteps).forEach(k => delete touchedSteps[k])
+    for (const g of stepList.value) {
+      for (const q of g.questions) q.selected = null
+    }
+    Object.keys(followUps).forEach(k => delete followUps[k])
+    Object.keys(touchedGroups).forEach(k => delete touchedGroups[k])
     currentIndex.value = 0
     direction.value = 'forward'
+  }
+
+  /** ساخت خروجی نهایی برای نگهداری محلی (بدون ارسال به سرور) */
+  function buildCompletionPayload(selection: SurveySelection): SurveyCompletionPayload {
+    return {
+      selection: { ...selection },
+      categories: stepList.value.map(g => ({
+        id: g.category?.strategy_node_id ?? '',
+        title: g.category?.strategy_node_title ?? '',
+        questions: g.questions.map(q => ({
+          _id: q._id,
+          text: q.text,
+          selected: (q.selected ?? null) as AnswerValue
+        }))
+      })),
+      followUps: { ...followUps },
+      completedAt: Date.now()
+    }
   }
 
   function scrollTop() {
@@ -178,28 +288,33 @@ export function useSurveyWizard(steps: () => SurveyStep[]) {
   }
 
   return {
-    steps: stepList,
+    displayGroups,
+    stepperSteps,
     currentIndex,
-    currentStep,
-    answers,
+    currentGroup,
     direction,
     isFirst,
     isLast,
     progress,
+    totalDisplayQuestions,
+    answeredCount,
+    totalAnswerable,
     currentErrors,
     showErrors,
-    isAnswered,
-    isSubQuestionVisible,
-    isSubAnswered,
-    isSubInvalid,
+    followUps,
+    isQuestionAnswered,
     isQuestionInvalid,
-    questionInvalidKeys,
+    isFollowUpVisible,
+    isFollowUpAnswered,
+    isFollowUpInvalid,
     stepStatus,
     setAnswer,
+    setFollowUp,
     next,
     prev,
     goTo,
     validateAll,
+    buildCompletionPayload,
     reset
   }
 }

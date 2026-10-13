@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { SurveyStep } from '~/composables/CommerceSurvey/useSurveyDefinition'
-
 /**
- * نوار استپر افقی (دسکتاپ) + نوار پیشرفت فشرده (موبایل)
+ * استپر بالای ویزارد – کاملاً داینامیک از دسته‌های API ساخته می‌شود
+ * (عنوان هر استپ: category.strategy_node_title – شناسه: strategy_node_id).
+ * دایره‌ها شماره‌ی بخش را نشان می‌دهند و وضعیت انجام‌شدن/خطا دارند.
  */
 defineProps<{
-  steps: SurveyStep[]
+  steps: Array<{ id: string; title: string }>
   currentIndex: number
   progress: number
   status: (index: number) => 'done' | 'active' | 'pending' | 'error'
@@ -37,7 +37,7 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
 
         <button
           type="button"
-          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
+          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-sm transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
           :class="{
             'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/30 scale-110': status(i) === 'active',
             'bg-green-500 border-green-500 text-white': status(i) === 'done',
@@ -47,11 +47,12 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
             'cursor-default': i > currentIndex
           }"
           :aria-current="status(i) === 'active' ? 'step' : undefined"
+          :aria-label="step.title"
           @click="emit('select', i)"
         >
           <Icon v-if="status(i) === 'done'" icon="lucide:check" class="w-5 h-5" />
           <Icon v-else-if="status(i) === 'error'" icon="lucide:alert-triangle" class="w-4 h-4" />
-          <Icon v-else :icon="step.icon" class="w-5 h-5" />
+          <span v-else>{{ i + 1 }}</span>
         </button>
 
         <span
@@ -60,7 +61,7 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
         >
           {{ step.title }}
         </span>
-        <span class="text-[10px] text-muted-400">مرحله {{ step.order }}</span>
+        <span class="text-[10px] text-muted-400">بخش {{ i + 1 }}</span>
       </li>
     </ol>
 
@@ -68,12 +69,12 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
     <div class="md:hidden">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <span class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center">
-            <Icon :icon="steps[currentIndex]?.icon" class="w-4 h-4" />
+          <span class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">
+            {{ currentIndex + 1 }}
           </span>
           <div>
             <p class="text-sm font-bold text-gray-900 dark:text-white">{{ steps[currentIndex]?.title }}</p>
-            <p class="text-[11px] text-muted-400">مرحله {{ currentIndex + 1 }} از {{ steps.length }}</p>
+            <p class="text-[11px] text-muted-400">بخش {{ currentIndex + 1 }} از {{ steps.length }}</p>
           </div>
         </div>
         <span class="text-xs font-bold text-primary-600 dark:text-primary-400">{{ progress }}٪</span>

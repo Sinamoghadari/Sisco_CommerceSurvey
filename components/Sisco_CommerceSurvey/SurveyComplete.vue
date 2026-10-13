@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import {
-  groupLabel,
-  typeLabel,
-  type SurveySelection
-} from '~/composables/CommerceSurvey/useSurveyDefinition'
+import { groupLabel, typeLabel, type SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
 
 /**
- * صفحه‌ی پایان نظرسنجی – صرفاً نمایش تشکر (بدون هیچ ارسال به سرور)
+ * صفحه‌ی پایان نظرسنجی – نمایش تشکر و خلاصه‌ی اجرا
+ * (خروجی فقط در حافظه‌ی کلاینت نگهداری می‌شود؛ endpoint ثبت در این فاز تعریف نشده است)
  */
 defineProps<{
   selection: SurveySelection
-  overallScore: number | null
+  answeredCount: number
+  totalQuestions: number
 }>()
 
 const emit = defineEmits<{ (e: 'restart'): void }>()
@@ -40,8 +38,8 @@ const emit = defineEmits<{ (e: 'restart'): void }>()
             <p class="font-bold text-gray-900 dark:text-white">{{ typeLabel(selection.type) }}</p>
           </div>
           <div class="rounded-xl border border-muted-200 dark:border-muted-800 py-4">
-            <p class="text-[11px] text-muted-400 mb-1">امتیاز کلی</p>
-            <p class="font-bold text-primary-600 dark:text-primary-400" dir="ltr">{{ overallScore ?? '—' }} / 10</p>
+            <p class="text-[11px] text-muted-400 mb-1">پاسخ‌های ثبت‌شده</p>
+            <p class="font-bold text-primary-600 dark:text-primary-400" dir="ltr">{{ answeredCount }} / {{ totalQuestions }}</p>
           </div>
         </div>
 

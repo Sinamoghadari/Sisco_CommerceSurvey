@@ -13,9 +13,10 @@ definePageMeta({
 })
 
 /**
- * وضعیت صفحه (ماشین حالت سمت کلاینت) از کامپوزیبل اختصاصی مدیریت می‌شود:
+ * وضعیت صفحه از کامپوزیبل اختصاصی مدیریت می‌شود؛ پرسشنامه به‌صورت داینامیک
+ * از سرویس توزیع نظرسنجی (SurveyDistribution/Access) دریافت می‌شود:
  *  select   → فرم انتخاب گروه/نوع مشتری + راه‌های ارتباطی
- *  survey   → ویزارد چندمرحله‌ای (بخش «اطلاعات اولیه» حذف شده است)
+ *  survey   → دریافت از API و ویزارد چندمرحله‌ی داینامیک
  *  complete → صفحه‌ی تشکر
  */
 const {
@@ -23,12 +24,15 @@ const {
   selection,
   completion,
   runId,
-  overallScore,
+  survey,
   startSurvey,
+  retryFetch,
   changeSelection,
   completeSurvey,
   restart
 } = useCommerceSurvey()
+
+const { categories, title, description, alreadyAnswered, status, error } = survey
 
 function onSelectorSubmit(sel: SurveySelection) {
   startSurvey(sel)
@@ -57,12 +61,19 @@ function onSelectorSubmit(sel: SurveySelection) {
         </div>
       </div>
 
-      <!-- نمای پرسشنامه -->
+      <!-- نمای پرسشنامه‌ی داینامیک (از API) -->
       <SurveyWizard
         v-else-if="phase === 'survey' && selection"
         :key="`survey-${selection.group}-${selection.type}-${runId}`"
         :selection="selection"
+        :groups="categories"
+        :status="status"
+        :error-message="error"
+        :survey-title="title"
+        :survey-description="description"
+        :already-answered="alreadyAnswered"
         @complete="completeSurvey"
+        @retry="retryFetch"
         @change-selection="changeSelection"
       />
 
@@ -71,7 +82,8 @@ function onSelectorSubmit(sel: SurveySelection) {
         v-else-if="phase === 'complete' && completion"
         key="complete"
         :selection="completion.selection"
-        :overall-score="overallScore"
+        :answered-count="completion.answeredCount"
+        :total-questions="completion.totalQuestions"
         @restart="restart"
       />
     </Transition>

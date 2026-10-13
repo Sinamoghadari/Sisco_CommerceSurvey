@@ -1,58 +1,80 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SurveyQuestion, SurveySubQuestion } from '~/composables/CommerceSurvey/useSurveyDefinition'
-import type { AnswerValue, SurveyAnswers } from '~/composables/CommerceSurvey/useSurveyWizard'
+import type { SurveyQuestion, ConditionalFollowUp } from '~/composables/CommerceSurvey/useSurveyApi'
+import type { AnswerValue } from '~/composables/CommerceSurvey/useSurveyWizard'
+import { isFollowUpConditionMet } from '~/composables/CommerceSurvey/useSurveyWizard'
 import RatingGroup from './RatingGroup.vue'
 import ChoiceGroup from './ChoiceGroup.vue'
 
 /**
- * رندر یک سؤال بر اساس نوع آن (rating / score / single / multi / text / textarea)
- * و در صورت وجود، سؤال‌های تکمیلیِ شرطی که فقط با امتیاز ۷ یا کمتر
- * (showWhenScoreAtMost) بلافاصله نمایش داده می‌شوند.
+ * موتور رندر سؤال – کاملاً بر اساس داده‌ی API:
+ * - strategy_range_rating: طیف داینامیک بین range_min و range_max
+ * - single_choice: گزینه‌های رشته‌ای سؤال
+ * - text: ورودی متنی
+ * در صورت فعال بودن conditional_follow_up و برقراری شرط عددی، سؤال تکمیلی
+ * با انیمیشن نمایش داده می‌شود (تک‌انتخابی از options، طیف امتیاز یا ورودی متنی).
  */
 const props = withDefaults(
   defineProps<{
     question: SurveyQuestion
-    modelValue: AnswerValue
     index: number
+    /** پاسخ فعلی سؤال تکمیلی (کلید: _id سؤال) */
+    followUpValue?: number | string | null
     invalid?: boolean
-    /** پاسخ‌های فعلی (برای سؤال‌های تکمیلی) */
-    answers?: SurveyAnswers
-    /** تشخیص بی‌پاسخ بودن سؤال تکمیلی (شامل وضعیت showErrors) */
-    isSubInvalid?: (q: SurveyQuestion, sub: SurveySubQuestion) => boolean
+    followUpInvalid?: boolean
   }>(),
   {
+    followUpValue: null,
     invalid: false,
-    answers: () => ({}),
-    isSubInvalid: undefined
+    followUpInvalid: false
   }
 )
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', v: AnswerValue): void
-  (e: 'answer', id: string, v: AnswerValue): void
+  (e: 'select', v: AnswerValue): void
+  (e: 'follow-up', v: number | string): void
 }>()
 
-function update(v: AnswerValue) {
-  emit('update:modelValue', v)
+const fu = computed<ConditionalFollowUp | undefined>(() => props.question.conditional_follow_up)
+const fuVisible = computed(() => isFollowUpConditionMet(props.question))
+const fuOptions = computed(() => (fu.value?.options ?? []).map(o => ({ value: o, label: o })))
+
+const selectedNumber = computed(() =>
+  typeof props.question.selected === 'number' && Number.isFinite(props.question.selected)
+    ? props.question.selected
+    : null
+)
+
+const selectedString = computed(() =>
+  typeof props.question.selected === 'string' ? props.question.selected : null
+)
+
+const isAnswered = computed(
+  () =>
+    props.question.selected !== null &&
+    props.question.selected !== undefined &&
+    !(typeof props.question.selected === 'string' && !props.question.selected.trim())
+)
+
+function onSelect(v: AnswerValue) {
+  emit('select', v)
 }
 
-function updateSub(sub: SurveySubQuestion, v: AnswerValue) {
-  emit('answer', sub.id, v)
+function onTextArea(e: Event) {
+  emit('select', (e.target as HTMLTextAreaElement).value)
 }
 
-function subValue(sub: SurveySubQuestion): string | string[] | null {
-  const v = props.answers[sub.id]
-  if (v === null || v === undefined) return null
-  return Array.isArray(v) ? v : String(v)
+function onInput(e: Event) {
+  emit('select', (e.target as HTMLInputElement).value)
 }
 
-/** شرط نمایش: امتیاز داده شده و <= آستانه‌ی سؤال تکمیلی */
-function isVisible(sub: SurveySubQuestion): boolean {
-  return typeof props.modelValue === 'number' && props.modelValue <= sub.showWhenScoreAtMost
+function onFollowUp(v: number | string) {
+  emit('follow-up', v)
 }
 
-const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s => isVisible(s)))
+function onFollowUpText(e: Event) {
+  emit('follow-up', (e.target as HTMLTextAreaElement).value)
+}
 </script>
 
 <template>
@@ -64,71 +86,67 @@ const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s 
         : 'border-muted-200 dark:border-muted-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800'
     "
   >
-    <!-- عنوان سؤال -->
+    <!-- عنوان سؤال (از question.text) -->
     <div class="flex items-start gap-3 mb-4">
       <span
         class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors"
-        :class="
-          modelValue !== null && modelValue !== undefined && modelValue !== '' && !(Array.isArray(modelValue) && !modelValue.length)
-            ? 'bg-green-500 text-white'
-            : 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
-        "
+        :class="isAnswered ? 'bg-green-500 text-white' : 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'"
       >
         {{ index + 1 }}
       </span>
       <div class="flex-1">
         <label class="block text-sm sm:text-base font-bold text-green-600 dark:text-green-400 leading-7">
-          {{ question.title }}
-          <span v-if="question.required" class="text-red-500 font-bold">*</span>
-          <span v-else class="text-xs font-normal text-muted-400 mr-1">(اختیاری)</span>
+          {{ question.text }}
+          <span v-if="question.required" class="text-red-500 font-bold" title="پاسخ به این سؤال الزامی است">*</span>
         </label>
-        <p v-if="question.hint" class="text-xs text-muted-500 dark:text-muted-400 mt-1 leading-6">
-          {{ question.hint }}
+        <p v-if="question.strategy_node_weight !== undefined && question.strategy_node_weight !== null"
+           class="text-[11px] text-muted-400 mt-1">
+          وزن این سؤال: {{ question.strategy_node_weight }}
         </p>
       </div>
     </div>
 
-    <!-- بدنه‌ی سؤال -->
+    <!-- بدنه‌ی سؤال بر اساس type -->
     <RatingGroup
-      v-if="question.type === 'rating' || question.type === 'score'"
-      :model-value="(modelValue as number | null)"
-      :max="10"
-      :labels="question.scaleLabels"
+      v-if="question.type === 'strategy_range_rating'"
+      :model-value="selectedNumber"
+      :min="question.range_min"
+      :max="question.range_max"
+      :labels="{ min: String(question.range_min), max: String(question.range_max) }"
       :invalid="invalid"
-      :name="question.title"
-      @update:model-value="update"
+      :name="question.text"
+      @update:model-value="onSelect"
     />
 
     <ChoiceGroup
-      v-else-if="question.type === 'single' || question.type === 'multi'"
-      :model-value="(modelValue as string | string[] | null)"
-      :options="question.options ?? []"
-      :multiple="question.type === 'multi'"
+      v-else-if="question.type === 'single_choice'"
+      :model-value="selectedString"
+      :options="(question.options ?? []).map(o => ({ value: o, label: o }))"
+      :multiple="false"
       :invalid="invalid"
-      @update:model-value="update"
+      @update:model-value="onSelect"
     />
 
     <textarea
-      v-else-if="question.type === 'textarea'"
-      :value="(modelValue as string) ?? ''"
+      v-else-if="question.type === 'text'"
+      :value="selectedString ?? ''"
       rows="4"
-      :placeholder="question.placeholder"
       class="w-full rounded-xl border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
       :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
-      @input="update(($event.target as HTMLTextAreaElement).value)"
+      @input="onTextArea"
     />
 
+    <!-- نوع ناشناخته: ورودی متنی به‌عنوان حالت ایمن -->
     <input
       v-else
       type="text"
-      :value="(modelValue as string) ?? ''"
-      :placeholder="question.placeholder"
-      class="w-full rounded-xl border px-4 py-3 text-sm bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500"
+      :value="selectedString ?? ''"
+      class="w-full rounded-xl border px-4 py-3 text-sm bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500"
       :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
-      @input="update(($event.target as HTMLInputElement).value)"
+      @input="onInput"
     />
 
-    <!-- پیام خطا -->
+    <!-- پیام خطای سؤال اصلی -->
     <Transition name="slide">
       <p v-if="invalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-3">
         <Icon icon="lucide:alert-circle" class="w-4 h-4" />
@@ -136,17 +154,12 @@ const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s 
       </p>
     </Transition>
 
-    <!-- سؤال‌های تکمیلی شرطی (نمایش فقط با امتیاز <= آستانه) -->
-    <TransitionGroup v-if="visibleSubs.length" name="sub" tag="div" class="mt-5 space-y-4">
+    <!-- سؤال تکمیلی شرطی (نمایش با برقراری شرط عددی) -->
+    <Transition name="reveal">
       <div
-        v-for="sub in visibleSubs"
-        :key="sub.id"
-        class="rounded-xl border-2 border-dashed p-4 bg-amber-50/50 dark:bg-amber-900/10 transition-colors duration-300"
-        :class="
-          isSubInvalid && isSubInvalid(question, sub)
-            ? 'border-red-400 dark:border-red-700'
-            : 'border-amber-300 dark:border-amber-700'
-        "
+        v-if="fu && fuVisible"
+        class="mt-5 rounded-xl border-2 border-dashed p-4 bg-amber-50/50 dark:bg-amber-900/10 transition-colors duration-300"
+        :class="followUpInvalid ? 'border-red-400 dark:border-red-700' : 'border-amber-300 dark:border-amber-700'"
       >
         <div class="flex items-start gap-2.5 mb-3">
           <span class="flex-shrink-0 inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold leading-5">
@@ -154,31 +167,49 @@ const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s 
             سؤال تکمیلی
           </span>
           <label class="block text-sm font-bold text-gray-900 dark:text-white leading-6">
-            {{ sub.title }}
-            <span v-if="sub.required" class="text-red-500 font-bold">*</span>
-            <span v-else class="text-xs font-normal text-muted-400 mr-1">(اختیاری)</span>
+            {{ fu.text }}
+            <span v-if="fu.required" class="text-red-500 font-bold">*</span>
           </label>
         </div>
 
+        <!-- نوع فیلد سؤال تکمیلی: گزینه‌ها → تک‌انتخابی / طیف امتیاز / متن -->
         <ChoiceGroup
-          :model-value="subValue(sub)"
-          :options="sub.options ?? []"
-          :multiple="sub.type === 'multi'"
-          :invalid="Boolean(isSubInvalid && isSubInvalid(question, sub))"
-          @update:model-value="v => updateSub(sub, v)"
+          v-if="fuOptions.length"
+          :model-value="typeof followUpValue === 'string' ? followUpValue : null"
+          :options="fuOptions"
+          :multiple="false"
+          :invalid="followUpInvalid"
+          @update:model-value="v => onFollowUp(String(v))"
+        />
+
+        <RatingGroup
+          v-else-if="fu.type === 'strategy_range_rating'"
+          :model-value="typeof followUpValue === 'number' ? followUpValue : null"
+          :min="fu.range_min"
+          :max="fu.range_max"
+          :labels="{ min: String(fu.range_min), max: String(fu.range_max) }"
+          :invalid="followUpInvalid"
+          :name="fu.text"
+          @update:model-value="onFollowUp"
+        />
+
+        <textarea
+          v-else
+          :value="followUpValue !== null && followUpValue !== undefined ? String(followUpValue) : ''"
+          rows="3"
+          class="w-full rounded-xl border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
+          :class="followUpInvalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
+          @input="onFollowUpText"
         />
 
         <Transition name="slide">
-          <p
-            v-if="isSubInvalid && isSubInvalid(question, sub)"
-            class="flex items-center gap-1.5 text-xs text-red-500 mt-2"
-          >
+          <p v-if="followUpInvalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-2">
             <Icon icon="lucide:alert-circle" class="w-4 h-4" />
             پاسخ به این سؤال الزامی است.
           </p>
         </Transition>
       </div>
-    </TransitionGroup>
+    </Transition>
   </div>
 </template>
 
@@ -193,18 +224,18 @@ const visibleSubs = computed(() => (props.question.subQuestions ?? []).filter(s 
   transform: translateY(-4px);
 }
 
-/* ورود/خروج سؤال تکمیلی شرطی */
-.sub-enter-active {
+/* انیمیشن ظهور سؤال تکمیلی شرطی */
+.reveal-enter-active {
   transition: all 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
-.sub-leave-active {
+.reveal-leave-active {
   transition: all 0.18s ease;
 }
-.sub-enter-from {
+.reveal-enter-from {
   opacity: 0;
   transform: translateY(-8px) scale(0.98);
 }
-.sub-leave-to {
+.reveal-leave-to {
   opacity: 0;
   transform: translateY(-6px);
 }

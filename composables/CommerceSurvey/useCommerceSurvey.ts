@@ -1,51 +1,60 @@
-import { computed, ref } from 'vue'
-import type { AnswerValue, SurveyAnswers } from './useSurveyWizard'
-import type { CustomerGroup, CustomerType, SurveySelection } from './useSurveyDefinition'
+import { ref } from 'vue'
+import { useSurveyApi } from './useSurveyApi'
+import type { SurveySelection } from './useSurveyDefinition'
+import type { SurveyCompletionPayload } from './useSurveyWizard'
 
 /**
- * ماشین حالت سمت کلاینت برای صفحه‌ی نظرسنجی امور بازرگانی.
+ * ماشین حالت صفحه‌ی نظرسنجی امور بازرگانی.
  *
  * فازها:
- *  select   → فرم انتخاب گروه/نوع مشتری + جدول‌های مدیریت لینک نظرسنجی
- *  survey   → ویزارد چندمرحله‌ای پرسشنامه (بر اساس محصول فعال)
+ *  select   → فرم انتخاب گروه/نوع مشتری + راه‌های ارتباطی
+ *  survey   → دریافت داینامیک پرسشنامه از API و ویزارد چندمرحله‌ای
  *  complete → صفحه‌ی تشکر
  *
- * تمام وضعیت صرفاً محلی و reactive است؛ هیچ فراخوانی شبکه‌ای انجام نمی‌شود
- * و منطق اعتبارسنجی پاسخ‌ها در useSurveyWizard نگهداری می‌شود.
+ * دریافت پرسشنامه از سرویس توزیع (SurveyDistribution/Access) و مدیریت
+ * وضعیت نظرسنجی هر دو در همین ماژول (و useSurveyApi) انجام می‌شود.
+ * پاسخ‌های کاربر فقط در حافظه‌ی کلاینت نگهداری می‌شوند؛ endpoint ثبت
+ * نظرسنجی در این فاز مشخص نیست و هیچ ارسال انجام نمی‌شود.
  */
 
 export type SurveyPhase = 'select' | 'survey' | 'complete'
 
 export interface SurveyCompletion {
   selection: SurveySelection
-  answers: SurveyAnswers
+  answeredCount: number
+  totalQuestions: number
   completedAt: number
+}
+
+export interface SurveySubmitPayload {
+  payload: SurveyCompletionPayload
+  answeredCount: number
+  totalQuestions: number
 }
 
 export function useCommerceSurvey() {
   const phase = ref<SurveyPhase>('select')
-  /** انتخاب جاری کاربر (گروه و نوع مشتری) */
+  /** انتخاب جاری کاربر (گروه و نوع مشتری) – زمینه‌ی نمایشی ورود به نظرسنجی */
   const selection = ref<SurveySelection | null>(null)
-  /** نتیجه‌ی نهایی نظرسنجی پس از ثبت */
   const completion = ref<SurveyCompletion | null>(null)
-  /** نسخه‌ی هر اجرای ویزارد؛ با تغییر آن، وضعیت ویزارد از صفر ساخته می‌شود */
+  /** نسخه‌ی هر اجرا؛ با تغییر آن وضعیت ویزارد از صفر ساخته می‌شود */
   const runId = ref(0)
 
-  const overallScore = computed<number | null>(() => {
-    const v = completion.value?.answers?.o_score
-    return typeof v === 'number' ? v : null
-  })
+  /** کلاینت API نظرسنجی (داده، وضعیت بارگذاری، خطا، دریافت مجدد) */
+  const survey = useSurveyApi()
 
-  /** شروع نظرسنجی از فرم انتخاب (گروه + نوع) */
+  /** شروع نظرسنجی: پاک‌سازی پاسخ‌های قبلی و دریافت پرسشنامه از API */
   function startSurvey(sel: SurveySelection) {
     selection.value = { group: sel.group, type: sel.type }
     runId.value++
     phase.value = 'survey'
+    survey.resetAnswers()
+    void survey.fetchSurvey()
   }
 
-  /** شروع مستقیم نظرسنجی از لینک‌های جدول مدیریت (اکشن «لینک شمش/گندله») */
-  function openSurveyFor(group: CustomerGroup, type: CustomerType) {
-    startSurvey({ group, type })
+  /** دریافت مجدد پرسشنامه پس از خطا */
+  function retryFetch() {
+    void survey.fetchSurvey(true)
   }
 
   /** بازگشت به نمای انتخاب */
@@ -53,12 +62,13 @@ export function useCommerceSurvey() {
     phase.value = 'select'
   }
 
-  /** ثبت نهایی پاسخ‌ها (فقط ذخیره‌ی محلی – بدون ارسال به سرور) */
-  function completeSurvey(payload: { selection: SurveySelection; answers: SurveyAnswers }) {
+  /** پایان نظرسنجی (ذخیره‌ی محلی خروجی – بدون فراخوانی شبکه) */
+  function completeSurvey(result: SurveySubmitPayload) {
     completion.value = {
-      selection: { ...payload.selection },
-      answers: payload.answers as Record<string, AnswerValue>,
-      completedAt: Date.now()
+      selection: { ...result.payload.selection },
+      answeredCount: result.answeredCount,
+      totalQuestions: result.totalQuestions,
+      completedAt: result.payload.completedAt
     }
     phase.value = 'complete'
   }
@@ -76,9 +86,9 @@ export function useCommerceSurvey() {
     selection,
     completion,
     runId,
-    overallScore,
+    survey,
     startSurvey,
-    openSurveyFor,
+    retryFetch,
     changeSelection,
     completeSurvey,
     restart
