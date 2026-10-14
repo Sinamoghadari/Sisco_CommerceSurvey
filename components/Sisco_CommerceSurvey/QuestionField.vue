@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { SurveyQuestion, ConditionalFollowUp } from '~/composables/CommerceSurvey/useSurveyApi'
+import type { SurveyQuestion } from '~/composables/CommerceSurvey/useSurveyApi'
 import type { AnswerValue } from '~/composables/CommerceSurvey/useSurveyWizard'
 import { isFollowUpConditionMet } from '~/composables/CommerceSurvey/useSurveyWizard'
-import RatingGroup from './RatingGroup.vue'
-import ChoiceGroup from './ChoiceGroup.vue'
+import QuestionControl from './QuestionControl.vue'
 
 /**
- * موتور رندر سؤال – کاملاً بر اساس داده‌ی API:
- * - strategy_range_rating: طیف داینامیک بین range_min و range_max
- * - single_choice: گزینه‌های رشته‌ای سؤال
- * - text: ورودی متنی
- * در صورت فعال بودن conditional_follow_up و برقراری شرط عددی، سؤال تکمیلی
- * با انیمیشن نمایش داده می‌شود (تک‌انتخابی از options، طیف امتیاز یا ورودی متنی).
+ * کارت یک سؤال – عنوان، نشانگر الزامی (*) و بدنه‌ی چندریختی بر اساس type.
+ * سؤال تکمیلی شرطی (conditional_follow_up) با برقراری شرط عددی، با انیمیشن
+ * ظاهر می‌شود و با همان موتور رندر (QuestionControl) نمایش داده می‌شود.
  */
 const props = withDefaults(
   defineProps<{
     question: SurveyQuestion
     index: number
-    /** پاسخ فعلی سؤال تکمیلی (کلید: _id سؤال) */
-    followUpValue?: number | string | null
+    /** پاسخ فعلی سؤال اصلی (از نگه‌دارنده‌ی answers بر اساس _id) */
+    answer: AnswerValue
+    /** پاسخ فعلی سؤال تکمیلی */
+    followUpValue: AnswerValue
+    /** نگه‌دارنده‌ی توضیح متنی گزینه‌ها */
+    optionTexts?: Record<string, string>
     invalid?: boolean
     followUpInvalid?: boolean
   }>(),
   {
-    followUpValue: null,
+    optionTexts: () => ({}),
     invalid: false,
     followUpInvalid: false
   }
@@ -32,49 +32,20 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'select', v: AnswerValue): void
-  (e: 'follow-up', v: number | string): void
+  (e: 'follow-up', v: AnswerValue): void
+  (e: 'option-text', key: string, text: string): void
 }>()
 
-const fu = computed<ConditionalFollowUp | undefined>(() => props.question.conditional_follow_up)
-const fuVisible = computed(() => isFollowUpConditionMet(props.question))
-const fuOptions = computed(() => (fu.value?.options ?? []).map(o => ({ value: o, label: o })))
+const fu = computed(() => props.question.conditional_follow_up)
+const fuVisible = computed(() => isFollowUpConditionMet({ ...props.question, selected: props.answer }))
 
-const selectedNumber = computed(() =>
-  typeof props.question.selected === 'number' && Number.isFinite(props.question.selected)
-    ? props.question.selected
-    : null
-)
-
-const selectedString = computed(() =>
-  typeof props.question.selected === 'string' ? props.question.selected : null
-)
-
-const isAnswered = computed(
-  () =>
-    props.question.selected !== null &&
-    props.question.selected !== undefined &&
-    !(typeof props.question.selected === 'string' && !props.question.selected.trim())
-)
-
-function onSelect(v: AnswerValue) {
-  emit('select', v)
-}
-
-function onTextArea(e: Event) {
-  emit('select', (e.target as HTMLTextAreaElement).value)
-}
-
-function onInput(e: Event) {
-  emit('select', (e.target as HTMLInputElement).value)
-}
-
-function onFollowUp(v: number | string) {
-  emit('follow-up', v)
-}
-
-function onFollowUpText(e: Event) {
-  emit('follow-up', (e.target as HTMLTextAreaElement).value)
-}
+const isAnswered = computed(() => {
+  const v = props.answer
+  if (v === null || v === undefined) return false
+  if (Array.isArray(v)) return v.length > 0
+  if (typeof v === 'string') return v.trim().length > 0
+  return typeof v === 'number' && Number.isFinite(v)
+})
 </script>
 
 <template>
@@ -103,43 +74,18 @@ function onFollowUpText(e: Event) {
     </div>
 
     <!-- بدنه‌ی سؤال بر اساس type -->
-    <RatingGroup
-      v-if="question.type === 'strategy_range_rating'"
-      :model-value="selectedNumber"
-      :min="question.range_min"
-      :max="question.range_max"
-      :labels="{ min: String(question.range_min), max: String(question.range_max) }"
+    <QuestionControl
+      :type="question.type"
+      :model-value="answer"
+      :options="question.options"
+      :range-min="question.range_min"
+      :range-max="question.range_max"
+      :option-texts="optionTexts"
+      :option-key-prefix="question._id"
       :invalid="invalid"
       :name="question.text"
-      @update:model-value="onSelect"
-    />
-
-    <ChoiceGroup
-      v-else-if="question.type === 'single_choice'"
-      :model-value="selectedString"
-      :options="(question.options ?? []).map(o => ({ value: o, label: o }))"
-      :multiple="false"
-      :invalid="invalid"
-      @update:model-value="onSelect"
-    />
-
-    <textarea
-      v-else-if="question.type === 'text'"
-      :value="selectedString ?? ''"
-      rows="4"
-      class="w-full rounded-xl border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
-      :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
-      @input="onTextArea"
-    />
-
-    <!-- نوع ناشناخته: ورودی متنی به‌عنوان حالت ایمن -->
-    <input
-      v-else
-      type="text"
-      :value="selectedString ?? ''"
-      class="w-full rounded-xl border px-4 py-3 text-sm bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500"
-      :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
-      @input="onInput"
+      @update:model-value="v => emit('select', v)"
+      @option-text="(key, text) => emit('option-text', key, text)"
     />
 
     <!-- پیام خطای سؤال اصلی -->
@@ -150,7 +96,7 @@ function onFollowUpText(e: Event) {
       </p>
     </Transition>
 
-    <!-- سؤال تکمیلی شرطی (نمایش با برقراری شرط عددی) -->
+    <!-- سؤال تکمیلی شرطی (همان موتور رندر، فعال با شرط امتیاز) -->
     <Transition name="reveal">
       <div
         v-if="fu && fuVisible"
@@ -168,34 +114,18 @@ function onFollowUpText(e: Event) {
           </label>
         </div>
 
-        <!-- نوع فیلد سؤال تکمیلی: گزینه‌ها → تک‌انتخابی / طیف امتیاز / متن -->
-        <ChoiceGroup
-          v-if="fuOptions.length"
-          :model-value="typeof followUpValue === 'string' ? followUpValue : null"
-          :options="fuOptions"
-          :multiple="false"
-          :invalid="followUpInvalid"
-          @update:model-value="v => onFollowUp(String(v))"
-        />
-
-        <RatingGroup
-          v-else-if="fu.type === 'strategy_range_rating'"
-          :model-value="typeof followUpValue === 'number' ? followUpValue : null"
-          :min="fu.range_min"
-          :max="fu.range_max"
-          :labels="{ min: String(fu.range_min), max: String(fu.range_max) }"
+        <QuestionControl
+          :type="fu.type || 'text'"
+          :model-value="followUpValue"
+          :options="fu.options ?? []"
+          :range-min="fu.range_min"
+          :range-max="fu.range_max"
+          :option-texts="optionTexts"
+          :option-key-prefix="`${question._id}__fu`"
           :invalid="followUpInvalid"
           :name="fu.text"
-          @update:model-value="onFollowUp"
-        />
-
-        <textarea
-          v-else
-          :value="followUpValue !== null && followUpValue !== undefined ? String(followUpValue) : ''"
-          rows="3"
-          class="w-full rounded-xl border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
-          :class="followUpInvalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
-          @input="onFollowUpText"
+          @update:model-value="v => emit('follow-up', v)"
+          @option-text="(key, text) => emit('option-text', key, text)"
         />
 
         <Transition name="slide">

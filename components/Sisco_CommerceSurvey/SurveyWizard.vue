@@ -4,6 +4,7 @@ import type { SurveyCategoryGroup } from '~/composables/CommerceSurvey/useSurvey
 import type { SurveyFetchStatus } from '~/composables/CommerceSurvey/useSurveyApi'
 import {
   useSurveyWizard,
+  GENERAL_STEP_TITLE,
   type SurveyCompletionPayload
 } from '~/composables/CommerceSurvey/useSurveyWizard'
 import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
@@ -11,10 +12,12 @@ import SurveyStepper from './SurveyStepper.vue'
 import SurveyStepPanel from './SurveyStepPanel.vue'
 
 /**
- * ویزارد پرسشنامه‌ی داینامیک – تمام محتوا (دسته‌ها، سؤال‌ها، طیف‌ها و
- * سؤال‌های تکمیلی شرطی) از پاسخ API ساخته می‌شود؛ هیچ مرحله یا سؤال
- * هاردکدشده‌ای وجود ندارد.
- * وضعیت‌های بارگذاری / خطا / خالی به‌صورت کامل مدیریت می‌شوند.
+ * ویزارد پرسشنامه‌ی داینامیک – تمام محتوا از پاسخ API ساخته می‌شود.
+ * - دایره‌های استپر فقط گره‌های استراتژیک هستند؛ بخش «نظرات و جمع‌بندی»
+ *   به‌صورت نشان پایانی متمایز و آخرین صفحه ظاهر می‌شود.
+ * - همه‌ی انواع سؤال (متن، تک/چندانتخابی با need_text، ستاره‌ای، طیف عددی
+ *   و طیف استراتژیک) و سؤال‌های تکمیلی شرطی به‌صورت یکسان رندر می‌شوند.
+ * - وضعیت‌های بارگذاری / خطا / خالی به‌صورت کامل مدیریت می‌شوند.
  */
 const props = defineProps<{
   selection: SurveySelection
@@ -37,7 +40,7 @@ const wizard = useSurveyWizard(() => props.groups ?? [])
 const isConfirmOpen = ref(false)
 
 const isEmptyView = computed(
-  () => wizard.stepperSteps.value.length === 0 || wizard.totalDisplayQuestions.value === 0
+  () => wizard.displayGroups.value.length === 0 || wizard.totalDisplayQuestions.value === 0
 )
 
 function onNext() {
@@ -147,7 +150,7 @@ function confirmSubmit() {
         <p v-if="surveyDescription" class="text-sm text-muted-500 dark:text-muted-400 mt-1 leading-7">{{ surveyDescription }}</p>
       </div>
 
-      <!-- نوار پیشرفت: بدون تکرار انتخاب‌های فرم ورود (تمیز و متمرکز بر پرسشنامه) -->
+      <!-- نوار پیشرفت -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <span class="chip chip--muted">
           <Icon icon="lucide:list-checks" class="w-3.5 h-3.5" />
@@ -164,10 +167,11 @@ function confirmSubmit() {
       </div>
 
       <BaseCard class="mb-6 overflow-hidden">
-        <!-- استپر داینامیک (از دسته‌های API) -->
+        <!-- استپر: دایره‌های استراتژیک + نشان پایانی جمع‌بندی -->
         <div class="px-6 sm:px-8 py-6 border-b border-muted-200 dark:border-muted-800 bg-muted-50/60 dark:bg-slate-900/40">
           <SurveyStepper
-            :steps="wizard.stepperSteps.value"
+            :steps="wizard.strategySteps.value"
+            :final-step="wizard.finalStep.value"
             :current-index="wizard.currentIndex.value"
             :progress="wizard.progress.value"
             :status="wizard.stepStatus"
@@ -175,16 +179,22 @@ function confirmSubmit() {
           />
         </div>
 
-        <!-- عنوان بخش جاری (strategy_node_title) -->
+        <!-- عنوان بخش جاری -->
         <div class="px-6 sm:px-8 pt-7 pb-2">
           <Transition :name="wizard.direction.value === 'forward' ? 'step-forward' : 'step-backward'" mode="out-in">
-            <div :key="wizard.currentGroup.value?.category?.strategy_node_id || wizard.currentIndex.value" class="flex items-start gap-3">
-              <span class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 flex items-center justify-center flex-shrink-0 font-bold">
-                {{ wizard.currentIndex.value + 1 }}
+            <div :key="wizard.currentGroup.value?.id || wizard.currentIndex.value" class="flex items-start gap-3">
+              <span
+                class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold"
+                :class="wizard.currentGroup.value?.isGeneral
+                  ? 'bg-primary-600 text-white shadow-md shadow-primary-600/25'
+                  : 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300'"
+              >
+                <Icon v-if="wizard.currentGroup.value?.isGeneral" icon="lucide:clipboard-check" class="w-5 h-5 text-white" />
+                <template v-else>{{ wizard.currentIndex.value + 1 }}</template>
               </span>
               <div>
                 <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  {{ wizard.currentGroup.value?.category?.strategy_node_title }}
+                  {{ wizard.currentGroup.value?.title || GENERAL_STEP_TITLE }}
                 </h2>
                 <p class="text-sm text-muted-500 dark:text-muted-400 mt-0.5">
                   {{ wizard.currentGroup.value?.questions.length }} سؤال
@@ -208,15 +218,18 @@ function confirmSubmit() {
         <!-- بدنه‌ی بخش: سؤال‌های داینامیک -->
         <div class="px-6 sm:px-8 py-6">
           <Transition :name="wizard.direction.value === 'forward' ? 'step-forward' : 'step-backward'" mode="out-in">
-            <div :key="wizard.currentGroup.value?.category?.strategy_node_id || wizard.currentIndex.value">
+            <div :key="wizard.currentGroup.value?.id || wizard.currentIndex.value">
               <SurveyStepPanel
                 :questions="wizard.currentGroup.value?.questions ?? []"
+                :answers="wizard.answers"
                 :follow-ups="wizard.followUps"
+                :option-texts="wizard.optionTexts"
                 :show-errors="wizard.showErrors.value"
                 :is-invalid="wizard.isQuestionInvalid"
                 :is-follow-up-invalid="wizard.isFollowUpInvalid"
                 @select="wizard.setAnswer"
                 @follow-up="wizard.setFollowUp"
+                @option-text="wizard.setOptionText"
               />
             </div>
           </Transition>
@@ -238,7 +251,7 @@ function confirmSubmit() {
           </BaseButton>
 
           <span class="hidden sm:block text-xs text-muted-400">
-            بخش {{ wizard.currentIndex.value + 1 }} از {{ wizard.stepperSteps.value.length }}
+            بخش {{ wizard.currentIndex.value + 1 }} از {{ wizard.displayGroups.value.length }}
           </span>
 
           <BaseButton
@@ -265,7 +278,7 @@ function confirmSubmit() {
             </p>
             <div class="flex justify-end gap-2">
               <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" @click="isConfirmOpen = false">خیر</button>
-              <button type="button" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors" @click="confirmSubmit">بله، ثبت شود</button>
+              <button type="button" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors" @click="confirmSubmit">بله، ثبت شود</button>
             </div>
           </div>
         </div>

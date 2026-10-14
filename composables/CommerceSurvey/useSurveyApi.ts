@@ -19,6 +19,15 @@ export const DEFAULT_SURVEY_API_URL = 'https://portal.sirjansteel.com/api/Survey
 /*                           اسکیمای پاسخ سرور (Schema)                       */
 /* -------------------------------------------------------------------------- */
 
+/** گزینه‌ی ساخت‌یافته (شکل جدید سرویس): شامل برچسب، مقدار، شناسه و نیاز به توضیح متنی */
+export interface SurveyOption {
+  label?: string
+  value?: string | number
+  _id?: string
+  need_text?: boolean
+}
+
+/** سؤال تکمیلی شرطی وابسته به امتیاز سؤال اصلی */
 export interface ConditionalFollowUp {
   enabled: boolean
   operator: 'less_than' | 'greater_than' | 'equal' | string
@@ -26,7 +35,7 @@ export interface ConditionalFollowUp {
   text: string
   required: boolean
   type: 'text' | 'strategy_range_rating' | string
-  options: string[]
+  options: string[] | SurveyOption[]
   range_min: number
   range_max: number
 }
@@ -35,8 +44,8 @@ export interface SurveyQuestion {
   _id: string
   survey_id: string
   text: string
-  type: 'strategy_range_rating' | 'single_choice' | 'text' | string
-  options: string[]
+  type: 'strategy_range_rating' | 'range_rating' | 'rating' | 'single_choice' | 'multiple_choice' | 'text' | string
+  options: string[] | SurveyOption[]
   order: number
   required: boolean
   status: boolean
@@ -77,6 +86,52 @@ export interface SurveyApiResponse {
 }
 
 export type SurveyFetchStatus = 'idle' | 'loading' | 'success' | 'error'
+
+/* -------------------------------------------------------------------------- */
+/*                        نرمال‌سازی گزینه‌ها (رشته/شیء)                        */
+/* -------------------------------------------------------------------------- */
+
+/** شکل یکسان‌شده‌ی گزینه برای رندر (خروجی normalizeOptions) */
+export interface NormalizedOption {
+  /** شناسه یکتا (ترجیحاً _id سرور، در غیر این صورت مقدار) */
+  id: string
+  label: string
+  value: string
+  /** آیا با انتخاب این گزینه، ورودی متنی تکمیلی باید نمایش داده شود؟ */
+  needText: boolean
+}
+
+/**
+ * گزینه‌های سرویس ممکن است رشته‌ی ساده باشند یا شیء {label,value,_id,need_text}.
+ * این helper هر دو شکل را به یک ساختار یکسان تبدیل می‌کند.
+ */
+export function normalizeOptions(options: unknown): NormalizedOption[] {
+  if (!Array.isArray(options)) return []
+  return options
+    .map((opt): NormalizedOption | null => {
+      if (typeof opt === 'string') {
+        const v = opt.trim()
+        return v ? { id: v, label: v, value: v, needText: false } : null
+      }
+      if (opt && typeof opt === 'object') {
+        const o = opt as SurveyOption
+        const rawValue = o.value ?? o.label ?? ''
+        const value = String(rawValue)
+        if (!value) return null
+        return {
+          id: String(o._id ?? value),
+          label: String(o.label ?? value),
+          value,
+          needText: Boolean(o.need_text)
+        }
+      }
+      if (typeof opt === 'number') {
+        return { id: String(opt), label: String(opt), value: String(opt), needText: false }
+      }
+      return null
+    })
+    .filter((o): o is NormalizedOption => o !== null)
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                  Composable                                */

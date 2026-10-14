@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import type { SurveyQuestion } from '~/composables/CommerceSurvey/useSurveyApi'
-import type { AnswerValue, FollowUpAnswer } from '~/composables/CommerceSurvey/useSurveyWizard'
+import type { AnswerValue } from '~/composables/CommerceSurvey/useSurveyWizard'
 import QuestionField from './QuestionField.vue'
 
 /**
  * پنل یک بخش (دسته‌ی API) – سؤال‌های مرتب‌شده را به موتور رندر می‌سپارد.
+ * پاسخ‌ها به‌صورت نگاشت بر اساس question._id پاس داده می‌شوند.
  */
 defineProps<{
   questions: SurveyQuestion[]
-  /** پاسخ سؤال‌های تکمیلی (کلید: _id سؤال اصلی) */
-  followUps: Record<string, FollowUpAnswer>
+  /** نگاشت پاسخ سؤال‌های اصلی (کلید: _id) */
+  answers: Record<string, AnswerValue>
+  /** نگاشت پاسخ سؤال‌های تکمیلی (کلید: _id سؤال اصلی) */
+  followUps: Record<string, AnswerValue>
+  /** نگاشت توضیح متنی گزینه‌های need_text */
+  optionTexts: Record<string, string>
   showErrors: boolean
   isInvalid: (q: SurveyQuestion) => boolean
   isFollowUpInvalid: (q: SurveyQuestion) => boolean
@@ -17,7 +22,8 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'select', q: SurveyQuestion, v: AnswerValue): void
-  (e: 'follow-up', q: SurveyQuestion, v: number | string): void
+  (e: 'follow-up', q: SurveyQuestion, v: AnswerValue): void
+  (e: 'option-text', key: string, text: string): void
 }>()
 </script>
 
@@ -29,11 +35,14 @@ const emit = defineEmits<{
         :key="q._id"
         :question="q"
         :index="i"
+        :answer="answers[q._id] ?? null"
         :follow-up-value="followUps[q._id] ?? null"
+        :option-texts="optionTexts"
         :invalid="showErrors && isInvalid(q)"
         :follow-up-invalid="showErrors && isFollowUpInvalid(q)"
         @select="v => emit('select', q, v)"
         @follow-up="v => emit('follow-up', q, v)"
+        @option-text="(key, text) => emit('option-text', key, text)"
       />
     </TransitionGroup>
   </div>
