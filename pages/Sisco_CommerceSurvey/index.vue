@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { SurveySelection } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
-import type { SurveyAnswers } from '~/composables/Sisco_CommerceSurvey/useSurveyWizard'
-import CustomerSelector from '~/components/Sisco_CommerceSurvey/CustomerSelector.vue'
+import { useCommerceSurvey } from '~/composables/CommerceSurvey/useCommerceSurvey'
+import { DEFAULT_SURVEY_SELECTION } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import ContactChannels from '~/components/Sisco_CommerceSurvey/ContactChannels.vue'
 import SurveyWizard from '~/components/Sisco_CommerceSurvey/SurveyWizard.vue'
 import SurveyComplete from '~/components/Sisco_CommerceSurvey/SurveyComplete.vue'
 
@@ -13,42 +12,25 @@ definePageMeta({
 })
 
 /**
- * ماشین حالت صفحه:
- *  select   → انتخاب گروه/نوع مشتری
- *  survey   → ویزارد چندمرحله‌ای
+ * وضعیت صفحه از کامپوزیبل اختصاصی مدیریت می‌شود؛ پرسشنامه به‌صورت داینامیک
+ * از سرویس توزیع نظرسنجی (SurveyDistribution/Access) دریافت می‌شود:
+ *  select   → صفحه‌ی ورود (شروع نظرسنجی + راه‌های ارتباطی)
+ *  survey   → دریافت از API و ویزارد چندمرحله‌ای داینامیک
  *  complete → صفحه‌ی تشکر
  */
-type Phase = 'select' | 'survey' | 'complete'
+const {
+  phase,
+  completion,
+  runId,
+  survey,
+  startSurvey,
+  retryFetch,
+  changeSelection,
+  completeSurvey,
+  restart
+} = useCommerceSurvey()
 
-const phase = ref<Phase>('select')
-const selection = ref<SurveySelection | null>(null)
-const result = ref<{ selection: SurveySelection; answers: SurveyAnswers } | null>(null)
-
-const overallScore = computed(() => {
-  const v = result.value?.answers?.o_score
-  return typeof v === 'number' ? v : null
-})
-
-function startSurvey(sel: SurveySelection) {
-  selection.value = sel
-  phase.value = 'survey'
-}
-
-function changeSelection() {
-  phase.value = 'select'
-}
-
-function completeSurvey(payload: { selection: SurveySelection; answers: SurveyAnswers }) {
-  // ارسال به سرور در محدوده‌ی این فاز نیست؛ نتیجه فقط در حافظه‌ی کلاینت نگهداری می‌شود.
-  result.value = payload
-  phase.value = 'complete'
-}
-
-function restart() {
-  result.value = null
-  selection.value = null
-  phase.value = 'select'
-}
+const { categories, title, description, alreadyAnswered, status, error } = survey
 </script>
 
 <template>
@@ -58,32 +40,59 @@ function restart() {
       <BaseHeading as="h1" size="3xl" weight="bold" class="text-black dark:text-white">
         نظرسنجی مشتریان امور بازرگانی
       </BaseHeading>
-      <p class="mt-2 text-sm text-muted-500 dark:text-muted-400">
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
         صدای مشتری (VOC) – شرکت فولاد سیرجان ایرانیان
       </p>
     </div>
 
     <Transition name="phase" mode="out-in">
-      <CustomerSelector
-        v-if="phase === 'select'"
-        key="select"
-        :initial="selection"
-        @submit="startSurvey"
-      />
+      <!-- نمای ورود: دکمه‌ی شروع + راه‌های ارتباطی -->
+      <div v-if="phase === 'select'" key="select" class="space-y-6">
+        <div class="mx-auto w-full max-w-4xl flex flex-col items-center gap-3">
+          <BaseButton
+            type="button"
+            color="success"
+            size="lg"
+            class="!px-12 !rounded-xl"
+            @click="startSurvey(DEFAULT_SURVEY_SELECTION)"
+          >
+            <span class="flex items-center gap-2">
+              شروع نظرسنجی
+              <Icon icon="lucide:arrow-left" class="w-5 h-5" />
+            </span>
+          </BaseButton>
+          <p class="text-xs text-muted-500 dark:text-muted-400 text-center leading-6">
+            پرسشنامه به‌صورت داینامیک از سرویس نظرسنجی بارگذاری می‌شود.
+          </p>
+        </div>
 
+        <div class="mx-auto w-full max-w-4xl">
+          <ContactChannels />
+        </div>
+      </div>
+
+      <!-- نمای پرسشنامه‌ی داینامیک (از API) -->
       <SurveyWizard
-        v-else-if="phase === 'survey' && selection"
-        :key="`survey-${selection.group}-${selection.type}`"
-        :selection="selection"
+        v-else-if="phase === 'survey'"
+        :key="`survey-${runId}`"
+        :selection="DEFAULT_SURVEY_SELECTION"
+        :groups="categories"
+        :status="status"
+        :error-message="error"
+        :survey-title="title"
+        :survey-description="description"
+        :already-answered="alreadyAnswered"
         @complete="completeSurvey"
+        @retry="retryFetch"
         @change-selection="changeSelection"
       />
 
+      <!-- نمای پایان -->
       <SurveyComplete
-        v-else-if="phase === 'complete' && result"
+        v-else-if="phase === 'complete' && completion"
         key="complete"
-        :selection="result.selection"
-        :overall-score="overallScore"
+        :answered-count="completion.answeredCount"
+        :total-questions="completion.totalQuestions"
         @restart="restart"
       />
     </Transition>

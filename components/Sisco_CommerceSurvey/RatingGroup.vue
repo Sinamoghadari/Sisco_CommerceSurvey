@@ -1,102 +1,109 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RATING_SCALE } from '~/composables/Sisco_CommerceSurvey/useSurveyDefinition'
 
 /**
- * گروه امتیازدهی – برای مقیاس ۱ تا ۵ (rating) و ۱ تا ۱۰ (score)
+ * گروه امتیازدهی داینامیک – طیف عددی بین range_min و range_max
+ * (مثلاً ۰ تا ۱۰، ۱ تا ۱۰، یا بازه‌های منفی مثل ۲۰- تا ۲۰+).
+ * چیدمان راست‌به‌چپ (RTL): کمترین مقدار (range_min) در سمت راست و
+ * بیشترین مقدار (range_max) در سمت چپ قرار می‌گیرد.
+ * برای بازه‌های پهن چیدمان فشرده + اسکرول افقی فعال می‌شود.
  */
 const props = withDefaults(
   defineProps<{
     modelValue: number | null
-    max?: 5 | 10
-    labels?: { min: string; max: string }
+    min: number
+    max: number
     invalid?: boolean
     name?: string
+    /** برچسب دو سر طیف (پیش‌فرض: خود اعداد بازه) */
+    labels?: { min: string; max: string }
   }>(),
-  { max: 5, invalid: false }
+  { invalid: false }
 )
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: number): void }>()
 
 const hover = ref<number | null>(null)
-const items = computed(() => Array.from({ length: props.max }, (_, i) => i + 1))
 
-const activeLabel = computed(() => {
-  const v = hover.value ?? props.modelValue
-  if (!v) return ''
-  if (props.max === 5) return RATING_SCALE.find(s => s.value === v)?.label ?? ''
-  if (v <= 3) return 'ناراضی'
-  if (v <= 6) return 'متوسط'
-  if (v <= 8) return 'راضی'
-  return 'بسیار راضی'
+const lo = computed(() => Math.ceil(Math.min(props.min, props.max)))
+const hi = computed(() => Math.floor(Math.max(props.min, props.max)))
+
+/** تمام اعداد صحیح بازه (از min تا max) */
+const items = computed<number[]>(() => {
+  const out: number[] = []
+  for (let n = lo.value; n <= hi.value; n++) out.push(n)
+  return out
 })
 
+/** بازه‌های پهن (بیش از ۱۵ گزینه) به چیدمان فشرده با اسکرول افقی نیاز دارند */
+const compact = computed(() => items.value.length > 15)
+
+/**
+ * ظاهر صنعتی/سازمانی: خانه‌های پرشده سبز سازمانی یکدست (بدون گرادیان
+ * رنگین‌کمانی)، متن سفید با کنتراست بالا و حلقه‌ی ظریف برای مقدار انتخابی.
+ */
 function toneClass(n: number, selected: boolean) {
-  const v = hover.value ?? props.modelValue ?? 0
-  const filled = n <= v
+  const v = hover.value ?? props.modelValue
+  const filled = v !== null && v !== undefined && rangeContains(n, v)
   if (!filled) {
-    return 'bg-white dark:bg-slate-900 border-muted-300 dark:border-muted-700 text-muted-500 dark:text-muted-400 hover:border-primary-400 hover:text-primary-600'
+    return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-green-600 hover:text-green-700 dark:hover:text-green-500'
   }
-  const ratio = n / props.max
-  const tone =
-    ratio <= 0.4
-      ? 'from-rose-500 to-rose-400 border-rose-500'
-      : ratio <= 0.6
-        ? 'from-amber-500 to-amber-400 border-amber-500'
-        : ratio <= 0.8
-          ? 'from-lime-500 to-lime-400 border-lime-500'
-          : 'from-green-600 to-green-500 border-green-600'
-  return `bg-gradient-to-br ${tone} text-white shadow-md ${selected ? 'scale-110 ring-4 ring-primary-500/20' : ''}`
+  return `bg-green-700 border-green-700 text-white ${selected ? 'ring-2 ring-green-600/25 scale-105' : ''}`
+}
+
+/** آیا مقدار انتخاب‌شده در بازه‌ی hover قرار می‌گیرد؟ (پر شدن بازه‌ای) */
+function rangeContains(n: number, v: number) {
+  return Math.abs(n - v) < 0.5
 }
 
 function onKey(e: KeyboardEvent) {
-  const v = props.modelValue ?? 0
+  const v = props.modelValue ?? hover.value ?? lo.value
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
     e.preventDefault()
-    emit('update:modelValue', Math.min(props.max, v + 1))
+    emit('update:modelValue', Math.min(hi.value, v + 1))
   } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
     e.preventDefault()
-    emit('update:modelValue', Math.max(1, v - 1))
+    emit('update:modelValue', Math.max(lo.value, v - 1))
   }
 }
 </script>
 
 <template>
   <div class="w-full" role="radiogroup" :aria-label="name" @keydown="onKey">
-    <div
-      class="flex items-center justify-between gap-1.5 sm:gap-2.5 rounded-xl p-2 sm:p-3 border transition-colors"
-      :class="invalid ? 'border-red-300 bg-red-50/40 dark:border-red-800 dark:bg-red-900/10' : 'border-transparent'"
-      dir="rtl"
-    >
-      <button
-        v-for="n in items"
-        :key="n"
-        type="button"
-        role="radio"
-        :aria-checked="modelValue === n"
-        :tabindex="modelValue === n || (!modelValue && n === 1) ? 0 : -1"
-        class="flex-1 aspect-square max-w-[52px] rounded-xl border-2 font-bold text-sm sm:text-base transition-all duration-200 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
-        :class="toneClass(n, modelValue === n)"
-        @mouseenter="hover = n"
-        @mouseleave="hover = null"
-        @click="emit('update:modelValue', n)"
+    <div class="overflow-x-auto pb-1 -mx-1 px-1">
+      <div
+        class="flex items-center rounded-lg p-2 sm:p-2.5 border transition-colors gap-1"
+        :class="[
+          compact ? 'min-w-max' : 'w-full justify-between gap-0.5',
+          invalid ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40'
+        ]"
+        dir="rtl"
       >
-        {{ n }}
-      </button>
+        <button
+          v-for="n in items"
+          :key="n"
+          type="button"
+          role="radio"
+          :aria-checked="modelValue === n"
+          :aria-label="`${n} از ${max}`"
+          :tabindex="modelValue === n || (modelValue === null && n === lo) ? 0 : -1"
+          class="aspect-square rounded-md border-2 font-bold transition-all duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+          :class="[
+            compact ? 'w-8 h-8 sm:w-9 sm:h-9 shrink-0 text-[11px] sm:text-xs' : 'flex-1 max-w-[46px] text-xs sm:text-sm',
+            toneClass(n, modelValue === n)
+          ]"
+          @mouseenter="hover = n"
+          @mouseleave="hover = null"
+          @click="emit('update:modelValue', n)"
+        >
+          {{ n }}
+        </button>
+      </div>
     </div>
 
-    <div class="flex items-center justify-between px-3 mt-1 text-[11px] sm:text-xs text-muted-500 dark:text-muted-400">
-      <span>{{ labels?.min ?? 'خیلی ضعیف' }}</span>
-      <Transition name="fade" mode="out-in">
-        <span
-          v-if="activeLabel"
-          :key="activeLabel"
-          class="font-bold text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/30"
-        >
-          {{ activeLabel }}
-        </span>
-      </Transition>
-      <span>{{ labels?.max ?? 'عالی' }}</span>
+    <div class="flex items-center justify-between px-3 mt-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium" dir="rtl">
+      <span>{{ labels?.min ?? lo }}</span>
+      <span>{{ labels?.max ?? hi }}</span>
     </div>
   </div>
 </template>
