@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type { SurveyCategoryGroup } from '~/composables/CommerceSurvey/useSurveyApi'
 import type { SurveyFetchStatus } from '~/composables/CommerceSurvey/useSurveyApi'
 import {
@@ -43,12 +43,31 @@ const isEmptyView = computed(
   () => wizard.displayGroups.value.length === 0 || wizard.totalDisplayQuestions.value === 0
 )
 
+/** سیگنال لرزش (shake) – با هر تلاش ناموفق برای عبور، افزایش می‌یابد */
+const validationSignal = ref(0)
+
+/** اسکرول نرم به اولین سؤال بی‌پاسخِ الزامی بخش جاری */
+async function scrollToFirstInvalid() {
+  validationSignal.value++
+  await nextTick()
+  const qid = wizard.firstInvalidQuestionId.value
+  if (!qid || typeof document === 'undefined') return
+  const el = document.getElementById(`q-${CSS.escape(qid)}`)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
 function onNext() {
   if (wizard.isLast.value) {
-    if (wizard.validateAll()) isConfirmOpen.value = true
+    if (!wizard.validateAll()) {
+      void scrollToFirstInvalid()
+      return
+    }
+    isConfirmOpen.value = true
     return
   }
-  wizard.next()
+  if (!wizard.next()) {
+    void scrollToFirstInvalid()
+  }
 }
 
 function confirmSubmit() {
@@ -151,19 +170,11 @@ function confirmSubmit() {
       </div>
 
       <!-- نوار پیشرفت -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex items-center mb-5">
         <span class="chip chip--muted">
           <Icon icon="lucide:list-checks" class="w-3.5 h-3.5" />
           {{ wizard.answeredCount.value }} / {{ wizard.totalAnswerable.value }} پاسخ
         </span>
-        <button
-          type="button"
-          class="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline underline-offset-4 flex items-center gap-1"
-          @click="emit('change-selection')"
-        >
-          <Icon icon="lucide:rotate-ccw" class="w-3.5 h-3.5" />
-          تغییر پارامترها
-        </button>
       </div>
 
       <BaseCard class="mb-6 overflow-hidden">
@@ -173,6 +184,7 @@ function confirmSubmit() {
             :steps="wizard.strategySteps.value"
             :final-step="wizard.finalStep.value"
             :current-index="wizard.currentIndex.value"
+            :max-reachable="wizard.maxReachedIndex.value"
             :progress="wizard.progress.value"
             :status="wizard.stepStatus"
             @select="wizard.goTo"
@@ -227,6 +239,8 @@ function confirmSubmit() {
                 :show-errors="wizard.showErrors.value"
                 :is-invalid="wizard.isQuestionInvalid"
                 :is-follow-up-invalid="wizard.isFollowUpInvalid"
+                :shake-token="validationSignal"
+                :first-invalid-id="wizard.firstInvalidQuestionId.value"
                 @select="wizard.setAnswer"
                 @follow-up="wizard.setFollowUp"
                 @option-text="wizard.setOptionText"

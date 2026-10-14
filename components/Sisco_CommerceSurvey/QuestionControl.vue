@@ -51,6 +51,25 @@ const isStar = computed(() => props.type === 'rating')
 const isNumericScale = computed(() => props.type === 'range_rating' || props.type === 'strategy_range_rating')
 const isTextarea = computed(() => props.type === 'text')
 
+/** تبدیل امن مقدار بازه به عدد صحیح؛ در صورت نامعتبر بودن از مقدار پیش‌فرض استفاده می‌شود */
+function toInt(v: unknown, fallback: number): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.trunc(n) : fallback
+}
+
+/**
+ * بازه‌ی مؤثر طیف:
+ *  - rating (ستاره‌ای): پیش‌فرض ۰ تا ۵ – حتی اگر سرور مقادیر را ارسال نکرده باشد
+ *    یا به‌صورت رشته/null باشند، مقیاس ستاره‌ها همیشه کامل رندر می‌شود.
+ *  - سایر طیف‌های عددی: پیش‌فرض ۰ تا ۱۰.
+ */
+const scaleRange = computed<{ min: number; max: number }>(() => {
+  if (isStar.value) {
+    return { min: toInt(props.rangeMin, 0), max: toInt(props.rangeMax, 5) }
+  }
+  return { min: toInt(props.rangeMin, 0), max: toInt(props.rangeMax, 10) }
+})
+
 const stringValue = computed(() => (typeof props.modelValue === 'string' ? props.modelValue : null))
 const numberValue = computed(() => (typeof props.modelValue === 'number' && Number.isFinite(props.modelValue) ? props.modelValue : null))
 const arrayValue = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : null))
@@ -89,8 +108,8 @@ function update(v: AnswerValue) {
   <QuestionStarRating
     v-else-if="isStar"
     :model-value="numberValue"
-    :min="rangeMin"
-    :max="rangeMax"
+    :min="scaleRange.min"
+    :max="scaleRange.max"
     :invalid="invalid"
     :name="name"
     @update:model-value="update"
@@ -100,8 +119,8 @@ function update(v: AnswerValue) {
   <RatingGroup
     v-else-if="isNumericScale"
     :model-value="numberValue"
-    :min="rangeMin"
-    :max="rangeMax"
+    :min="scaleRange.min"
+    :max="scaleRange.max"
     :invalid="invalid"
     :name="name"
     @update:model-value="update"

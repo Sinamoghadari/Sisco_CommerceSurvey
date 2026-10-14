@@ -24,7 +24,16 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: number): void }>()
 const hover = ref<number | null>(null)
 
 const lo = computed(() => Math.ceil(Math.min(props.min, props.max)))
-const hi = computed(() => Math.floor(Math.max(props.min, props.max)))
+const hiRaw = computed(() => Math.floor(Math.max(props.min, props.max)))
+
+/**
+ * سقف مؤثر طیف: اگر بازه‌ی ارسالی از سرور degenerate باشد (مثلاً فقط ۰)
+ * حداقل یک ستاره رندر می‌شود تا مقیاس همیشه تعاملی بماند.
+ */
+const hi = computed(() => {
+  const floor = Math.max(1, lo.value)
+  return hiRaw.value >= floor ? hiRaw.value : floor
+})
 
 /** آیا بازه شامل مقدار ۰ است؟ (نمایش خانه‌ی «بدون امتیاز») */
 const hasZeroCell = computed(() => lo.value <= 0 && hi.value >= 0)

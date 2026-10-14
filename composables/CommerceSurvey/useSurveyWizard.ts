@@ -89,6 +89,13 @@ export const optionTextKey = (questionId: string, value: string, followUp = fals
  */
 export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
   const currentIndex = ref(0)
+  /**
+   * سقف دسترسی خطی (Strict Linear Stepper):
+   * کاربر فقط می‌تواند به بخش‌هایی برود که به‌ترتیب به آن‌ها رسیده است.
+   * این مقدار فقط با پیشروی موفق (عبور از اعتبارسنجی بخش فعلی) افزایش می‌یابد
+   * و پرش به جلو بدون تکمیل مراحل میانی را ممنوع می‌کند.
+   */
+  const maxReachedIndex = ref(0)
   const direction = ref<'forward' | 'backward'>('forward')
   const touchedGroups = reactive<Record<string, boolean>>({})
 
@@ -232,6 +239,16 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     return id ? Boolean(touchedGroups[id]) : false
   })
 
+  /**
+   * شناسه‌ی اولین سؤال بی‌پاسخِ الزامیِ بخش جاری (برای اسکرول خودکار).
+   * کلیدهای سؤال تکمیلی پسوند __follow_up دارند که در اینجا حذف می‌شود.
+   */
+  const firstInvalidQuestionId = computed<string | null>(() => {
+    const first = currentErrors.value[0]
+    if (!first) return null
+    return first.replace('__follow_up', '')
+  })
+
   function stepStatus(index: number): 'done' | 'active' | 'pending' | 'error' {
     const group = stepList.value[index]
     if (!group) return 'pending'
@@ -290,6 +307,10 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     if (!isLast.value) {
       direction.value = 'forward'
       currentIndex.value++
+      // پیشروی خطی: سقف دسترسی فقط با عبور موفق از اعتبارسنجی بالا می‌رود
+      if (currentIndex.value > maxReachedIndex.value) {
+        maxReachedIndex.value = currentIndex.value
+      }
       scrollTop()
     }
     return true
@@ -308,22 +329,21 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
   }
 
   function goTo(index: number) {
-    // فقط پیمایش به بخش‌های قبلی یا تکمیل‌شده مجاز است
     if (index < 0 || index >= stepList.value.length) return
-    if (index > currentIndex.value) {
-      for (let i = currentIndex.value; i < index; i++) {
-        const id = stepList.value[i].id
-        if (id) touchedGroups[id] = true
-        if (groupErrors(stepList.value[i]).length) {
-          currentIndex.value = i
-          scrollTop()
-          return
-        }
-      }
+    // Strict Linear Stepper: پرش به جلو ممنوع است
+    if (index <= currentIndex.value) {
+      // حرکت به عقب به بخش‌های دیده‌شده همیشه مجاز است
+      direction.value = 'backward'
+      currentIndex.value = index
+      scrollTop()
+      return
     }
-    direction.value = index > currentIndex.value ? 'forward' : 'backward'
-    currentIndex.value = index
-    scrollTop()
+    if (index === currentIndex.value + 1) {
+      // یک گام جلو: فقط با عبور از اعتبارسنجی بخش فعلی (همان رفتار «بخش بعد»)
+      next()
+      return
+    }
+    // index > currentIndex + 1 → پرش روی دایره‌های نرسیده مجاز نیست
   }
 
   function validateAll(): boolean {
@@ -347,6 +367,7 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     Object.keys(optionTexts).forEach(k => delete optionTexts[k])
     Object.keys(touchedGroups).forEach(k => delete touchedGroups[k])
     currentIndex.value = 0
+    maxReachedIndex.value = 0
     direction.value = 'forward'
   }
 
@@ -381,6 +402,7 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     strategySteps,
     finalStep,
     currentIndex,
+    maxReachedIndex,
     currentGroup,
     direction,
     isFirst,
@@ -394,6 +416,7 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     totalAnswerable,
     currentErrors,
     showErrors,
+    firstInvalidQuestionId,
     getAnswer,
     getFollowUp,
     isQuestionAnswered,

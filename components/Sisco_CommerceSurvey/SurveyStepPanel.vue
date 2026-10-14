@@ -18,6 +18,10 @@ defineProps<{
   showErrors: boolean
   isInvalid: (q: SurveyQuestion) => boolean
   isFollowUpInvalid: (q: SurveyQuestion) => boolean
+  /** سیگنال لرزش (با هر تلاش ناموفق افزایش می‌یابد) */
+  shakeToken?: number
+  /** شناسه‌ی اولین سؤال بی‌پاسخ (برای اسکرول و لرزش) */
+  firstInvalidId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -40,6 +44,8 @@ const emit = defineEmits<{
         :option-texts="optionTexts"
         :invalid="showErrors && isInvalid(q)"
         :follow-up-invalid="showErrors && isFollowUpInvalid(q)"
+        :shake-token="shakeToken ?? 0"
+        :is-first-invalid="firstInvalidId === q._id"
         @select="v => emit('select', q, v)"
         @follow-up="v => emit('follow-up', q, v)"
         @option-text="(key, text) => emit('option-text', key, text)"

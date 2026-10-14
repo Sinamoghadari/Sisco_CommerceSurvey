@@ -16,6 +16,8 @@ const props = defineProps<{
   finalStep: { id: string; title: string } | null
   /** ایندکس جاری در فضای کل بخش‌ها (استراتژیک + پایانی) */
   currentIndex: number
+  /** سقف دسترسی خطی: فقط دایره‌های <= این مقدار قابل کلیک‌اند (Strict Linear Stepper) */
+  maxReachable: number
   progress: number
   status: (index: number) => 'done' | 'active' | 'pending' | 'error'
 }>()
@@ -48,8 +50,9 @@ function finalClass(): string {
     : 'bg-white dark:bg-slate-900 border-dashed border-primary-300 dark:border-primary-700 text-primary-500 dark:text-primary-300'
 }
 
+/** فقط بخش‌های رسیده‌شده (به‌ترتیب) قابل کلیک هستند؛ پرش به جلو ممنوع */
 function isNavigable(index: number): boolean {
-  return index <= props.currentIndex
+  return index <= props.maxReachable
 }
 
 /** عنوان بخش جاری برای نمای موبایل (استراتژیک یا پایانی) */
@@ -83,9 +86,12 @@ const mobileTitle = computed(() =>
 
         <button
           type="button"
-          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-sm transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
-          :class="[circleClass(i), isNavigable(i) ? 'cursor-pointer hover:scale-105' : 'cursor-default']"
+          :disabled="!isNavigable(i)"
+          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-sm transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30 disabled:cursor-not-allowed"
+          :class="[circleClass(i), isNavigable(i) ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-70']"
           :aria-current="status(i) === 'active' ? 'step' : undefined"
+          :aria-disabled="!isNavigable(i)"
+          :title="isNavigable(i) ? step.title : 'برای دسترسی به این بخش، ابتدا بخش‌های قبلی را تکمیل کنید'"
           :aria-label="`${step.title} – بخش ${i + 1}`"
           @click="emit('select', i)"
         >
@@ -112,9 +118,12 @@ const mobileTitle = computed(() =>
 
         <button
           type="button"
-          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
-          :class="[finalClass(), isNavigable(steps.length) ? 'cursor-pointer hover:scale-105' : 'cursor-default']"
+          :disabled="!isNavigable(steps.length)"
+          class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30 disabled:cursor-not-allowed"
+          :class="[finalClass(), isNavigable(steps.length) ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-70']"
           :aria-current="currentIndex >= steps.length ? 'step' : undefined"
+          :aria-disabled="!isNavigable(steps.length)"
+          :title="isNavigable(steps.length) ? finalStep.title : 'برای دسترسی به این بخش، ابتدا بخش‌های قبلی را تکمیل کنید'"
           :aria-label="finalStep.title"
           @click="emit('select', steps.length)"
         >

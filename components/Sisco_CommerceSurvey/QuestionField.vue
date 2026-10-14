@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { SurveyQuestion } from '~/composables/CommerceSurvey/useSurveyApi'
 import type { AnswerValue } from '~/composables/CommerceSurvey/useSurveyWizard'
 import { isFollowUpConditionMet } from '~/composables/CommerceSurvey/useSurveyWizard'
@@ -22,11 +22,17 @@ const props = withDefaults(
     optionTexts?: Record<string, string>
     invalid?: boolean
     followUpInvalid?: boolean
+    /** سیگنال لرزش: با هر تغییر، در صورت بودن اولین سؤالِ بی‌پاسخ، انیمیشن اجرا می‌شود */
+    shakeToken?: number
+    /** آیا این سؤال، اولین سؤال بی‌پاسخِ الزامی است؟ */
+    isFirstInvalid?: boolean
   }>(),
   {
     optionTexts: () => ({}),
     invalid: false,
-    followUpInvalid: false
+    followUpInvalid: false,
+    shakeToken: 0,
+    isFirstInvalid: false
   }
 )
 
@@ -35,6 +41,22 @@ const emit = defineEmits<{
   (e: 'follow-up', v: AnswerValue): void
   (e: 'option-text', key: string, text: string): void
 }>()
+
+/** اجرای انیمیشن لرزش روی اولین سؤال بی‌پاسخ پس از تلاش ناموفق برای عبور */
+const shaking = ref(false)
+let shakeTimer: ReturnType<typeof setTimeout> | null = null
+watch(
+  () => props.shakeToken,
+  () => {
+    if (!props.isFirstInvalid) return
+    shaking.value = false
+    if (shakeTimer) clearTimeout(shakeTimer)
+    requestAnimationFrame(() => {
+      shaking.value = true
+      shakeTimer = setTimeout(() => (shaking.value = false), 700)
+    })
+  }
+)
 
 const fu = computed(() => props.question.conditional_follow_up)
 const fuVisible = computed(() => isFollowUpConditionMet({ ...props.question, selected: props.answer }))
@@ -50,12 +72,14 @@ const isAnswered = computed(() => {
 
 <template>
   <div
-    class="rounded-2xl border p-5 sm:p-6 transition-all duration-300 bg-white dark:bg-slate-900/60"
-    :class="
+    :id="`q-${question._id}`"
+    class="rounded-2xl border p-5 sm:p-6 transition-all duration-300 bg-white dark:bg-slate-900/60 scroll-mt-24"
+    :class="[
       invalid
         ? 'border-red-300 dark:border-red-800 shadow-[0_0_0_4px_rgba(239,68,68,0.08)]'
-        : 'border-muted-200 dark:border-muted-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800'
-    "
+        : 'border-muted-200 dark:border-muted-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800',
+      shaking ? 'question-shake' : ''
+    ]"
   >
     <!-- عنوان سؤال (از question.text) -->
     <div class="flex items-start gap-3 mb-4">
@@ -68,7 +92,7 @@ const isAnswered = computed(() => {
       <div class="flex-1">
         <label class="block text-sm sm:text-base font-bold text-green-600 dark:text-green-400 leading-7">
           {{ question.text }}
-          <span v-if="question.required" class="text-red-500 font-bold" title="پاسخ به این سؤال الزامی است">*</span>
+          <span v-if="question.required" class="text-red-500 font-bold" title="لطفاً به این سوال پاسخ دهید">*</span>
         </label>
       </div>
     </div>
@@ -92,7 +116,7 @@ const isAnswered = computed(() => {
     <Transition name="slide">
       <p v-if="invalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-3">
         <Icon icon="lucide:alert-circle" class="w-4 h-4" />
-        پاسخ به این سؤال الزامی است.
+        لطفاً به این سوال پاسخ دهید.
       </p>
     </Transition>
 
@@ -131,7 +155,7 @@ const isAnswered = computed(() => {
         <Transition name="slide">
           <p v-if="followUpInvalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-2">
             <Icon icon="lucide:alert-circle" class="w-4 h-4" />
-            پاسخ به این سؤال الزامی است.
+            لطفاً به این سوال پاسخ دهید.
           </p>
         </Transition>
       </div>
@@ -148,6 +172,30 @@ const isAnswered = computed(() => {
 .slide-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* انیمیشن لرزش اولین سؤال بی‌پاسخ */
+.question-shake {
+  animation: question-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes question-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
 }
 
 /* انیمیشن ظهور سؤال تکمیلی شرطی */
