@@ -40,7 +40,7 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
       <BaseHeading as="h1" size="3xl" weight="bold" class="text-black dark:text-white">
         نظرسنجی مشتریان امور بازرگانی
       </BaseHeading>
-      <p class="mt-2 text-sm text-muted-500 dark:text-muted-400">
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
         صدای مشتری (VOC) – شرکت فولاد سیرجان ایرانیان
       </p>
     </div>
@@ -53,7 +53,7 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
             type="button"
             color="success"
             size="lg"
-            class="!px-12 shadow-lg shadow-green-500/25 hover:-translate-y-0.5 transition-all duration-300"
+            class="!px-12 !rounded-xl"
             @click="startSurvey(DEFAULT_SURVEY_SELECTION)"
           >
             <span class="flex items-center gap-2">

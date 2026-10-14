@@ -38,23 +38,17 @@ const items = computed<number[]>(() => {
 /** بازه‌های پهن (بیش از ۱۵ گزینه) به چیدمان فشرده با اسکرول افقی نیاز دارند */
 const compact = computed(() => items.value.length > 15)
 
+/**
+ * ظاهر صنعتی/سازمانی: خانه‌های پرشده سبز سازمانی یکدست (بدون گرادیان
+ * رنگین‌کمانی)، متن سفید با کنتراست بالا و حلقه‌ی ظریف برای مقدار انتخابی.
+ */
 function toneClass(n: number, selected: boolean) {
   const v = hover.value ?? props.modelValue
   const filled = v !== null && v !== undefined && rangeContains(n, v)
   if (!filled) {
-    return 'bg-white dark:bg-slate-900 border-muted-300 dark:border-muted-700 text-muted-500 dark:text-muted-400 hover:border-primary-400 hover:text-primary-600'
+    return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-green-600 hover:text-green-700 dark:hover:text-green-500'
   }
-  const span = hi.value - lo.value || 1
-  const ratio = (n - lo.value) / span
-  const tone =
-    ratio <= 0.3
-      ? 'from-rose-500 to-rose-400 border-rose-500'
-      : ratio <= 0.5
-        ? 'from-amber-500 to-amber-400 border-amber-500'
-        : ratio <= 0.7
-          ? 'from-lime-500 to-lime-400 border-lime-500'
-          : 'from-green-600 to-green-500 border-green-600'
-  return `bg-gradient-to-br ${tone} text-white shadow-md ${selected ? 'scale-110 ring-4 ring-primary-500/20' : ''}`
+  return `bg-green-700 border-green-700 text-white ${selected ? 'ring-2 ring-green-600/25 scale-105' : ''}`
 }
 
 /** آیا مقدار انتخاب‌شده در بازه‌ی hover قرار می‌گیرد؟ (پر شدن بازه‌ای) */
@@ -78,10 +72,10 @@ function onKey(e: KeyboardEvent) {
   <div class="w-full" role="radiogroup" :aria-label="name" @keydown="onKey">
     <div class="overflow-x-auto pb-1 -mx-1 px-1">
       <div
-        class="flex items-center rounded-xl p-2 sm:p-3 border transition-colors gap-1"
+        class="flex items-center rounded-lg p-2 sm:p-2.5 border transition-colors gap-1"
         :class="[
           compact ? 'min-w-max' : 'w-full justify-between gap-0.5',
-          invalid ? 'border-red-300 bg-red-50/40 dark:border-red-800 dark:bg-red-900/10' : 'border-transparent'
+          invalid ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40'
         ]"
         dir="rtl"
       >
@@ -93,7 +87,7 @@ function onKey(e: KeyboardEvent) {
           :aria-checked="modelValue === n"
           :aria-label="`${n} از ${max}`"
           :tabindex="modelValue === n || (modelValue === null && n === lo) ? 0 : -1"
-          class="aspect-square rounded-lg border-2 font-bold transition-all duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
+          class="aspect-square rounded-md border-2 font-bold transition-all duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
           :class="[
             compact ? 'w-8 h-8 sm:w-9 sm:h-9 shrink-0 text-[11px] sm:text-xs' : 'flex-1 max-w-[46px] text-xs sm:text-sm',
             toneClass(n, modelValue === n)
@@ -107,7 +101,7 @@ function onKey(e: KeyboardEvent) {
       </div>
     </div>
 
-    <div class="flex items-center justify-between px-3 mt-1 text-[11px] sm:text-xs text-muted-500 dark:text-muted-400" dir="rtl">
+    <div class="flex items-center justify-between px-3 mt-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium" dir="rtl">
       <span>{{ labels?.min ?? lo }}</span>
       <span>{{ labels?.max ?? hi }}</span>
     </div>

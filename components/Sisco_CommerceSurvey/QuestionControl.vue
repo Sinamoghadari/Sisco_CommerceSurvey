@@ -46,13 +46,18 @@ const emit = defineEmits<{
 
 const normalizedOptions = computed(() => normalizeOptions(props.options))
 
-const isChoice = computed(() => props.type === 'single_choice' || props.type === 'multiple_choice')
-const isStar = computed(() => props.type === 'rating')
-const isNumericScale = computed(() => props.type === 'range_rating' || props.type === 'strategy_range_rating')
-const isTextarea = computed(() => props.type === 'text')
+/** نوع نرمال‌شده (حذف فاصله/حروف بزرگ) تا تنوع ارسال سرور باعث رد شدن شرط رندر نشود */
+const normalizedType = computed(() => String(props.type ?? '').trim().toLowerCase())
+
+const isChoice = computed(() => normalizedType.value === 'single_choice' || normalizedType.value === 'multiple_choice')
+const isStar = computed(() => normalizedType.value === 'rating')
+const isNumericScale = computed(() => normalizedType.value === 'range_rating' || normalizedType.value === 'strategy_range_rating')
+const isTextarea = computed(() => normalizedType.value === 'text')
 
 /** تبدیل امن مقدار بازه به عدد صحیح؛ در صورت نامعتبر بودن از مقدار پیش‌فرض استفاده می‌شود */
 function toInt(v: unknown, fallback: number): number {
+  // مقادیر غایب (null/undefined/رشته‌ی خالی) باید به پیش‌فرض برسند، نه صفر
+  if (v === null || v === undefined || v === '') return fallback
   const n = Number(v)
   return Number.isFinite(n) ? Math.trunc(n) : fallback
 }
@@ -86,8 +91,8 @@ function update(v: AnswerValue) {
     :value="stringValue ?? ''"
     rows="4"
     :placeholder="placeholder"
-    class="w-full rounded-xl border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
-    :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
+    class="w-full rounded-lg border px-4 py-3 text-sm leading-7 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-green-600/20 focus:border-green-700 resize-y"
+    :class="invalid ? 'border-red-400' : 'border-slate-300 dark:border-slate-600'"
     @input="update(($event.target as HTMLTextAreaElement).value)"
   />
 
@@ -96,7 +101,7 @@ function update(v: AnswerValue) {
     v-else-if="isChoice"
     :model-value="arrayValue ?? stringValue"
     :options="normalizedOptions"
-    :multiple="type === 'multiple_choice'"
+    :multiple="normalizedType === 'multiple_choice'"
     :invalid="invalid"
     :option-texts="optionTexts"
     :option-key-prefix="optionKeyPrefix"
@@ -132,8 +137,8 @@ function update(v: AnswerValue) {
     type="text"
     :value="stringValue ?? ''"
     :placeholder="placeholder"
-    class="w-full rounded-xl border px-4 py-3 text-sm bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500"
-    :class="invalid ? 'border-red-400' : 'border-muted-300 dark:border-muted-700'"
+    class="w-full rounded-lg border px-4 py-3 text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-green-600/20 focus:border-green-700"
+    :class="invalid ? 'border-red-400' : 'border-slate-300 dark:border-slate-600'"
     @input="update(($event.target as HTMLInputElement).value)"
   />
 </template>

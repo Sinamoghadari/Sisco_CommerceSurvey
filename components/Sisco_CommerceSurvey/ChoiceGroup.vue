@@ -73,8 +73,8 @@ function onOptionText(option: NormalizedOption, event: Event) {
 
 <template>
   <div
-    class="space-y-2.5"
-    :class="invalid ? 'rounded-xl ring-1 ring-red-300 dark:ring-red-800 bg-red-50/40 dark:bg-red-900/10 p-1' : ''"
+    class="space-y-3"
+    :class="invalid ? 'rounded-lg ring-1 ring-red-300 dark:ring-red-800 bg-red-50/50 dark:bg-red-900/10 p-1.5' : ''"
     :role="multiple ? 'group' : 'radiogroup'"
   >
     <button
@@ -83,21 +83,21 @@ function onOptionText(option: NormalizedOption, event: Event) {
       type="button"
       :role="multiple ? 'checkbox' : 'radio'"
       :aria-checked="isChecked(opt.value)"
-      class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm text-right transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
+      class="group w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-sm text-right transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
       :class="
         isChecked(opt.value)
-          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 shadow-sm'
-          : 'border-muted-200 dark:border-muted-700 bg-white dark:bg-slate-900 text-muted-700 dark:text-muted-200 hover:border-primary-300 hover:bg-primary-50/40'
+          ? 'border-green-700 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60'
       "
       @click="toggle(opt.value)"
     >
       <span
         class="flex-shrink-0 w-5 h-5 border-2 flex items-center justify-center transition-all duration-200"
         :class="[
-          multiple ? 'rounded-md' : 'rounded-full',
+          multiple ? 'rounded-[4px]' : 'rounded-full',
           isChecked(opt.value)
-            ? 'border-primary-500 bg-primary-500 text-white'
-            : 'border-muted-300 dark:border-muted-600 group-hover:border-primary-400'
+            ? 'border-green-700 bg-green-700 text-white'
+            : 'border-slate-300 dark:border-slate-600 group-hover:border-green-600'
         ]"
       >
         <Transition name="pop">
@@ -110,14 +110,17 @@ function onOptionText(option: NormalizedOption, event: Event) {
     </button>
 
     <!-- ورودی متنی تکمیلی برای گزینه‌های دارای need_text -->
-    <TransitionGroup v-if="activeNeedTextOptions.length" name="needtext" tag="div" class="space-y-2.5">
+    <TransitionGroup v-if="activeNeedTextOptions.length" name="needtext" tag="div" class="space-y-3">
       <div
         v-for="opt in activeNeedTextOptions"
         :key="`needtext-${opt.id}`"
-        class="rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10 p-3"
+        class="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 p-3.5"
       >
-        <label :for="`needtext-${optionKeyPrefix}-${opt.id}`" class="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 mb-2">
-          <Icon icon="lucide:pencil-line" class="w-3.5 h-3.5" />
+        <label :for="`needtext-${optionKeyPrefix}-${opt.id}`" class="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
           توضیح برای «{{ opt.label }}»
         </label>
         <textarea
@@ -125,7 +128,7 @@ function onOptionText(option: NormalizedOption, event: Event) {
           rows="2"
           :value="textValue(opt)"
           :placeholder="needTextPlaceholder"
-          class="w-full rounded-lg border px-3 py-2 text-sm leading-6 bg-white dark:bg-slate-900 text-muted-800 dark:text-muted-100 placeholder:text-muted-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 resize-y"
+          class="w-full rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm leading-6 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-green-600/20 focus:border-green-700 resize-y"
           @input="onOptionText(opt, $event)"
         />
       </div>

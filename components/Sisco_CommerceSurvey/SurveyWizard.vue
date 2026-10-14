@@ -37,6 +37,12 @@ const emit = defineEmits<{
 
 const wizard = useSurveyWizard(() => props.groups ?? [])
 
+/** تبدیل ارقام لاتین به فارسی برای نمایش یکدست counters */
+const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+function fa(n: number | string): string {
+  return String(n).replace(/\d/g, d => FA_DIGITS[+d])
+}
+
 const isConfirmOpen = ref(false)
 
 const isEmptyView = computed(
@@ -83,11 +89,11 @@ function confirmSubmit() {
 <template>
   <div class="mx-auto w-full max-w-4xl">
     <!-- ================= بارگذاری ================= -->
-    <BaseCard v-if="status === 'loading'" class="mb-6 overflow-hidden">
+    <BaseCard v-if="status === 'loading'" class="mb-6 overflow-hidden !rounded-xl">
       <div class="px-6 sm:px-8 py-6 border-b border-muted-200 dark:border-muted-800">
         <div class="flex items-center gap-3">
-          <span class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
-            <Icon icon="lucide:loader-circle" class="w-5 h-5 text-primary-600 dark:text-primary-300 animate-spin" />
+          <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <Icon icon="lucide:loader-circle" class="w-5 h-5 text-slate-600 dark:text-slate-300 animate-spin" />
           </span>
           <div>
             <p class="font-bold text-gray-900 dark:text-white">در حال دریافت پرسشنامه…</p>
@@ -96,7 +102,7 @@ function confirmSubmit() {
         </div>
       </div>
       <div class="px-6 sm:px-8 py-6 space-y-4" aria-hidden="true">
-        <div v-for="n in 3" :key="n" class="rounded-2xl border border-muted-200 dark:border-muted-800 p-5">
+        <div v-for="n in 3" :key="n" class="rounded-xl border border-slate-200 dark:border-slate-800 p-5">
           <div class="h-4 rounded bg-muted-200 dark:bg-muted-700 animate-pulse w-2/3 mb-3" />
           <div class="h-9 rounded-xl bg-muted-100 dark:bg-slate-800 animate-pulse w-full mb-2" />
           <div class="h-3 rounded bg-muted-100 dark:bg-slate-800 animate-pulse w-1/3" />
@@ -105,9 +111,9 @@ function confirmSubmit() {
     </BaseCard>
 
     <!-- ================= خطا ================= -->
-    <BaseCard v-else-if="status === 'error'" class="mb-6 overflow-hidden">
+    <BaseCard v-else-if="status === 'error'" class="mb-6 overflow-hidden !rounded-xl">
       <div class="px-8 py-12 text-center">
-        <div class="mx-auto w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center mb-4">
+        <div class="mx-auto w-16 h-16 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center mb-4">
           <Icon icon="lucide:cloud-alert" class="w-8 h-8" />
         </div>
         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">خطا در دریافت پرسشنامه</h2>
@@ -129,9 +135,9 @@ function confirmSubmit() {
     </BaseCard>
 
     <!-- ================= خالی ================= -->
-    <BaseCard v-else-if="isEmptyView" class="mb-6 overflow-hidden">
+    <BaseCard v-else-if="isEmptyView" class="mb-6 overflow-hidden !rounded-xl">
       <div class="px-8 py-12 text-center">
-        <div class="mx-auto w-16 h-16 rounded-2xl bg-muted-100 dark:bg-slate-800 text-muted-400 flex items-center justify-center mb-4">
+        <div class="mx-auto w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-4">
           <Icon icon="lucide:inbox" class="w-8 h-8" />
         </div>
         <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">پرسشنامه‌ای برای نمایش وجود ندارد</h2>
@@ -156,7 +162,7 @@ function confirmSubmit() {
       <Transition name="slide" appear>
         <div
           v-if="alreadyAnswered"
-          class="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
+          class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-700 dark:text-amber-300"
         >
           <Icon icon="lucide:info" class="w-4 h-4 flex-shrink-0" />
           بر اساس اطلاعات سرویس، شما قبلاً در این نظرسنجی شرکت کرده‌اید.
@@ -169,17 +175,25 @@ function confirmSubmit() {
         <p v-if="surveyDescription" class="text-sm text-muted-500 dark:text-muted-400 mt-1 leading-7">{{ surveyDescription }}</p>
       </div>
 
-      <!-- نوار پیشرفت -->
+      <!-- نوار پیشرفت: نشان با تراز عمودی/افقی دقیق -->
       <div class="flex items-center mb-5">
-        <span class="chip chip--muted">
-          <Icon icon="lucide:list-checks" class="w-3.5 h-3.5" />
-          {{ wizard.answeredCount.value }} / {{ wizard.totalAnswerable.value }} پاسخ
+        <span class="progress-pill" dir="rtl">
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m3 17 2 2 4-4" />
+            <path d="m3 7 2 2 4-4" />
+            <path d="M13 6h8" />
+            <path d="M13 12h8" />
+            <path d="M13 18h8" />
+          </svg>
+          <span class="progress-pill__text">
+            {{ fa(wizard.answeredCount.value) }} / {{ fa(wizard.totalAnswerable.value) }} پاسخ
+          </span>
         </span>
       </div>
 
-      <BaseCard class="mb-6 overflow-hidden">
+      <BaseCard class="mb-6 overflow-hidden !rounded-xl">
         <!-- استپر: دایره‌های استراتژیک + نشان پایانی جمع‌بندی -->
-        <div class="px-6 sm:px-8 py-6 border-b border-muted-200 dark:border-muted-800 bg-muted-50/60 dark:bg-slate-900/40">
+        <div class="px-6 sm:px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40">
           <SurveyStepper
             :steps="wizard.strategySteps.value"
             :final-step="wizard.finalStep.value"
@@ -196,10 +210,10 @@ function confirmSubmit() {
           <Transition :name="wizard.direction.value === 'forward' ? 'step-forward' : 'step-backward'" mode="out-in">
             <div :key="wizard.currentGroup.value?.id || wizard.currentIndex.value" class="flex items-start gap-3">
               <span
-                class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold"
+                class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 font-bold"
                 :class="wizard.currentGroup.value?.isGeneral
-                  ? 'bg-primary-600 text-white shadow-md shadow-primary-600/25'
-                  : 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300'"
+                  ? 'bg-green-700 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
               >
                 <Icon v-if="wizard.currentGroup.value?.isGeneral" icon="lucide:clipboard-check" class="w-5 h-5 text-white" />
                 <template v-else>{{ wizard.currentIndex.value + 1 }}</template>
@@ -220,7 +234,7 @@ function confirmSubmit() {
         <Transition name="slide">
           <div
             v-if="wizard.showErrors.value && wizard.currentErrors.value.length"
-            class="mx-6 sm:mx-8 mt-4 flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-300"
+            class="mx-6 sm:mx-8 mt-4 flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-300"
           >
             <Icon icon="lucide:alert-triangle" class="w-4 h-4 flex-shrink-0" />
             لطفاً به {{ wizard.currentErrors.value.length }} پاسخ الزامی باقی‌مانده در این بخش پاسخ دهید.
@@ -250,7 +264,7 @@ function confirmSubmit() {
         </div>
 
         <!-- ناوبری -->
-        <div class="px-6 sm:px-8 py-5 border-t border-muted-200 dark:border-muted-800 bg-muted-50/60 dark:bg-slate-900/40 flex items-center justify-between gap-3">
+        <div class="px-6 sm:px-8 py-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex items-center justify-between gap-3">
           <BaseButton
             type="button"
             color="muted"
@@ -264,14 +278,14 @@ function confirmSubmit() {
             </span>
           </BaseButton>
 
-          <span class="hidden sm:block text-xs text-muted-400">
-            بخش {{ wizard.currentIndex.value + 1 }} از {{ wizard.displayGroups.value.length }}
+          <span class="hidden sm:block text-xs text-slate-400 font-medium">
+            بخش {{ fa(wizard.currentIndex.value + 1) }} از {{ fa(wizard.displayGroups.value.length) }}
           </span>
 
           <BaseButton
             type="button"
             :color="wizard.isLast.value ? 'success' : 'primary'"
-            class="!px-7 shadow-md hover:-translate-y-0.5 transition-all"
+            class="!px-6"
             @click="onNext"
           >
             <span class="flex items-center gap-2">
@@ -291,8 +305,8 @@ function confirmSubmit() {
               آیا از ثبت نهایی پاسخ‌های خود اطمینان دارید؟
             </p>
             <div class="flex justify-end gap-2">
-              <button type="button" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" @click="isConfirmOpen = false">خیر</button>
-              <button type="button" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors" @click="confirmSubmit">بله، ثبت شود</button>
+              <button type="button" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" @click="isConfirmOpen = false">خیر</button>
+              <button type="button" class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors" @click="confirmSubmit">بله، ثبت شود</button>
             </div>
           </div>
         </div>
@@ -302,11 +316,35 @@ function confirmSubmit() {
 </template>
 
 <style scoped>
-.chip {
-  @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800;
+/**
+ * نشان پیشرفت: تراز مرکزی کامل (عمودی/افقی) با ارسال ثابت، line-height یک
+ * و فاصله‌گذاری متقارن – متناسب با ارقام فارسی.
+ */
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  height: 2rem;
+  min-width: 2rem;
+  padding: 0 0.875rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
-.chip--muted {
-  @apply bg-muted-100 dark:bg-slate-800 text-muted-600 dark:text-muted-300 border-muted-200 dark:border-muted-700;
+.progress-pill__text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  letter-spacing: 0;
+  transform: translateY(0.5px);
 }
 
 /* ترنزیشن جابه‌جایی بخش‌ها (RTL: جلو = ورود از چپ) */

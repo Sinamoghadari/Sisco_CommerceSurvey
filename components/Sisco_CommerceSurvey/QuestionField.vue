@@ -73,11 +73,11 @@ const isAnswered = computed(() => {
 <template>
   <div
     :id="`q-${question._id}`"
-    class="rounded-2xl border p-5 sm:p-6 transition-all duration-300 bg-white dark:bg-slate-900/60 scroll-mt-24"
+    class="rounded-xl border p-5 sm:p-6 transition-all duration-300 bg-white dark:bg-slate-900/60 scroll-mt-24"
     :class="[
       invalid
-        ? 'border-red-300 dark:border-red-800 shadow-[0_0_0_4px_rgba(239,68,68,0.08)]'
-        : 'border-muted-200 dark:border-muted-800 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-800',
+        ? 'border-red-300 dark:border-red-800 shadow-[0_0_0_3px_rgba(220,38,38,0.06)]'
+        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
       shaking ? 'question-shake' : ''
     ]"
   >
@@ -85,12 +85,12 @@ const isAnswered = computed(() => {
     <div class="flex items-start gap-3 mb-4">
       <span
         class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors"
-        :class="isAnswered ? 'bg-green-500 text-white' : 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'"
+        :class="isAnswered ? 'bg-green-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
       >
         {{ index + 1 }}
       </span>
       <div class="flex-1">
-        <label class="block text-sm sm:text-base font-bold text-green-600 dark:text-green-400 leading-7">
+        <label class="block text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-7">
           {{ question.text }}
           <span v-if="question.required" class="text-red-500 font-bold" title="لطفاً به این سوال پاسخ دهید">*</span>
         </label>
@@ -114,8 +114,12 @@ const isAnswered = computed(() => {
 
     <!-- پیام خطای سؤال اصلی -->
     <Transition name="slide">
-      <p v-if="invalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-3">
-        <Icon icon="lucide:alert-circle" class="w-4 h-4" />
+      <p v-if="invalid" class="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 mt-3">
+        <svg viewBox="0 0 24 24" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4" />
+          <path d="M12 16h.01" />
+        </svg>
         لطفاً به این سوال پاسخ دهید.
       </p>
     </Transition>
@@ -124,12 +128,15 @@ const isAnswered = computed(() => {
     <Transition name="reveal">
       <div
         v-if="fu && fuVisible"
-        class="mt-5 rounded-xl border-2 border-dashed p-4 bg-amber-50/50 dark:bg-amber-900/10 transition-colors duration-300"
-        :class="followUpInvalid ? 'border-red-400 dark:border-red-700' : 'border-amber-300 dark:border-amber-700'"
+        class="mt-6 rounded-lg border border-dashed p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/50 transition-colors duration-300"
+        :class="followUpInvalid ? 'border-red-400 dark:border-red-700' : 'border-slate-300 dark:border-slate-600'"
       >
         <div class="flex items-start gap-2.5 mb-3">
-          <span class="flex-shrink-0 inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold leading-5">
-            <Icon icon="lucide:corner-down-left" class="w-3 h-3" />
+          <span class="flex-shrink-0 inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold leading-5">
+            <svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 4v7a4 4 0 0 1-4 4H4" />
+              <path d="m9 10-5 5 5 5" />
+            </svg>
             سؤال تکمیلی
           </span>
           <label class="block text-sm font-bold text-gray-900 dark:text-white leading-6">
@@ -153,8 +160,12 @@ const isAnswered = computed(() => {
         />
 
         <Transition name="slide">
-          <p v-if="followUpInvalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-2">
-            <Icon icon="lucide:alert-circle" class="w-4 h-4" />
+          <p v-if="followUpInvalid" class="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 mt-2">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
+            </svg>
             لطفاً به این سوال پاسخ دهید.
           </p>
         </Transition>

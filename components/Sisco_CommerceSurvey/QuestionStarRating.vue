@@ -4,9 +4,11 @@ import { computed, ref } from 'vue'
 /**
  * امتیازدهی ستاره‌ای – تعداد ستاره‌ها به‌صورت داینامیک بین range_min و
  * range_max ساخته می‌شود (مثلاً ۰ تا ۵ ستاره).
- * - چیدمان راست‌به‌چپ: کمترین مقدار در سمت راست قرار می‌گیرد.
- * - پر شدن با طلایی/زرد و افکت نرم hover.
- * - اگر بازه شامل ۰ باشد، خانه‌ی «۰» (بدون امتیاز) به‌صورت عددی ابتدای طیف است.
+ * - ستاره‌ها با SVG درون‌خطی (بدون وابستگی به کامپوننت Icon یا مجموعه آیکون)
+ *   رندر می‌شوند تا در هیچ محیطی خالی نمانند.
+ * - چیدمان راست‌به‌چپ: خانه‌ی «۰» و کمترین مقدار سمت راست، بیشترین مقدار چپ.
+ * - پر شدن با طلایی/کهربایی گرم (amber) و پیش‌نمایش hover.
+ * - انتخاب ۰: از طریق خانه‌ی صفر یا کلیک دوباره روی اولین ستاره‌ی انتخاب‌شده.
  */
 const props = withDefaults(
   defineProps<{
@@ -26,10 +28,7 @@ const hover = ref<number | null>(null)
 const lo = computed(() => Math.ceil(Math.min(props.min, props.max)))
 const hiRaw = computed(() => Math.floor(Math.max(props.min, props.max)))
 
-/**
- * سقف مؤثر طیف: اگر بازه‌ی ارسالی از سرور degenerate باشد (مثلاً فقط ۰)
- * حداقل یک ستاره رندر می‌شود تا مقیاس همیشه تعاملی بماند.
- */
+/** سقف مؤثر طیف: بازه‌ی degenerate (مثلاً ۰ تا ۰) حداقل یک ستاره دارد */
 const hi = computed(() => {
   const floor = Math.max(1, lo.value)
   return hiRaw.value >= floor ? hiRaw.value : floor
@@ -53,23 +52,20 @@ function isFilled(n: number): boolean {
   return typeof v === 'number' && n > 0 && n <= v
 }
 
-function isSelected(n: number): boolean {
-  return props.modelValue === n
-}
+/** مسیر ستاره‌ی پنج‌پر 24x24 – مشترک بین همه‌ی ستاره‌ها */
+const STAR_PATH = 'M12 2.5l2.95 5.98 6.6.96-4.78 4.66 1.13 6.58L12 17.58l-5.9 3.1 1.13-6.58L4.45 9.44l6.6-.96L12 2.5z'
 
-function cellClass(n: number): string {
-  const selected = isSelected(n)
-  if (n === 0) {
-    // خانه‌ی «۰» – بدون امتیاز
-    if (props.modelValue === 0) {
-      return 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-900/20 scale-110'
-    }
-    return 'border-muted-300 dark:border-muted-600 text-muted-400 hover:border-amber-400 hover:text-amber-500'
+/**
+ * انتخاب مقدار:
+ *  - کلیک روی ستاره‌ی انتخاب‌شده‌ی اول (۱) آن را پاک می‌کند و به ۰ برمی‌گرداند.
+ *  - سایر ستاره‌ها مقدار خودشان را تنظیم می‌کنند.
+ */
+function select(n: number) {
+  if (props.modelValue === n && n === 1 && hasZeroCell.value) {
+    emit('update:modelValue', 0)
+    return
   }
-  if (isFilled(n)) {
-    return `border-amber-400 text-amber-400 ${selected ? 'scale-110 drop-shadow-[0_2px_6px_rgba(245,158,11,0.45)]' : ''}`
-  }
-  return 'border-muted-200 dark:border-muted-700 text-muted-300 dark:text-muted-600 hover:text-amber-300 hover:border-amber-300'
+  emit('update:modelValue', n)
 }
 
 function onKey(e: KeyboardEvent) {
@@ -79,7 +75,7 @@ function onKey(e: KeyboardEvent) {
     emit('update:modelValue', Math.min(hi.value, v + 1))
   } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
     e.preventDefault()
-    emit('update:modelValue', Math.max(lo.value, v - 1))
+    emit('update:modelValue', Math.max(hasZeroCell.value ? 0 : lo.value, v - 1))
   }
 }
 </script>
@@ -87,30 +83,34 @@ function onKey(e: KeyboardEvent) {
 <template>
   <div class="w-full" role="radiogroup" :aria-label="name" @keydown="onKey">
     <div
-      class="flex items-center gap-1.5 rounded-xl p-2.5 border transition-colors w-fit max-w-full"
-      :class="invalid ? 'border-red-300 bg-red-50/40 dark:border-red-800 dark:bg-red-900/10' : 'border-transparent'"
+      class="flex items-center gap-1 rounded-lg border p-2 transition-colors w-fit max-w-full"
+      :class="invalid ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40'"
       dir="rtl"
     >
-      <!-- خانه‌ی صفر (در صورت وجود در بازه) -->
+      <!-- خانه‌ی صفر (بدون امتیاز) – ابتدای طیف در سمت راست -->
       <button
         v-if="hasZeroCell"
         type="button"
         role="radio"
         :aria-checked="modelValue === 0"
-        aria-label="بدون امتیاز"
+        aria-label="بدون امتیاز (۰)"
         :tabindex="modelValue === 0 || modelValue === null ? 0 : -1"
-        class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/30"
-        :class="cellClass(0)"
+        class="h-9 w-9 sm:h-10 sm:w-10 rounded-md border flex items-center justify-center text-sm font-bold leading-none transition-colors duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/25"
+        :class="
+          modelValue === 0
+            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+            : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-amber-400 hover:text-amber-600'
+        "
         @mouseenter="hover = 0"
         @mouseleave="hover = null"
         @click="emit('update:modelValue', 0)"
       >
-        {{ lo }}
+        0
       </button>
 
-      <span v-if="hasZeroCell" class="w-px h-6 bg-muted-200 dark:bg-muted-700 mx-0.5" aria-hidden="true" />
+      <span v-if="hasZeroCell" class="w-px h-7 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true" />
 
-      <!-- ستاره‌ها -->
+      <!-- ستاره‌ها: SVG درون‌خطی با fill صریح (مستقل از Icon/CSS) -->
       <button
         v-for="n in starValues"
         :key="n"
@@ -119,30 +119,29 @@ function onKey(e: KeyboardEvent) {
         :aria-checked="modelValue === n"
         :aria-label="`${n} ستاره`"
         :tabindex="modelValue === n || (modelValue === null && n === Math.max(1, lo)) ? 0 : -1"
-        class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/30 star-cell"
-        :class="[cellClass(n), isFilled(n) ? 'star-filled' : '']"
+        class="w-10 h-10 sm:w-11 sm:h-11 rounded-md flex items-center justify-center transition-transform duration-150 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/25 hover:scale-105"
         @mouseenter="hover = n"
         @mouseleave="hover = null"
-        @click="emit('update:modelValue', n)"
+        @click="select(n)"
       >
-        <Icon icon="lucide:star" class="w-6 h-6 sm:w-7 sm:h-7" />
+        <svg
+          viewBox="0 0 24 24"
+          class="w-7 h-7 sm:w-8 sm:h-8"
+          aria-hidden="true"
+        >
+          <path
+            :d="STAR_PATH"
+            :fill="isFilled(n) ? '#fbbf24' : '#f8fafc'"
+            :stroke="isFilled(n) ? '#d97706' : '#cbd5e1'"
+            stroke-width="1.4"
+            stroke-linejoin="round"
+          />
+        </svg>
       </button>
     </div>
 
-    <p v-if="invalid" class="flex items-center gap-1.5 text-xs text-red-500 mt-2">
-      <Icon icon="lucide:alert-circle" class="w-4 h-4" />
-      انتخاب امتیاز الزامی است.
+    <p v-if="invalid" class="text-xs text-red-600 dark:text-red-400 mt-2">
+      لطفاً به این سوال پاسخ دهید.
     </p>
   </div>
 </template>
-
-<style scoped>
-/* پر کردن ستاره‌ی lucide (خطی) با رنگ طلایی جاری هنگام انتخاب/hover */
-.star-cell svg {
-  fill: transparent;
-  transition: fill 0.15s ease;
-}
-.star-filled svg {
-  fill: currentColor;
-}
-</style>

@@ -93,9 +93,9 @@ const salesMembers: SalesMember[] = [
 <template>
   <BaseCard class="overflow-hidden">
     <!-- سربرگ کارت -->
-    <div class="relative px-8 py-7 border-b border-muted-200 dark:border-muted-800 bg-gradient-to-l from-primary-50/70 to-transparent dark:from-primary-900/20">
+    <div class="relative px-8 py-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-primary-500 text-white flex items-center justify-center shadow-lg shadow-primary-500/30 flex-shrink-0">
+        <div class="w-12 h-12 rounded-lg bg-green-700 text-white flex items-center justify-center flex-shrink-0">
           <img src="/img/Sisco_CommerceSurvey/headset.svg" alt="راه‌های ارتباطی" class="w-6 h-6 channel-icon channel-icon--white" />
         </div>
         <div>
@@ -117,15 +117,15 @@ const salesMembers: SalesMember[] = [
           :href="channel.href"
           :target="channel.href?.startsWith('http') ? '_blank' : undefined"
           :rel="channel.href?.startsWith('http') ? 'noopener noreferrer' : undefined"
-          class="group flex items-center gap-3.5 p-4 rounded-xl border border-muted-200 dark:border-muted-800 bg-white dark:bg-slate-900 transition-all duration-300 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
+          class="group flex items-center gap-3.5 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors duration-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
         >
-          <span class="w-11 h-11 rounded-lg bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 flex items-center justify-center flex-shrink-0 transition-colors">
+          <span class="w-11 h-11 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0 transition-colors">
             <img :src="channel.icon" :alt="channel.label" class="w-6 h-6 channel-icon" />
           </span>
           <span class="flex-1 min-w-0">
             <span class="block text-[11px] text-muted-500 dark:text-muted-400 mb-0.5">{{ channel.label }}</span>
             <span
-              class="block text-sm font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate"
+              class="block text-sm font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors truncate"
               :dir="channel.ltr ? 'ltr' : undefined"
               :class="channel.ltr ? 'text-left' : ''"
             >
@@ -146,23 +146,23 @@ const salesMembers: SalesMember[] = [
           <img src="/img/Sisco_CommerceSurvey/briefcase.svg" alt="دپارتمان فروش" class="w-5 h-5 channel-icon channel-icon--muted" />
         </span>
         <h3 class="text-base font-bold text-gray-900 dark:text-white">دپارتمان فروش</h3>
-        <div class="flex-1 h-px bg-gradient-to-l from-muted-200 dark:from-muted-700 to-transparent" />
+        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
       </div>
 
       <!-- رئیس فروش -->
-      <div class="mb-4 p-4 rounded-xl border-2 border-primary-200 dark:border-primary-800 bg-primary-50/60 dark:bg-primary-900/20 flex flex-wrap items-center gap-3">
-        <span class="w-11 h-11 rounded-lg bg-primary-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-primary-500/25">
+      <div class="mb-4 p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10 flex flex-wrap items-center gap-3">
+        <span class="w-11 h-11 rounded-md bg-green-700 text-white flex items-center justify-center flex-shrink-0">
           <img src="/img/Sisco_CommerceSurvey/users.svg" alt="رئیس فروش" class="w-6 h-6 channel-icon channel-icon--white" />
         </span>
         <div class="flex-1 min-w-0">
           <p class="flex items-center flex-wrap gap-2">
             <span class="text-sm font-bold text-gray-900 dark:text-white">{{ salesChief.name }}</span>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary-500 text-white">{{ salesChief.role }}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-green-700 text-white">{{ salesChief.role }}</span>
           </p>
         </div>
         <a
           :href="`tel:${salesChief.phoneTel}`"
-          class="inline-flex items-center gap-1.5 text-sm font-bold text-primary-600 dark:text-primary-300 hover:underline underline-offset-4"
+          class="inline-flex items-center gap-1.5 text-sm font-bold text-green-700 dark:text-green-400 hover:underline underline-offset-4"
           dir="ltr"
         >
           <img src="/img/Sisco_CommerceSurvey/phone.svg" alt="" class="w-3.5 h-3.5 channel-icon" />
@@ -176,7 +176,7 @@ const salesMembers: SalesMember[] = [
         <div
           v-for="member in salesMembers"
           :key="member.name"
-          class="p-4 rounded-xl border border-muted-200 dark:border-muted-800 bg-muted-50/60 dark:bg-slate-900/60"
+          class="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60"
         >
           <p class="flex items-center gap-2 mb-2.5">
             <img src="/img/Sisco_CommerceSurvey/users.svg" alt="" class="w-4 h-4 channel-icon channel-icon--muted" />
@@ -185,13 +185,13 @@ const salesMembers: SalesMember[] = [
           <div class="space-y-1.5 text-xs">
             <p class="flex items-center justify-between gap-2">
               <span class="text-muted-500 dark:text-muted-400">همراه:</span>
-              <a :href="`tel:${member.mobileTel}`" dir="ltr" class="font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+              <a :href="`tel:${member.mobileTel}`" dir="ltr" class="font-bold text-gray-900 dark:text-white hover:text-green-700 dark:hover:text-green-400 transition-colors">
                 {{ member.mobile }}
               </a>
             </p>
             <p class="flex items-center justify-between gap-2">
               <span class="text-muted-500 dark:text-muted-400">داخلی:</span>
-              <a :href="`tel:${member.internalTel}`" dir="ltr" class="font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+              <a :href="`tel:${member.internalTel}`" dir="ltr" class="font-bold text-gray-900 dark:text-white hover:text-green-700 dark:hover:text-green-400 transition-colors">
                 {{ member.internal }}
               </a>
             </p>
@@ -206,10 +206,10 @@ const salesMembers: SalesMember[] = [
 /* رنگ‌آمیزی آیکون‌های SVG خطی لوکال (بدون CDN) */
 .channel-icon {
   stroke: currentColor;
-  filter: invert(36%) sepia(80%) saturate(1600%) hue-rotate(200deg) brightness(95%) contrast(95%);
+  filter: invert(38%) sepia(10%) saturate(450%) hue-rotate(165deg) brightness(92%) contrast(92%);
 }
 .dark .channel-icon {
-  filter: invert(70%) sepia(40%) saturate(900%) hue-rotate(190deg) brightness(105%);
+  filter: invert(70%) sepia(8%) saturate(350%) hue-rotate(165deg) brightness(105%);
 }
 .channel-icon--white {
   filter: invert(100%);
