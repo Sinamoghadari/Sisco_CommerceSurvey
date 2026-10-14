@@ -62,18 +62,6 @@ function rangeContains(n: number, v: number) {
   return Math.abs(n - v) < 0.5
 }
 
-const activeLabel = computed(() => {
-  const v = hover.value ?? props.modelValue
-  if (v === null || v === undefined) return ''
-  const span = hi.value - lo.value || 1
-  const ratio = (v - lo.value) / span
-  if (ratio <= 0.2) return 'خیلی ضعیف'
-  if (ratio <= 0.4) return 'ضعیف'
-  if (ratio <= 0.6) return 'متوسط'
-  if (ratio <= 0.8) return 'خوب'
-  return 'عالی'
-})
-
 function onKey(e: KeyboardEvent) {
   const v = props.modelValue ?? hover.value ?? lo.value
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
@@ -121,15 +109,6 @@ function onKey(e: KeyboardEvent) {
 
     <div class="flex items-center justify-between px-3 mt-1 text-[11px] sm:text-xs text-muted-500 dark:text-muted-400" dir="rtl">
       <span>{{ labels?.min ?? lo }}</span>
-      <Transition name="fade" mode="out-in">
-        <span
-          v-if="activeLabel"
-          :key="activeLabel"
-          class="font-bold text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/30"
-        >
-          {{ activeLabel }}
-        </span>
-      </Transition>
       <span>{{ labels?.max ?? hi }}</span>
     </div>
   </div>

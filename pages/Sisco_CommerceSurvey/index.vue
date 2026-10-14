@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useCommerceSurvey } from '~/composables/CommerceSurvey/useCommerceSurvey'
-import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
-import CustomerSelector from '~/components/Sisco_CommerceSurvey/CustomerSelector.vue'
+import { DEFAULT_SURVEY_SELECTION } from '~/composables/CommerceSurvey/useSurveyDefinition'
 import ContactChannels from '~/components/Sisco_CommerceSurvey/ContactChannels.vue'
 import SurveyWizard from '~/components/Sisco_CommerceSurvey/SurveyWizard.vue'
 import SurveyComplete from '~/components/Sisco_CommerceSurvey/SurveyComplete.vue'
@@ -15,13 +14,12 @@ definePageMeta({
 /**
  * وضعیت صفحه از کامپوزیبل اختصاصی مدیریت می‌شود؛ پرسشنامه به‌صورت داینامیک
  * از سرویس توزیع نظرسنجی (SurveyDistribution/Access) دریافت می‌شود:
- *  select   → فرم انتخاب گروه/نوع مشتری + راه‌های ارتباطی
- *  survey   → دریافت از API و ویزارد چندمرحله‌ی داینامیک
+ *  select   → صفحه‌ی ورود (شروع نظرسنجی + راه‌های ارتباطی)
+ *  survey   → دریافت از API و ویزارد چندمرحله‌ای داینامیک
  *  complete → صفحه‌ی تشکر
  */
 const {
   phase,
-  selection,
   completion,
   runId,
   survey,
@@ -33,10 +31,6 @@ const {
 } = useCommerceSurvey()
 
 const { categories, title, description, alreadyAnswered, status, error } = survey
-
-function onSelectorSubmit(sel: SurveySelection) {
-  startSurvey(sel)
-}
 </script>
 
 <template>
@@ -52,9 +46,25 @@ function onSelectorSubmit(sel: SurveySelection) {
     </div>
 
     <Transition name="phase" mode="out-in">
-      <!-- نمای انتخاب: فرم ورود + راه‌های ارتباطی -->
+      <!-- نمای ورود: دکمه‌ی شروع + راه‌های ارتباطی -->
       <div v-if="phase === 'select'" key="select" class="space-y-6">
-        <CustomerSelector :initial="selection" @submit="onSelectorSubmit" />
+        <div class="mx-auto w-full max-w-4xl flex flex-col items-center gap-3">
+          <BaseButton
+            type="button"
+            color="success"
+            size="lg"
+            class="!px-12 shadow-lg shadow-green-500/25 hover:-translate-y-0.5 transition-all duration-300"
+            @click="startSurvey(DEFAULT_SURVEY_SELECTION)"
+          >
+            <span class="flex items-center gap-2">
+              شروع نظرسنجی
+              <Icon icon="lucide:arrow-left" class="w-5 h-5" />
+            </span>
+          </BaseButton>
+          <p class="text-xs text-muted-500 dark:text-muted-400 text-center leading-6">
+            پرسشنامه به‌صورت داینامیک از سرویس نظرسنجی بارگذاری می‌شود.
+          </p>
+        </div>
 
         <div class="mx-auto w-full max-w-4xl">
           <ContactChannels />
@@ -63,9 +73,9 @@ function onSelectorSubmit(sel: SurveySelection) {
 
       <!-- نمای پرسشنامه‌ی داینامیک (از API) -->
       <SurveyWizard
-        v-else-if="phase === 'survey' && selection"
-        :key="`survey-${selection.group}-${selection.type}-${runId}`"
-        :selection="selection"
+        v-else-if="phase === 'survey'"
+        :key="`survey-${runId}`"
+        :selection="DEFAULT_SURVEY_SELECTION"
         :groups="categories"
         :status="status"
         :error-message="error"
@@ -81,7 +91,6 @@ function onSelectorSubmit(sel: SurveySelection) {
       <SurveyComplete
         v-else-if="phase === 'complete' && completion"
         key="complete"
-        :selection="completion.selection"
         :answered-count="completion.answeredCount"
         :total-questions="completion.totalQuestions"
         @restart="restart"

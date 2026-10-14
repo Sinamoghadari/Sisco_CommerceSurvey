@@ -3,8 +3,10 @@
  * استپر بالای ویزارد – کاملاً داینامیک از دسته‌های API ساخته می‌شود
  * (عنوان هر استپ: category.strategy_node_title – شناسه: strategy_node_id).
  * دایره‌ها شماره‌ی بخش را نشان می‌دهند و وضعیت انجام‌شدن/خطا دارند.
+ * کنتراست تمام حالت‌ها تضمین‌شده است: دایره‌های پر (فعال/انجام‌شده/خطا)
+ * همیشه متن سفید روی رنگ ۶۰۰ دارند و دایره‌ی خاموش متن خوانا روی زمینه‌ی روشن.
  */
-defineProps<{
+const props = defineProps<{
   steps: Array<{ id: string; title: string }>
   currentIndex: number
   progress: number
@@ -12,6 +14,28 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ (e: 'select', index: number): void }>()
+
+/** کلاس دایره بر اساس وضعیت – با کنتراست تضمین‌شده برای عدد داخل آن */
+function circleClass(index: number): string {
+  switch (props.status(index)) {
+    case 'active':
+      // دایره پر آبی – عدد سفید واضح
+      return 'bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-600/30 scale-110'
+    case 'done':
+      // دایره پر سبز – عدد/تیک سفید واضح
+      return 'bg-green-600 border-green-600 text-white'
+    case 'error':
+      // دایره پر قرمز – عدد سفید واضح
+      return 'bg-red-600 border-red-600 text-white'
+    default:
+      // دایره خاموش – متن خاکستری خوانا روی زمینه‌ی سفید/تیره
+      return 'bg-white dark:bg-slate-900 border-muted-300 dark:border-muted-600 text-muted-500 dark:text-muted-300'
+  }
+}
+
+function isNavigable(index: number): boolean {
+  return index <= props.currentIndex
+}
 </script>
 
 <template>
@@ -38,26 +62,19 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
         <button
           type="button"
           class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-sm transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
-          :class="{
-            'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/30 scale-110': status(i) === 'active',
-            'bg-green-500 border-green-500 text-white': status(i) === 'done',
-            'bg-red-500 border-red-500 text-white': status(i) === 'error',
-            'bg-white dark:bg-slate-900 border-muted-300 dark:border-muted-600 text-muted-400': status(i) === 'pending',
-            'cursor-pointer hover:scale-105': i <= currentIndex,
-            'cursor-default': i > currentIndex
-          }"
+          :class="[circleClass(i), isNavigable(i) ? 'cursor-pointer hover:scale-105' : 'cursor-default']"
           :aria-current="status(i) === 'active' ? 'step' : undefined"
-          :aria-label="step.title"
+          :aria-label="`${step.title} – بخش ${i + 1}`"
           @click="emit('select', i)"
         >
-          <Icon v-if="status(i) === 'done'" icon="lucide:check" class="w-5 h-5" />
-          <Icon v-else-if="status(i) === 'error'" icon="lucide:alert-triangle" class="w-4 h-4" />
-          <span v-else>{{ i + 1 }}</span>
+          <Icon v-if="status(i) === 'done'" icon="lucide:check" class="w-5 h-5 text-white" />
+          <Icon v-else-if="status(i) === 'error'" icon="lucide:alert-triangle" class="w-4 h-4 text-white" />
+          <span v-else class="text-inherit">{{ i + 1 }}</span>
         </button>
 
         <span
           class="mt-2.5 text-[11px] lg:text-xs font-bold transition-colors leading-5 px-1"
-          :class="status(i) === 'active' ? 'text-primary-600 dark:text-primary-400' : status(i) === 'pending' ? 'text-muted-400' : 'text-gray-900 dark:text-muted-200'"
+          :class="status(i) === 'active' ? 'text-primary-600 dark:text-primary-400' : status(i) === 'pending' ? 'text-muted-500 dark:text-muted-400' : 'text-gray-900 dark:text-muted-200'"
         >
           {{ step.title }}
         </span>
@@ -69,7 +86,7 @@ const emit = defineEmits<{ (e: 'select', index: number): void }>()
     <div class="md:hidden">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-2">
-          <span class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center text-sm font-bold">
+          <span class="w-8 h-8 rounded-full bg-primary-600 border-2 border-primary-600 text-white flex items-center justify-center text-sm font-bold">
             {{ currentIndex + 1 }}
           </span>
           <div>

@@ -99,10 +99,6 @@ function onFollowUpText(e: Event) {
           {{ question.text }}
           <span v-if="question.required" class="text-red-500 font-bold" title="پاسخ به این سؤال الزامی است">*</span>
         </label>
-        <p v-if="question.strategy_node_weight !== undefined && question.strategy_node_weight !== null"
-           class="text-[11px] text-muted-400 mt-1">
-          وزن این سؤال: {{ question.strategy_node_weight }}
-        </p>
       </div>
     </div>
 

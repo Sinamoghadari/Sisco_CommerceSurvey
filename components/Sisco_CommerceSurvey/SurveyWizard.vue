@@ -188,9 +188,6 @@ function confirmSubmit() {
                 </h2>
                 <p class="text-sm text-muted-500 dark:text-muted-400 mt-0.5">
                   {{ wizard.currentGroup.value?.questions.length }} سؤال
-                  <template v-if="wizard.currentGroup.value?.category?.strategy_node_weight !== undefined && wizard.currentGroup.value?.category?.strategy_node_weight !== null">
-                    • وزن بخش: {{ wizard.currentGroup.value?.category?.strategy_node_weight }}
-                  </template>
                 </p>
               </div>
             </div>
