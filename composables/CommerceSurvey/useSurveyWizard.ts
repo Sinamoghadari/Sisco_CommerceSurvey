@@ -31,6 +31,13 @@ export interface SurveyCompletionPayload {
 }
 
 /**
+ * ساختار answers سرویس Submit:
+ * کلید اول = question._id ؛ کلید داخلی = نوع سؤال (+ conditional_answer اختیاری)
+ * نمونه: { "6acf2e4daf06527140f9717a": { "strategy_range_rating": 8 } }
+ */
+export type SurveySubmitAnswers = Record<string, Record<string, AnswerValue>>
+
+/**
  * ارزیابی شرط نمایش سؤال تکمیلی بر اساس امتیاز انتخاب‌شده.
  * عملگرهای استاندارد عددی: less_than (<) ، greater_than (>) ، equal (==)
  * و حالت‌های <= و >= نیز پشتیبانی می‌شوند.
@@ -391,6 +398,49 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     }
   }
 
+  /**
+   * مقدارسازی بر اساس نوع سؤال مطابق قرارداد سرویس Submit:
+   *  - multiple_choice → آرایه‌ی مقادیر گزینه‌ها
+   *  - سایر انواع (text / single_choice / rating / range_rating /
+   *    strategy_range_rating) → مقدار اسکالر به همان شکل ذخیره‌شده
+   */
+  function serializeTypedValue(type: string, v: AnswerValue): AnswerValue {
+    if (type === 'multiple_choice') {
+      if (Array.isArray(v)) return v
+      if (v === null || v === undefined || v === '') return []
+      return [String(v)]
+    }
+    return v
+  }
+
+  /**
+   * سریالایز پاسخ‌های کاربر به ساختار answers سرویس Submit:
+   *  - کلید سطح اول: question._id
+   *  - کلید داخلی: نوع سؤال (strategy_range_rating / rating / text /
+   *    single_choice / multiple_choice / range_rating)
+   *  - conditional_answer فقط وقتی افزوده می‌شود که سؤال تکمیلی فعال باشد،
+   *    شرط آستانه برقرار باشد و پاسخ داده شده باشد؛ مقدار آن نیز بر اساس
+   *    نوع سؤال تکمیلی سریالایز می‌شود.
+   *  - سؤال‌های بی‌پاسخ (حتی اختیاریِ خالی) در خروجی نمی‌آیند.
+   */
+  function buildSubmitAnswers(): SurveySubmitAnswers {
+    const out: SurveySubmitAnswers = {}
+    for (const g of stepList.value) {
+      for (const q of g.questions) {
+        if (!isQuestionAnswered(q)) continue
+        const entry: Record<string, AnswerValue> = {
+          [q.type]: serializeTypedValue(q.type, getAnswer(q))
+        }
+        if (isFollowUpVisible(q) && isFollowUpAnswered(q)) {
+          const fuType = q.conditional_follow_up?.type || 'text'
+          entry.conditional_answer = serializeTypedValue(fuType, getFollowUp(q))
+        }
+        out[q._id] = entry
+      }
+    }
+    return out
+  }
+
   function scrollTop() {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -433,6 +483,7 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
     goTo,
     validateAll,
     buildCompletionPayload,
+    buildSubmitAnswers,
     reset
   }
 }
