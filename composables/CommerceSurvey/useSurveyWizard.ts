@@ -399,42 +399,56 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
   }
 
   /**
-   * مقدارسازی بر اساس نوع سؤال مطابق قرارداد سرویس Submit:
-   *  - multiple_choice → آرایه‌ی مقادیر گزینه‌ها
-   *  - سایر انواع (text / single_choice / rating / range_rating /
-   *    strategy_range_rating) → مقدار اسکالر به همان شکل ذخیره‌شده
-   */
-  function serializeTypedValue(type: string, v: AnswerValue): AnswerValue {
-    if (type === 'multiple_choice') {
-      if (Array.isArray(v)) return v
-      if (v === null || v === undefined || v === '') return []
-      return [String(v)]
-    }
-    return v
-  }
-
-  /**
-   * سریالایز پاسخ‌های کاربر به ساختار answers سرویس Submit:
+   * ساخت answers مطابق قرارداد سرویس Submit:
    *  - کلید سطح اول: question._id
-   *  - کلید داخلی: نوع سؤال (strategy_range_rating / rating / text /
-   *    single_choice / multiple_choice / range_rating)
-   *  - conditional_answer فقط وقتی افزوده می‌شود که سؤال تکمیلی فعال باشد،
-   *    شرط آستانه برقرار باشد و پاسخ داده شده باشد؛ مقدار آن نیز بر اساس
-   *    نوع سؤال تکمیلی سریالایز می‌شود.
-   *  - سؤال‌های بی‌پاسخ (حتی اختیاریِ خالی) در خروجی نمی‌آیند.
+   *  - انواع عددی (strategy_range_rating / range_rating / rating) → کلید
+   *    «number» با مقدار عددی
+   *  - text → کلید «text» با مقدار رشته‌ای
+   *  - single_choice / multiple_choice → کلید «selected» به‌صورت آرایه‌ی
+   *    رشته‌ای (تک‌انتخابی هم درون آرایه بسته‌بندی می‌شود)
+   *  - نوع ناشناخته → بر اساس نوع مقدار (عدد/آرایه/رشته) نگاشت می‌شود
+   *  - conditional_answer فقط در صورت داشتن مقدار غیرخالی افزوده می‌شود
+   *    (آرایه‌ها با «, » به رشته تبدیل می‌شوند)
+   *  - سؤال‌های بی‌پاسخ در خروجی نمی‌آیند
    */
   function buildSubmitAnswers(): SurveySubmitAnswers {
     const out: SurveySubmitAnswers = {}
     for (const g of stepList.value) {
       for (const q of g.questions) {
+        // بی‌پاسخ (undefined / null / رشته‌ی خالی / آرایه‌ی خالی) → حذف از خروجی
         if (!isQuestionAnswered(q)) continue
-        const entry: Record<string, AnswerValue> = {
-          [q.type]: serializeTypedValue(q.type, getAnswer(q))
+        const val = getAnswer(q)
+        const entry: Record<string, AnswerValue> = {}
+
+        switch (q.type) {
+          case 'strategy_range_rating':
+          case 'range_rating':
+          case 'rating': {
+            const n = Number(val)
+            entry.number = Number.isFinite(n) ? n : 0
+            break
+          }
+          case 'text':
+            entry.text = String(val ?? '')
+            break
+          case 'multiple_choice':
+          case 'single_choice':
+            entry.selected = Array.isArray(val) ? val : [String(val)]
+            break
+          default:
+            // نگاشت ایمن بر اساس نوع مقدار
+            if (typeof val === 'number') entry.number = val
+            else if (Array.isArray(val)) entry.selected = val
+            else entry.text = String(val ?? '')
         }
-        if (isFollowUpVisible(q) && isFollowUpAnswered(q)) {
-          const fuType = q.conditional_follow_up?.type || 'text'
-          entry.conditional_answer = serializeTypedValue(fuType, getFollowUp(q))
+
+        // پاسخ شرطی: فقط در صورت داشتن مقدار غیرخالی (موتور ویزارد مقدارهای
+        // قدیمی را هنگام خروج از شرط پاک می‌کند)
+        const condVal = getFollowUp(q)
+        if (condVal !== null && condVal !== undefined && String(condVal).trim() !== '') {
+          entry.conditional_answer = Array.isArray(condVal) ? condVal.join(', ') : String(condVal)
         }
+
         out[q._id] = entry
       }
     }
