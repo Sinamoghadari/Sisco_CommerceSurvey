@@ -128,7 +128,7 @@ export default defineNuxtConfig({
 
       // گزارش نظرسنجی راهبردی (GetStrategySurveyReport)
       // قابل بازنویسی با متغیر محیطی NUXT_PUBLIC_SURVEY_REPORT_URL
-      surveyReportUrl: 'https://portal.sirjansteel.com/api/SurveyDistribution/GetStrategySurveyReport',
+      surveyReportUrl: 'https://portal.sirjansteel.com/api/GetStrategySurveyReport',
     },
   },
 

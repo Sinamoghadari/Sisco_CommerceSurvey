@@ -7,7 +7,7 @@ import { ref } from 'vue'
  *   { "distribution_id": "..." }
  *
  * - آدرس سرویس از runtimeConfig.public.surveyReportUrl خوانده می‌شود
- *   (پیش‌فرض: https://portal.sirjansteel.com/api/SurveyDistribution/GetStrategySurveyReport).
+ *   (پیش‌فرض: https://portal.sirjansteel.com/api/GetStrategySurveyReport).
  * - distribution_id از route.query.distribution_id خوانده می‌شود و در نبود آن
  *   مقدار پیش‌فرض SURVEY_DISTRIBUTION_ID_FALLBACK استفاده می‌گردد
  *   (آماده‌ی پذیرش مقادیر داینامیک از route params یا state در مراحل بعد).
@@ -15,7 +15,7 @@ import { ref } from 'vue'
  */
 
 /** آدرس پیش‌فرض گزارش نظرسنجی راهبردی */
-export const DEFAULT_SURVEY_REPORT_URL = 'https://portal.sirjansteel.com/api/SurveyDistribution/GetStrategySurveyReport'
+export const DEFAULT_SURVEY_REPORT_URL = 'https://portal.sirjansteel.com/api/GetStrategySurveyReport'
 
 /**
  * مقدار پیش‌فرض distribution_id (تا زمانی که شناسه‌ی توزیع واقعی از
