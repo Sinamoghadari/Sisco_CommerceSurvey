@@ -44,40 +44,6 @@ function navigateTo(tab: any) {
               class="h-12 md:h-16 max-w-xs md:max-w-none object-contain"
             />
           </div>
-
-          <!-- شماره‌های تماس: اجباراً سمت چپ Header -->
-          <div class="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 items-center gap-2 text-white">
-            <Icon icon="lucide:phone-call" class="w-5 h-5 flex-shrink-0" />
-
-            <div class="flex flex-col text-left">
-              <!-- عنوان شماره‌ها -->
-              <span class="mb-1 text-xs font-medium text-white/90">
-                شماره‌های پاسخگو
-              </span>
-
-              <!-- شماره‌ها -->
-              <div class="flex flex-col text-sm leading-6">
-                <a
-                  href="tel:03431257117"
-                  dir="ltr"
-                  class="font-semibold tracking-wide hover:text-blue-950 transition-colors"
-                >
-                  0343125-7117
-                </a>
-
-                <a
-                  href="tel:03431257113"
-                  dir="ltr"
-                  class="font-semibold tracking-wide hover:text-blue-950 transition-colors"
-                >
-                  0343125-7113
-                </a>
-              </div>
-            </div>
-          </div>
-
-
-
         <!-- تب‌های ناوبری -->
         <div class="flex flex-wrap justify-center items-center gap-7 flex-1">
           <button

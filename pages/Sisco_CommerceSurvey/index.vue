@@ -61,9 +61,7 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
               <Icon icon="lucide:arrow-left" class="w-5 h-5" />
             </span>
           </BaseButton>
-          <p class="text-xs text-muted-500 dark:text-muted-400 text-center leading-6">
-            پرسشنامه به‌صورت داینامیک از سرویس نظرسنجی بارگذاری می‌شود.
-          </p>
+          
         </div>
 
         <div class="mx-auto w-full max-w-4xl">
