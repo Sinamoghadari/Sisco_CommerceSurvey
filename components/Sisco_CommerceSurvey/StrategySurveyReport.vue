@@ -94,10 +94,10 @@ function selectAllCategories() {
 const isDark = useDark()
 const { success: successColor, warning: warningColor, primary: primaryColor } = useTailwindColors()
 
-/** رنگ محورها: خاکستری اسلیت خوانا در هر دو حالت */
-const AXIS_COLOR = '#64748b'
-/** رنگ برچسب تیک‌ها: پرکنتراست بر اساس حالت روشن/تیره */
-const tickColor = computed(() => (isDark.value ? '#cbd5e1' : '#334155'))
+/** رنگ خطوط محور: پررنگ (slate-600 در روشن، slate-400 در تیره) */
+const axisColor = computed(() => (isDark.value ? '#94a3b8' : '#475569'))
+/** رنگ برچسب تیک‌ها: پرکنتراست (slate-800 در روشن، slate-50 در تیره) */
+const tickColor = computed(() => (isDark.value ? '#f1f5f9' : '#1e293b'))
 /** رنگ خطوط شبکه: slate-300 در روشن، slate-700 در تیره */
 const gridColor = computed(() => (isDark.value ? '#334155' : '#cbd5e1'))
 
@@ -108,8 +108,8 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number) 
   return {
     xaxis: {
       categories: xCategories,
-      axisBorder: { show: true, color: AXIS_COLOR, height: 1.5 },
-      axisTicks: { show: true, color: AXIS_COLOR },
+      axisBorder: { show: true, color: axisColor.value, height: 2 },
+      axisTicks: { show: true, color: axisColor.value, height: 6 },
       labels: {
         rotate: xRotate,
         maxHeight: xMaxHeight,
@@ -119,8 +119,8 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number) 
     yaxis: {
       opposite: true,
       forceNiceScale: true,
-      axisBorder: { show: true, color: AXIS_COLOR, width: 1.5 },
-      axisTicks: { show: true, color: AXIS_COLOR },
+      axisBorder: { show: true, color: axisColor.value, width: 2 },
+      axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
         style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
         formatter: faIntFormatter
@@ -157,7 +157,8 @@ const ratingTrendConfig = computed(() => ({
     colors: [successColor.value],
     dataLabels: {
       enabled: true,
-      style: { fontSize: '13px', fontWeight: 600, colors: [tickColor.value] },
+      // سفید خالص روی پس‌زمینه‌ی تیره‌ی برچسب‌ها برای خوانایی کامل
+      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
       formatter: (v: number) => `${v}`
     },
     stroke: { width: 2, curve: 'smooth' },
@@ -172,8 +173,8 @@ const ratingTrendConfig = computed(() => ({
       min: ratingTrend.value.range?.min ?? undefined,
       max: ratingTrend.value.range?.max ?? undefined,
       forceNiceScale: true,
-      axisBorder: { show: true, color: AXIS_COLOR, width: 1.5 },
-      axisTicks: { show: true, color: AXIS_COLOR },
+      axisBorder: { show: true, color: axisColor.value, width: 2 },
+      axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
         style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
         formatter: faIntFormatter
@@ -182,6 +183,8 @@ const ratingTrendConfig = computed(() => ({
     legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px', fontWeight: 600 },
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
+      // جابه‌جایی رو به بالا تا تولتیپ نقطه‌ی فعال و برچسب‌ها را نپوشاند
+      offsetY: -25,
       y: {
         formatter: (val: number) =>
           ratingTrend.value.range
@@ -216,7 +219,8 @@ const weightedTrendConfig = computed(() => ({
     colors: [warningColor.value],
     dataLabels: {
       enabled: true,
-      style: { fontSize: '13px', fontWeight: 600, colors: [tickColor.value] },
+      // سفید خالص روی پس‌زمینه‌ی تیره‌ی برچسب‌ها برای خوانایی کامل
+      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
       // حداکثر دو رقم اعشار بدون صفرهای انتهایی (مثلاً 8.29 به‌جای 8.290000)
       formatter: (v: number) => Number(v.toFixed(2))
     },
@@ -229,6 +233,8 @@ const weightedTrendConfig = computed(() => ({
     ),
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
+      // جابه‌جایی رو به بالا تا تولتیپ نقطه‌ی فعال و برچسب‌ها را نپوشاند
+      offsetY: -25,
       y: { formatter: (val: number) => `امتیاز وزنی محاسبه‌شده: ${Number(val.toFixed(2))}` }
     }
   }
@@ -268,8 +274,8 @@ const respondentChartConfig = computed(() => ({
     ),
     xaxis: {
       categories: respondentScores.value.displayLabels,
-      axisBorder: { show: true, color: AXIS_COLOR, height: 1.5 },
-      axisTicks: { show: true, color: AXIS_COLOR },
+      axisBorder: { show: true, color: axisColor.value, height: 2 },
+      axisTicks: { show: true, color: axisColor.value, height: 6 },
       labels: {
         rotate: -45,
         maxHeight: 170,
@@ -392,11 +398,6 @@ function retry() {
           <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
             <header class="mb-3">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
-              <!-- زیرنویس با ارتفاع حداقلی ثابت برای تراز افقی دو نمودار -->
-              <p class="mt-1 min-h-[2.5rem] text-xs font-medium leading-5 text-slate-600 dark:text-slate-300">
-                امتیاز سؤال‌های «rating» در هر پاسخ‌نامه، برحسب زمان ثبت
-                <template v-if="ratingTrend.range"> — مقیاس {{ ratingTrend.range.min }} تا {{ ratingTrend.range.max }}</template>
-              </p>
             </header>
             <div class="mt-auto">
               <div v-if="ratingTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
@@ -412,10 +413,6 @@ function retry() {
           <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
             <header class="mb-3">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
-              <p class="mt-1 min-h-[2.5rem] text-xs font-medium leading-5 text-slate-600 dark:text-slate-300">
-                Σ امتیاز × وزن گره استراتژیک، به‌ازای هر پاسخ‌نامه
-                <template v-if="weightedTrend.skippedReports"> — ({{ weightedTrend.skippedReports }} پاسخ‌نامه بدون پاسخ وزنی معتبر)</template>
-              </p>
             </header>
             <div class="mt-auto">
               <div v-if="weightedTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
