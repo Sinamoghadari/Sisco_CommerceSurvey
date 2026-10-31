@@ -30,7 +30,7 @@ const {
   restart
 } = useCommerceSurvey()
 
-const { categories, title, description, alreadyAnswered, status, error } = survey
+const { categories, alreadyAnswered, status, error } = survey
 </script>
 
 <template>
@@ -53,7 +53,7 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
             type="button"
             color="success"
             size="lg"
-            class="!px-12 !rounded-xl"
+            class="!px-12 !rounded-xl text-lg font-bold"
             @click="startSurvey(DEFAULT_SURVEY_SELECTION)"
           >
             <span class="flex items-center gap-2">
@@ -77,8 +77,6 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
         :groups="categories"
         :status="status"
         :error-message="error"
-        :survey-title="title"
-        :survey-description="description"
         :already-answered="alreadyAnswered"
         @complete="completeSurvey"
         @retry="retryFetch"

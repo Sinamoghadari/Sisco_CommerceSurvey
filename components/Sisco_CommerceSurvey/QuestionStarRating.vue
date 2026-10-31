@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
  *   رندر می‌شوند تا در هیچ محیطی خالی نمانند.
  * - چیدمان راست‌به‌چپ: خانه‌ی «۰» و کمترین مقدار سمت راست، بیشترین مقدار چپ.
  * - پر شدن با طلایی/کهربایی گرم (amber) و پیش‌نمایش hover.
- * - انتخاب ۰: از طریق خانه‌ی صفر یا کلیک دوباره روی اولین ستاره‌ی انتخاب‌شده.
+ * - انتخاب ۰ (پاک کردن): کلیک دوباره روی اولین ستاره‌ی انتخاب‌شده.
  */
 const props = withDefaults(
   defineProps<{
@@ -34,7 +34,7 @@ const hi = computed(() => {
   return hiRaw.value >= floor ? hiRaw.value : floor
 })
 
-/** آیا بازه شامل مقدار ۰ است؟ (نمایش خانه‌ی «بدون امتیاز») */
+/** آیا بازه شامل مقدار ۰ است؟ (مرز پایین کیبورد و منطق پاک کردن) */
 const hasZeroCell = computed(() => lo.value <= 0 && hi.value >= 0)
 
 /** مقادیر ستاره‌ای (حداقل ۱) تا سقف بازه */
@@ -87,29 +87,6 @@ function onKey(e: KeyboardEvent) {
       :class="invalid ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40'"
       dir="rtl"
     >
-      <!-- خانه‌ی صفر (بدون امتیاز) – ابتدای طیف در سمت راست -->
-      <button
-        v-if="hasZeroCell"
-        type="button"
-        role="radio"
-        :aria-checked="modelValue === 0"
-        aria-label="بدون امتیاز (۰)"
-        :tabindex="modelValue === 0 || modelValue === null ? 0 : -1"
-        class="h-9 w-9 sm:h-10 sm:w-10 rounded-md border flex items-center justify-center text-sm font-bold leading-none transition-colors duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500/25"
-        :class="
-          modelValue === 0
-            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-            : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-amber-400 hover:text-amber-600'
-        "
-        @mouseenter="hover = 0"
-        @mouseleave="hover = null"
-        @click="emit('update:modelValue', 0)"
-      >
-        0
-      </button>
-
-      <span v-if="hasZeroCell" class="w-px h-7 bg-slate-200 dark:bg-slate-700 mx-0.5" aria-hidden="true" />
-
       <!-- ستاره‌ها: SVG درون‌خطی با fill صریح (مستقل از Icon/CSS) -->
       <button
         v-for="n in starValues"

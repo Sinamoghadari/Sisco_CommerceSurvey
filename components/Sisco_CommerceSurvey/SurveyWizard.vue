@@ -25,8 +25,6 @@ const props = defineProps<{
   groups: SurveyCategoryGroup[] | null
   status: SurveyFetchStatus
   errorMessage: string | null
-  surveyTitle: string
-  surveyDescription: string
   alreadyAnswered: boolean
 }>()
 
@@ -209,12 +207,6 @@ async function confirmSubmit() {
         </div>
       </Transition>
 
-      <!-- معرفی پرسشنامه از API -->
-      <div v-if="surveyTitle || surveyDescription" class="mb-5 px-1">
-        <h2 v-if="surveyTitle" class="text-lg font-bold text-gray-900 dark:text-white">{{ surveyTitle }}</h2>
-        <p v-if="surveyDescription" class="text-sm text-muted-500 dark:text-muted-400 mt-1 leading-7">{{ surveyDescription }}</p>
-      </div>
-
       <!-- نوار پیشرفت: نشان با تراز عمودی/افقی دقیق -->
       <div class="flex items-center mb-5">
         <span class="progress-pill" dir="rtl">
@@ -330,6 +322,7 @@ async function confirmSubmit() {
             type="button"
             color="muted"
             variant="outline"
+            class="font-bold"
             :disabled="wizard.isFirst.value"
             @click="wizard.prev"
           >
@@ -346,7 +339,7 @@ async function confirmSubmit() {
           <BaseButton
             type="button"
             :color="wizard.isLast.value ? 'success' : 'primary'"
-            class="!px-6"
+            class="!px-6 font-bold"
             :disabled="wizard.isLast.value && submit.isSubmitting.value"
             @click="onNext"
           >
@@ -379,7 +372,7 @@ async function confirmSubmit() {
             <div class="flex justify-end gap-2">
               <button
                 type="button"
-                class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="submit.isSubmitting.value"
                 @click="isConfirmOpen = false"
               >
@@ -387,7 +380,7 @@ async function confirmSubmit() {
               </button>
               <button
                 type="button"
-                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg font-bold hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 :disabled="submit.isSubmitting.value"
                 @click="confirmSubmit"
               >

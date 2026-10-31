@@ -73,7 +73,7 @@ function onOptionText(option: NormalizedOption, event: Event) {
 
 <template>
   <div
-    class="space-y-3"
+    class="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2"
     :class="invalid ? 'rounded-lg ring-1 ring-red-300 dark:ring-red-800 bg-red-50/50 dark:bg-red-900/10 p-1.5' : ''"
     :role="multiple ? 'group' : 'radiogroup'"
   >
@@ -83,7 +83,7 @@ function onOptionText(option: NormalizedOption, event: Event) {
       type="button"
       :role="multiple ? 'checkbox' : 'radio'"
       :aria-checked="isChecked(opt.value)"
-      class="group w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-sm text-right transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+      class="group flex h-full w-full items-center gap-3 min-h-[3.25rem] px-4 py-3 rounded-lg border text-sm text-right transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
       :class="
         isChecked(opt.value)
           ? 'border-green-700 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300'
@@ -110,7 +110,7 @@ function onOptionText(option: NormalizedOption, event: Event) {
     </button>
 
     <!-- ورودی متنی تکمیلی برای گزینه‌های دارای need_text -->
-    <TransitionGroup v-if="activeNeedTextOptions.length" name="needtext" tag="div" class="space-y-3">
+    <TransitionGroup v-if="activeNeedTextOptions.length" name="needtext" tag="div" class="space-y-3 sm:col-span-2">
       <div
         v-for="opt in activeNeedTextOptions"
         :key="`needtext-${opt.id}`"

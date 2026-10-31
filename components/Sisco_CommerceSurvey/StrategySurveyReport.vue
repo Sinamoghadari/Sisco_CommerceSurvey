@@ -102,27 +102,37 @@ const ratingTrendConfig = computed(() => ({
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
+      fontSize: 13,
+      fontWeight: 600,
       zoom: { enabled: false },
       toolbar: { show: false },
       defaultLocale: 'fa',
       locales: [fa]
     },
     colors: [successColor.value],
-    dataLabels: { enabled: true, formatter: (v: number) => `${v}` },
+    dataLabels: {
+      enabled: true,
+      style: { fontSize: '13px', fontWeight: 600 },
+      formatter: (v: number) => `${v}`
+    },
     stroke: { width: 2, curve: 'smooth' },
     markers: { size: 5, hover: { size: 7 } },
     grid: { row: { colors: ['transparent', 'transparent'], opacity: 0.5 } },
     xaxis: {
       categories: ratingTrend.value.series[0]?.data.map(p => p.x) ?? [],
-      labels: { rotate: -35, maxHeight: 70 }
+      labels: { rotate: -35, maxHeight: 70, style: { fontSize: '13px', fontWeight: 600 } }
     },
     yaxis: {
       opposite: true,
       min: ratingTrend.value.range?.min ?? undefined,
       max: ratingTrend.value.range?.max ?? undefined,
-      forceNiceScale: true
+      forceNiceScale: true,
+      labels: {
+        style: { fontSize: '13px', fontWeight: 600 },
+        formatter: (val: number) => Number(val).toLocaleString('fa-IR', { maximumFractionDigits: 0 })
+      }
     },
-    legend: { position: 'top', horizontalAlign: 'right' },
+    legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px', fontWeight: 600 },
     tooltip: {
       y: {
         formatter: (val: number) =>
@@ -148,23 +158,38 @@ const weightedTrendConfig = computed(() => ({
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
+      fontSize: 13,
+      fontWeight: 600,
       zoom: { enabled: false },
       toolbar: { show: false },
       defaultLocale: 'fa',
       locales: [fa]
     },
     colors: [warningColor.value],
-    dataLabels: { enabled: true, formatter: (v: number) => `${v}` },
+    dataLabels: {
+      enabled: true,
+      style: { fontSize: '13px', fontWeight: 600 },
+      // حداکثر دو رقم اعشار بدون صفرهای انتهایی (مثلاً 8.29 به‌جای 8.290000)
+      formatter: (v: number) => Number(v.toFixed(2))
+    },
     stroke: { width: 2, curve: 'smooth' },
     markers: { size: 5, hover: { size: 7 } },
     grid: { row: { colors: ['transparent', 'transparent'], opacity: 0.5 } },
     xaxis: {
       categories: weightedTrend.value.series[0]?.data.map(p => p.x) ?? [],
-      labels: { rotate: -35, maxHeight: 70 }
+      labels: { rotate: -35, maxHeight: 70, style: { fontSize: '13px', fontWeight: 600 } }
     },
-    yaxis: { opposite: true, forceNiceScale: true },
+    yaxis: {
+      opposite: true,
+      forceNiceScale: true,
+      labels: {
+        style: { fontSize: '13px', fontWeight: 600 },
+        // اعداد صحیح تمیز بدون اعشار زائد (مثلاً 10 به‌جای 10.000000)
+        formatter: (val: number) => Number(val).toLocaleString('fa-IR', { maximumFractionDigits: 0 })
+      }
+    },
     tooltip: {
-      y: { formatter: (val: number) => `امتیاز وزنی محاسبه‌شده: ${val}` }
+      y: { formatter: (val: number) => `امتیاز وزنی محاسبه‌شده: ${Number(val.toFixed(2))}` }
     }
   }
 }))
@@ -175,11 +200,13 @@ const respondentScores = computed(() =>
 )
 const respondentChartConfig = computed(() => ({
   type: 'bar',
-  height: 320,
+  height: 380,
   series: [{ name: 'نمره', data: respondentScores.value.values }],
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
+      fontSize: 13,
+      fontWeight: 600,
       toolbar: { show: false },
       defaultLocale: 'fa',
       locales: [fa]
@@ -189,14 +216,28 @@ const respondentChartConfig = computed(() => ({
     plotOptions: {
       bar: { horizontal: false, endingShape: 'rounded', columnWidth: '55%' }
     },
-    dataLabels: { enabled: true },
+    dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 600 } },
     stroke: { show: true, width: 2, colors: ['transparent'] },
+    grid: { padding: { bottom: 10 } },
     xaxis: {
       categories: respondentScores.value.displayLabels,
-      labels: { rotate: -45, maxHeight: 110, trim: false },
+      labels: {
+        rotate: -45,
+        maxHeight: 170,
+        trim: false,
+        hideOverlappingLabels: false,
+        style: { fontSize: '13px', fontWeight: 600 }
+      },
       tooltip: { enabled: false }
     },
-    yaxis: { opposite: true, forceNiceScale: true },
+    yaxis: {
+      opposite: true,
+      forceNiceScale: true,
+      labels: {
+        style: { fontSize: '13px', fontWeight: 600 },
+        formatter: (val: number) => Number(val).toLocaleString('fa-IR', { maximumFractionDigits: 0 })
+      }
+    },
     tooltip: {
       custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
         const t = respondentScores.value.tooltips[dataPointIndex]
@@ -233,6 +274,7 @@ const hasAnyPoint = computed(
   () => ratingTrend.value.pointCount > 0 || weightedTrend.value.pointCount > 0
 )
 
+/** تلاش مجدد فقط از بنر خطا (دریافت اولیه خودکار است) */
 function retry() {
   void fetchStrategySurveyReport()
 }
@@ -258,21 +300,6 @@ function retry() {
           </div>
         </div>
 
-        <button
-          type="button"
-          class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-green-700 px-4 text-xs font-bold text-white transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25 disabled:cursor-not-allowed disabled:opacity-60"
-          :disabled="isReportLoading"
-          @click="retry"
-        >
-          <svg v-if="isReportLoading" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
-          </svg>
-          <svg v-else viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-            <path d="M21 3v6h-6" />
-          </svg>
-          {{ reports.length ? 'دریافت مجدد' : 'دریافت گزارش' }}
-        </button>
       </div>
 
       <!-- بدنه -->
@@ -319,8 +346,10 @@ function retry() {
 
         <!-- داشبورد -->
         <template v-else>
+          <!-- دو نمودار روند، کنار هم در نمایشگرهای بزرگ -->
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <!-- نمودار ۱: روند رضایت کلی عملکرد -->
-          <section class="mb-8">
+          <section>
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
               <span class="text-[11px] text-slate-400">
@@ -337,7 +366,7 @@ function retry() {
           </section>
 
           <!-- نمودار ۲: روند رضایت (وزنی) -->
-          <section class="mb-8">
+          <section>
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
               <span class="text-[11px] text-slate-400">
@@ -353,8 +382,10 @@ function retry() {
             </p>
           </section>
 
+          </div>
+
           <!-- نمودار ۳: نمره‌ی سؤال‌ها به تفکیک دسته -->
-          <section>
+          <section class="mt-6">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
 
