@@ -8,6 +8,7 @@ import {
   type SurveyCompletionPayload
 } from '~/composables/CommerceSurvey/useSurveyWizard'
 import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
+import { useSurveySubmit } from '~/composables/CommerceSurvey/useSurveySubmit'
 import SurveyStepper from './SurveyStepper.vue'
 import SurveyStepPanel from './SurveyStepPanel.vue'
 
@@ -36,6 +37,16 @@ const emit = defineEmits<{
 }>()
 
 const wizard = useSurveyWizard(() => props.groups ?? [])
+
+/**
+ * اتصال به سرویس ثبت پاسخ‌ها (SurveyDistribution/Submit):
+ * سریالایز پاسخ‌های ویزارد و پس از موفقیت، فاز صفحه به «تکمیل» می‌رود.
+ */
+const submit = useSurveySubmit({
+  buildAnswers: () => wizard.buildSubmitAnswers(),
+  answeredCount: () => wizard.answeredCount.value,
+  totalQuestions: () => wizard.totalAnswerable.value
+})
 
 /** تبدیل ارقام لاتین به فارسی برای نمایش یکدست counters */
 const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
@@ -76,13 +87,29 @@ function onNext() {
   }
 }
 
-function confirmSubmit() {
+/**
+ * ثبت نهایی: ابتدا اعتبارسنجی کامل (در صورت نقص، اسکرول به اولین سؤال
+ * بی‌پاسخ و جلوگیری از ارسال)، سپس فراخوانی سرویس Submit.
+ */
+async function confirmSubmit() {
+  if (submit.isSubmitting.value || submit.isSubmitted.value) return
+  if (!wizard.validateAll()) {
+    isConfirmOpen.value = false
+    void scrollToFirstInvalid()
+    return
+  }
+  const ok = await submit.submitSurvey()
+  if (ok) {
+    isConfirmOpen.value = false
+    emit('complete', {
+      payload: wizard.buildCompletionPayload(props.selection),
+      answeredCount: wizard.answeredCount.value,
+      totalQuestions: wizard.totalAnswerable.value
+    })
+    return
+  }
+  // شکست ثبت: مودال بسته و بنر خطا با گزینه‌ی «تلاش مجدد» نمایش داده می‌شود
   isConfirmOpen.value = false
-  emit('complete', {
-    payload: wizard.buildCompletionPayload(props.selection),
-    answeredCount: wizard.answeredCount.value,
-    totalQuestions: wizard.totalAnswerable.value
-  })
 }
 </script>
 
@@ -263,6 +290,27 @@ function confirmSubmit() {
           </Transition>
         </div>
 
+        <!-- بنر خطای ثبت (با گزینه‌ی تلاش مجدد) -->
+        <div
+          v-if="submit.submitError.value"
+          class="mx-6 sm:mx-8 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-300"
+          role="alert"
+        >
+          <span class="flex items-center gap-2">
+            <Icon icon="lucide:cloud-alert" class="w-4 h-4 flex-shrink-0" />
+            {{ submit.submitError.value }}
+          </span>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-md border border-red-300 dark:border-red-700 px-3 py-1.5 text-xs font-bold text-red-700 dark:text-red-200 transition-colors hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="submit.isSubmitting.value"
+            @click="confirmSubmit"
+          >
+            <Icon icon="lucide:rotate-cw" class="w-3.5 h-3.5" :class="submit.isSubmitting.value ? 'animate-spin' : ''" />
+            تلاش مجدد
+          </button>
+        </div>
+
         <!-- ناوبری -->
         <div class="px-6 sm:px-8 py-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex items-center justify-between gap-3">
           <BaseButton
@@ -286,11 +334,22 @@ function confirmSubmit() {
             type="button"
             :color="wizard.isLast.value ? 'success' : 'primary'"
             class="!px-6"
+            :disabled="wizard.isLast.value && submit.isSubmitting.value"
             @click="onNext"
           >
             <span class="flex items-center gap-2">
-              {{ wizard.isLast.value ? 'ثبت نهایی نظرسنجی' : 'بخش بعد' }}
-              <Icon :icon="wizard.isLast.value ? 'lucide:send' : 'lucide:arrow-left'" class="w-4 h-4" />
+              <template v-if="wizard.isLast.value && submit.isSubmitting.value">در حال ثبت…</template>
+              <template v-else>{{ wizard.isLast.value ? 'ثبت نهایی نظرسنجی' : 'بخش بعد' }}</template>
+              <svg
+                v-if="wizard.isLast.value && submit.isSubmitting.value"
+                class="w-4 h-4 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
+              </svg>
+              <Icon v-else :icon="wizard.isLast.value ? 'lucide:send' : 'lucide:arrow-left'" class="w-4 h-4" />
             </span>
           </BaseButton>
         </div>
@@ -305,8 +364,31 @@ function confirmSubmit() {
               آیا از ثبت نهایی پاسخ‌های خود اطمینان دارید؟
             </p>
             <div class="flex justify-end gap-2">
-              <button type="button" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" @click="isConfirmOpen = false">خیر</button>
-              <button type="button" class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors" @click="confirmSubmit">بله، ثبت شود</button>
+              <button
+                type="button"
+                class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="submit.isSubmitting.value"
+                @click="isConfirmOpen = false"
+              >
+                خیر
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                :disabled="submit.isSubmitting.value"
+                @click="confirmSubmit"
+              >
+                <svg
+                  v-if="submit.isSubmitting.value"
+                  class="w-4 h-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
+                </svg>
+                {{ submit.isSubmitting.value ? 'در حال ثبت…' : 'بله، ثبت شود' }}
+              </button>
             </div>
           </div>
         </div>
