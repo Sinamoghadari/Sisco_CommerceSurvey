@@ -1,21 +1,23 @@
 import { ref } from 'vue'
 
 /**
- * اتصال به سرویس گزارش نظرسنجی راهبردی:
- *   POST {surveyReportUrl}
- *   Content-Type: application/json
- *   { "distribution_id": "..." }
+ * اتصال به سرویس گزارش نظرسنجی راهبردی از طریق کلاینت مرکزی پروژه (useApi):
  *
- * - آدرس سرویس از runtimeConfig.public.surveyReportUrl خوانده می‌شود
- *   (پیش‌فرض: https://portal.sirjansteel.com/api/GetStrategySurveyReport).
- * - distribution_id از route.query.distribution_id خوانده می‌شود و در نبود آن
- *   مقدار پیش‌فرض SURVEY_DISTRIBUTION_ID_FALLBACK استفاده می‌گردد
- *   (آماده‌ی پذیرش مقادیر داینامیک از route params یا state در مراحل بعد).
- * - پاسخ خام سرویس بدون تغییر در reportData نگهداری می‌شود (برای JSON Inspector).
+ *   const api = useApi()
+ *   const response = await api('/GetStrategySurveyReport', {
+ *     method: 'POST',
+ *     body: { distribution_id: distributionId }
+ *   })
+ *
+ * - useApi توکن احراز هویت (کوکی sis_token) را به‌صورت Bearer به درخواست
+ *   می‌افزاید و مسیرهای نسبی را روی https://portal.sirjansteel.com/api
+ *   سوار می‌کند؛ فراخوانی مستقیم $fetch بدون اعتبارنامه با
+ *   access_denied از سمت سرور مواجه می‌شود.
+ * - distribution_id از route.query.distribution_id یا آرگومان ورودی
+ *   خوانده می‌شود و در نبود آن‌ها مقدار پیش‌فرض
+ *   SURVEY_DISTRIBUTION_ID_FALLBACK استفاده می‌گردد.
+ * - پاسخ خام سرویس بدون تغییر در reportData نگهداری می‌شود (JSON Inspector).
  */
-
-/** آدرس پیش‌فرض گزارش نظرسنجی راهبردی */
-export const DEFAULT_SURVEY_REPORT_URL = 'https://portal.sirjansteel.com/api/GetStrategySurveyReport'
 
 /**
  * مقدار پیش‌فرض distribution_id (تا زمانی که شناسه‌ی توزیع واقعی از
@@ -23,6 +25,9 @@ export const DEFAULT_SURVEY_REPORT_URL = 'https://portal.sirjansteel.com/api/Get
  * همان مقدار اولویت دارد.
  */
 export const SURVEY_DISTRIBUTION_ID_FALLBACK = '3ef23fdeecad664aeedcb961a4561269988da62d1c6a12ce0951a7afc0bb8ede'
+
+/** مسیر نسبی سرویس گزارش (روی base مرکزی useApi سوار می‌شود) */
+export const SURVEY_REPORT_PATH = '/GetStrategySurveyReport'
 
 /** خواندن distribution_id از کوئری؛ در نبود آن مقدار پیش‌فرض */
 function resolveDistributionId(): string {
@@ -39,33 +44,20 @@ function resolveDistributionId(): string {
   return SURVEY_DISTRIBUTION_ID_FALLBACK
 }
 
-/** آدرس سرویس گزارش (با امکان بازنویسی از runtimeConfig) */
-function resolveReportUrl(): string {
-  try {
-    const config = useRuntimeConfig()
-    const override = config?.public?.surveyReportUrl as string | undefined
-    if (override && override.trim().length > 0) return override.trim()
-  } catch {
-    /* useRuntimeConfig خارج از context Nuxt در دسترس نیست */
-  }
-  return DEFAULT_SURVEY_REPORT_URL
+/** پیام خطای فارسی بر اساس خطای کلاینت مرکزی */
+function toReportError(e: any): string {
+  return (
+    e?.response?.data?.msg_description ||
+    e?.data?.msg_description ||
+    'خطا در برقراری ارتباط با سرور'
+  )
 }
 
-/** پیام خطای فارسی بر اساس خطای $fetch */
-function toReportError(err: unknown): string {
-  const e = err as { data?: { msg_description?: unknown; message?: unknown; error?: unknown }; statusCode?: number }
-  const serverDescription = e?.data?.msg_description
-  if (typeof serverDescription === 'string' && serverDescription.trim().length > 0) {
-    return serverDescription.trim()
-  }
-  const apiMessage = e?.data?.message ?? e?.data?.error
-  if (typeof apiMessage === 'string' && apiMessage.trim().length > 0) {
-    return apiMessage.trim()
-  }
-  if (e?.statusCode && e.statusCode >= 500) {
-    return 'خطای سرور در دریافت گزارش رخ داد. لطفاً چند لحظه بعد دوباره تلاش کنید.'
-  }
-  return 'دریافت گزارش با خطا مواجه شد. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.'
+/** خروجی استاندارد فراخوانی گزارش (مطابق الگوی ماژول‌های دیگر پروژه) */
+export interface StrategyReportResult {
+  result: boolean
+  data?: unknown
+  msg?: string
 }
 
 /**
@@ -80,22 +72,40 @@ export function useStrategySurveyReport() {
   /** داده‌ی خام گزارش (بدون تغییر – برای نمایش/کپی JSON) */
   const reportData = ref<unknown>(null)
 
-  /** دریافت گزارش از سرویس؛ true → موفق */
-  async function fetchStrategySurveyReport(): Promise<boolean> {
+  /**
+   * دریافت گزارش از سرویس (با اعتبارنامه‌ی مرکزی پروژه).
+   * true → موفق (داده در reportData)؛ false → ناموفق (پیام در reportError).
+   */
+  async function fetchStrategySurveyReport(
+    distributionId: string = resolveDistributionId()
+  ): Promise<boolean> {
     if (isReportLoading.value) return false
     reportError.value = null
     isReportLoading.value = true
     try {
-      const distributionId = resolveDistributionId()
-      const response = await $fetch<unknown>(resolveReportUrl(), {
+      // کلاینت مرکزی پروژه: افزودن اعتبارنامه/توکن + base URL
+      const api = useApi()
+      const response: any = await api(SURVEY_REPORT_PATH, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: { distribution_id: distributionId }
+        body: {
+          distribution_id: distributionId
+        }
       })
-      reportData.value = response
-      return true
-    } catch (err) {
-      reportError.value = toReportError(err)
+
+      if (
+        response &&
+        (response.result === 'OK' || Array.isArray(response) || !response.access_denied)
+      ) {
+        reportData.value = response
+        return true
+      }
+
+      // دسترسی رد شده / داده‌ای یافت نشد – پیام سرور عیناً نمایش داده می‌شود
+      const msg = response?.msg_description || 'دسترسی مجاز نمی‌باشد یا داده‌ای یافت نشد.'
+      reportError.value = msg
+      return false
+    } catch (e: any) {
+      reportError.value = toReportError(e)
       return false
     } finally {
       isReportLoading.value = false
