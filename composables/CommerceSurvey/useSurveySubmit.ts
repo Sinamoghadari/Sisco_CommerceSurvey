@@ -18,6 +18,12 @@ import type { SurveySubmitAnswers } from './useSurveyWizard'
 export const DEFAULT_SURVEY_SUBMIT_URL = 'https://portal.sirjansteel.com/api/SurveyDistribution/Submit'
 
 /**
+ * پیام پیش‌فرض موفقیت – فقط وقتی استفاده می‌شود که سرور msg_description
+ * نداده باشد (undefined/null). پیام واقعی سرور همیشه عیناً نمایش داده می‌شود.
+ */
+export const SURVEY_FALLBACK_SUCCESS_MESSAGE = 'پاسخ شما با موفقیت ثبت شد.'
+
+/**
  * توکن پیش‌فرض (قابل استفاده تا زمانی که توکن واقعی از مسیر ورود توزیع شود).
  * در صورت وجود ?token= در آدرس صفحه، همان مقدار اولویت دارد.
  */
@@ -59,9 +65,17 @@ function resolveSubmitUrl(): string {
   return DEFAULT_SURVEY_SUBMIT_URL
 }
 
-/** پیام خطای فارسی بر اساس خطای $fetch */
+/**
+ * پیام خطای فارسی بر اساس خطای $fetch.
+ * اولویت: msg_description سرور (هشدار/خطای اختصاصی بک‌اند) → message → error
+ * → پیام عمومی بر اساس کد وضعیت.
+ */
 function toPersianError(err: unknown): string {
-  const e = err as { data?: { message?: unknown; error?: unknown }; statusCode?: number }
+  const e = err as { data?: { msg_description?: unknown; message?: unknown; error?: unknown }; statusCode?: number }
+  const serverDescription = e?.data?.msg_description
+  if (typeof serverDescription === 'string' && serverDescription.trim().length > 0) {
+    return serverDescription.trim()
+  }
   const apiMessage = e?.data?.message ?? e?.data?.error
   if (typeof apiMessage === 'string' && apiMessage.trim().length > 0) {
     return apiMessage.trim()
@@ -70,6 +84,15 @@ function toPersianError(err: unknown): string {
     return 'خطای سرور در ثبت پاسخ‌ها رخ داد. لطفاً چند لحظه بعد دوباره تلاش کنید.'
   }
   return 'ثبت پاسخ‌ها با خطا مواجه شد. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.'
+}
+
+/** استخراج msg_description از بدنه‌ی پاسخ (در صورت وجود رشته‌ی غیرخالی) */
+function extractServerMessage(body: unknown): string | null {
+  if (body && typeof body === 'object' && 'msg_description' in body) {
+    const msg = (body as Record<string, unknown>).msg_description
+    if (typeof msg === 'string' && msg.trim().length > 0) return msg.trim()
+  }
+  return null
 }
 
 /**
@@ -84,6 +107,13 @@ export function useSurveySubmit(options: SurveySubmitOptions) {
   const submitError = ref<string | null>(null)
   /** ثبت با موفقیت انجام شده است */
   const isSubmitted = ref(false)
+  /**
+   * پیام دقیق سرور (msg_description) – بدون hardcode؛ در صورت undefined/null
+   * بودن، UI از SURVEY_FALLBACK_SUCCESS_MESSAGE استفاده می‌کند.
+   */
+  const serverMessage = ref<string | null>(null)
+  /** شناسه‌ی پاسخ ثبت‌شده از سرویس (response_id) */
+  const responseId = ref<string | null>(null)
 
   /**
    * ارسال پاسخ‌ها به سرویس Submit.
@@ -106,10 +136,15 @@ export function useSurveySubmit(options: SurveySubmitOptions) {
       if (response && typeof response === 'object' && 'result' in response) {
         const result = String((response as Record<string, unknown>).result ?? '').toUpperCase()
         if (result && result !== 'OK') {
-          submitError.value = toPersianError(response)
+          // پیام اختصاصی سرور (مثلاً هشدار پاسخ تکراری) عیناً نمایش داده می‌شود
+          submitError.value = extractServerMessage(response) ?? toPersianError(response)
           return false
         }
       }
+      // بازخورد داینامیک سرور: msg_description و response_id (در صورت وجود)
+      serverMessage.value = extractServerMessage(response)
+      const rid = response && typeof response === 'object' ? (response as Record<string, unknown>).response_id : null
+      responseId.value = rid !== null && rid !== undefined ? String(rid) : null
       isSubmitted.value = true
       return true
     } catch (err) {
@@ -124,7 +159,9 @@ export function useSurveySubmit(options: SurveySubmitOptions) {
   function resetSubmit() {
     submitError.value = null
     isSubmitted.value = false
+    serverMessage.value = null
+    responseId.value = null
   }
 
-  return { isSubmitting, submitError, isSubmitted, submitSurvey, resetSubmit }
+  return { isSubmitting, submitError, isSubmitted, serverMessage, responseId, submitSurvey, resetSubmit }
 }

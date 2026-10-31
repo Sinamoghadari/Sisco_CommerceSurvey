@@ -91,6 +91,8 @@ const { categories, title, description, alreadyAnswered, status, error } = surve
         key="complete"
         :answered-count="completion.answeredCount"
         :total-questions="completion.totalQuestions"
+        :server-message="completion.serverMessage"
+        :response-id="completion.responseId"
         @restart="restart"
       />
     </Transition>

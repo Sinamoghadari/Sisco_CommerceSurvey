@@ -24,12 +24,20 @@ export interface SurveyCompletion {
   answeredCount: number
   totalQuestions: number
   completedAt: number
+  /** پیام دقیق سرور (msg_description) – در صورت ارسال */
+  serverMessage?: string | null
+  /** شناسه‌ی پاسخ ثبت‌شده (response_id) – در صورت ارسال */
+  responseId?: string | null
 }
 
 export interface SurveySubmitPayload {
   payload: SurveyCompletionPayload
   answeredCount: number
   totalQuestions: number
+  /** پیام دقیق سرور (msg_description) – در صورت ارسال */
+  serverMessage?: string | null
+  /** شناسه‌ی پاسخ ثبت‌شده (response_id) – در صورت ارسال */
+  responseId?: string | null
 }
 
 export function useCommerceSurvey() {
@@ -68,7 +76,9 @@ export function useCommerceSurvey() {
       selection: { ...result.payload.selection },
       answeredCount: result.answeredCount,
       totalQuestions: result.totalQuestions,
-      completedAt: result.payload.completedAt
+      completedAt: result.payload.completedAt,
+      serverMessage: result.serverMessage ?? null,
+      responseId: result.responseId ?? null
     }
     phase.value = 'complete'
   }

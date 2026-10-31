@@ -31,7 +31,18 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'complete', result: { payload: SurveyCompletionPayload; answeredCount: number; totalQuestions: number }): void
+  (
+    e: 'complete',
+    result: {
+      payload: SurveyCompletionPayload
+      answeredCount: number
+      totalQuestions: number
+      /** پیام دقیق سرور از پاسخ Submit (msg_description) */
+      serverMessage: string | null
+      /** شناسه‌ی پاسخ ثبت‌شده از پاسخ Submit (response_id) */
+      responseId: string | null
+    }
+  ): void
   (e: 'retry'): void
   (e: 'change-selection'): void
 }>()
@@ -104,7 +115,9 @@ async function confirmSubmit() {
     emit('complete', {
       payload: wizard.buildCompletionPayload(props.selection),
       answeredCount: wizard.answeredCount.value,
-      totalQuestions: wizard.totalAnswerable.value
+      totalQuestions: wizard.totalAnswerable.value,
+      serverMessage: submit.serverMessage.value,
+      responseId: submit.responseId.value
     })
     return
   }

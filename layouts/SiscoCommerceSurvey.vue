@@ -5,8 +5,9 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 
-// علامت‌گذاری تب فعال بر اساس route.path
+// علامت‌گذاری تب فعال بر اساس route.path (گزارش‌دهی قبل از پیشوند مشترک بررسی می‌شود)
 const activeTab = computed(() => {
+  if (route.path.startsWith('/Sisco_CommerceSurvey/report')) return 'report'
   if (route.path.startsWith('/Sisco_CommerceSurvey')) return 'survey'
   return ''
 })
@@ -15,9 +16,15 @@ const activeTab = computed(() => {
 const navigationTabs = [
   {
     id: 'survey',
-    label: 'نظرسنجی مشتریان امور بازرگانی',
+    label: 'نظرسنجی',
     icon: 'lucide:clipboard-list',
     path: '/Sisco_CommerceSurvey'
+  },
+  {
+    id: 'report',
+    label: 'گزارش‌دهی',
+    icon: 'lucide:bar-chart-3',
+    path: '/Sisco_CommerceSurvey/report'
   }
 ]
 
