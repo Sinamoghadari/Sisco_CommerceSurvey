@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import type { QuestionCategory, SurveyCategoryGroup, SurveyQuestion } from './useSurveyApi'
+import type { QuestionCategory, SurveyCategoryGroup, SurveyOption, SurveyQuestion } from './useSurveyApi'
 import type { SurveySelection } from './useSurveyDefinition'
 
 export type AnswerValue = number | string | string[] | null
@@ -79,6 +79,59 @@ export function isStrategyCategory(cat?: QuestionCategory): boolean {
 /** کلید نگه‌داری توضیح متنی گزینه‌ها: `{questionId}:{value}` یا `{questionId}__fu:{value}` */
 export const optionTextKey = (questionId: string, value: string, followUp = false) =>
   `${questionId}${followUp ? '__fu' : ''}:${value}`
+
+/**
+ * تبدیل پاسخ شرطی انتخاب‌شده به برچسب‌های قابل خواندن برای انسان:
+ *  - سؤال تکمیلی متنی (type === 'text' یا بدون options) → همان متن کاربر
+ *  - گزینه‌ای → نگاشت value/_id به label از conditional_follow_up.options
+ *    (مقدار بدون تطبیق عیناً حفظ می‌شود)
+ *  - گزینه‌های دارای need_text → افزودن متن واردشده‌ی کاربر در پرانتز
+ *  - چند انتخاب با «، » به هم می‌چسبند
+ */
+export function resolveConditionalAnswer(
+  conditionalFollowUp: ConditionalFollowUp | null | undefined,
+  selectedVal: AnswerValue,
+  customTextAnswers?: Record<string, string>
+): string {
+  if (!conditionalFollowUp || selectedVal === undefined || selectedVal === null || selectedVal === '') {
+    return ''
+  }
+
+  // حالت ۱: سؤال تکمیلی متنی خالص (یا بدون گزینه) → متن کاربر بدون تغییر
+  if (conditionalFollowUp.type === 'text' || !conditionalFollowUp.options?.length) {
+    return String(selectedVal).trim()
+  }
+
+  // حالت ۲: سؤال تکمیلی گزینه‌ای (single_choice / multiple_choice)
+  const selectedList: string[] = Array.isArray(selectedVal) ? selectedVal : [String(selectedVal)]
+  const options = (conditionalFollowUp.options || []).map(opt =>
+    typeof opt === 'string' ? { value: opt, label: opt } : opt
+  )
+
+  const resolvedLabels: string[] = []
+
+  for (const itemVal of selectedList) {
+    const matched = options.find(opt => opt.value === itemVal || opt._id === itemVal)
+
+    if (matched) {
+      let labelText = matched.label || ''
+
+      // متن تکمیلی «سایر موارد» در صورت وجود (ورودی کاربر یا text_answer سرور)
+      const additionalText =
+        customTextAnswers?.[itemVal] || (matched as SurveyOption & { text_answer?: string }).text_answer
+      if (matched.need_text && additionalText && additionalText.trim()) {
+        labelText += ` (${additionalText.trim()})`
+      }
+
+      resolvedLabels.push(labelText)
+    } else {
+      // بدون تطبیق: همان مقدار اصلی حفظ می‌شود
+      resolvedLabels.push(String(itemVal))
+    }
+  }
+
+  return resolvedLabels.filter(Boolean).join('، ')
+}
 
 /**
  * موتور وضعیت ویزارد پرسشنامه‌ی داینامیک.
@@ -442,11 +495,25 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
             else entry.text = String(val ?? '')
         }
 
-        // پاسخ شرطی: فقط در صورت داشتن مقدار غیرخالی (موتور ویزارد مقدارهای
-        // قدیمی را هنگام خروج از شرط پاک می‌کند)
+        // پاسخ شرطی: تبدیل مقادیر انتخابی به برچسب‌های خوانا (فقط در صورت
+        // داشتن مقدار غیرخالی؛ موتور ویزارد مقدارهای قدیمی را هنگام خروج
+        // از شرط پاک می‌کند)
+        const fuDef = q.conditional_follow_up
         const condVal = getFollowUp(q)
-        if (condVal !== null && condVal !== undefined && String(condVal).trim() !== '') {
-          entry.conditional_answer = Array.isArray(condVal) ? condVal.join(', ') : String(condVal)
+        if (fuDef && condVal !== null && condVal !== undefined && String(condVal).trim() !== '') {
+          // متن‌های «سایر موارد» ذخیره‌شده در optionTexts (کلید: {id}__fu:{value})
+          const customTexts: Record<string, string> = {}
+          for (const opt of fuDef.options ?? []) {
+            if (typeof opt === 'string') continue
+            const value = String(opt.value ?? '')
+            if (!value) continue
+            const t = optionTexts[optionTextKey(q._id, value, true)]
+            if (typeof t === 'string' && t.trim()) customTexts[value] = t
+          }
+          const resolved = resolveConditionalAnswer(fuDef, condVal, customTexts)
+          if (resolved.trim() !== '') {
+            entry.conditional_answer = resolved
+          }
         }
 
         out[q._id] = entry
