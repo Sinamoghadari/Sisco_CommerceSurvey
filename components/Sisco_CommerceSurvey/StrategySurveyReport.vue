@@ -1,105 +1,251 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import fa from 'apexcharts/dist/locales/fa.json'
 import { useStrategySurveyReport } from '~/composables/CommerceSurvey/useStrategySurveyReport'
+import type { SurveyCategoryGroup } from '~/composables/CommerceSurvey/useSurveyApi'
+import {
+  buildCategoryList,
+  buildQuestionMeta,
+  buildRatingTrend,
+  buildRespondentScores,
+  buildWeightedTrend,
+  extractReports,
+  formatFaDateTime,
+  sortReportsChronologically,
+  UNMAPPED_CATEGORY
+} from '~/composables/CommerceSurvey/useSurveyReportDashboard'
 
 /**
- * نمای «گزارش‌دهی» – بازرسی داده‌های جمع‌آوری‌شده‌ی نظرسنجی راهبردی.
- * گزارش هنگام ورود به نما (فاز بازرسی) به‌صورت خودکار دریافت می‌شود و
- * دکمه‌ی «دریافت مجدد» برای به‌روزرسانی دستی در دسترس است.
- * خروجی خام سرویس در یک JSON Inspector تمیز و قابل کپی نمایش داده می‌شود.
+ * داشبورد «گزارش‌دهی» بر اساس پاسخ واقعی POST /GetStrategySurveyReport:
+ *  ۱. روند رضایت کلی عملکرد (area) – امتیاز سؤال‌های rating در طول زمان
+ *  ۲. روند رضایت (area) – امتیاز وزنی Σ(number × strategy_node_weight) هر گزارش
+ *  ۳. نمره‌ی سؤال‌ها به تفکیک دسته (bar) – پاسخ‌دهنده‌ی انتخابی + فیلتر دسته‌ها
+ * نمودارها با AddonApexcharts (کتابخانه‌ی موجود پروژه – ApexCharts) رسم می‌شوند
+ * و هیچ کتابخانه یا مقدار هاردکد‌شده‌ی جدیدی استفاده نشده است.
  */
+
+const props = defineProps<{
+  /** متادیتای تأییدشده‌ی پرسشنامه از Access API (نگاشت question_id → دسته) */
+  groups: SurveyCategoryGroup[] | null
+}>()
 
 const { isReportLoading, reportError, reportData, fetchStrategySurveyReport } = useStrategySurveyReport()
 
-/** دریافت خودکار گزارش هنگام ورود به نما (سمت کلاینت) */
+/** دریافت گزارش هنگام ورود به نما (سمت کلاینت) */
 onMounted(() => {
   if (reportData.value === null && !isReportLoading.value) {
     void fetchStrategySurveyReport()
   }
 })
 
-/** متن قالب‌بندی‌شده‌ی JSON برای نمایش و کپی */
-const prettyJson = computed(() => (reportData.value === null ? '' : JSON.stringify(reportData.value, null, 2)))
+/* ----------------------------- داده‌ی پایه ----------------------------- */
 
-/** آمار خلاصه برای سربرگ کارت (در صورت ساختار قابل شمارش) */
-const stats = computed(() => {
-  const d = reportData.value as Record<string, unknown> | null
-  if (!d || typeof d !== 'object') return null
-  const result = typeof d.result === 'string' ? d.result : null
-  const count =
-    Array.isArray(d.data)
-      ? d.data.length
-      : d.data && typeof d.data === 'object'
-        ? Object.keys(d.data as Record<string, unknown>).length
-        : null
-  return { result, count }
-})
+const reports = computed(() => extractReports(reportData.value))
+const sortedReports = computed(() => sortReportsChronologically(reports.value))
+const meta = computed(() => buildQuestionMeta(props.groups))
 
-/**
- * هایلایت سبک JSON: ابتدا escape و سپس span برای کلید/رشته/عدد/bool.
- * (escape قبل از افزودن تگ‌ها → بدون ریسک XSS)
- */
-const highlightedJson = computed(() => {
-  const raw = prettyJson.value
-  if (!raw) return ''
-  const escaped = raw
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  return escaped.replace(
-    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-    match => {
-      let cls = 'json-number'
-      if (/^"/.test(match)) {
-        cls = /:$/.test(match) ? 'json-key' : 'json-string'
-      } else if (/true|false/.test(match)) {
-        cls = 'json-boolean'
-      } else if (/null/.test(match)) {
-        cls = 'json-null'
+/** گزینه‌های پاسخ‌دهنده (قدیمی → جدید؛ کلید پایدار: response_id) */
+const respondentOptions = computed(() =>
+  sortedReports.value.map(r => ({
+    id: String(r.response_id ?? ''),
+    label: `${formatFaDateTime(r.submitted_at ?? '')}${r.response_id ? ` — ${String(r.response_id).slice(-6)}` : ''}`
+  }))
+)
+
+/** پاسخ‌دهنده‌ی انتخابی – پیش‌فرض: جدیدترین گزارش */
+const selectedResponseId = ref<string>('')
+watch(
+  respondentOptions,
+  opts => {
+    if (!opts.length) {
+      selectedResponseId.value = ''
+      return
+    }
+    if (!opts.some(o => o.id === selectedResponseId.value)) {
+      selectedResponseId.value = opts[opts.length - 1]!.id
+    }
+  },
+  { immediate: true }
+)
+
+const selectedReport = computed(
+  () => sortedReports.value.find(r => String(r.response_id ?? '') === selectedResponseId.value) ?? null
+)
+
+/* --------------------------- فیلتر دسته‌ها --------------------------- */
+
+const categoryList = computed(() => buildCategoryList(meta.value, reports.value))
+/** null = همه‌ی دسته‌ها */
+const selectedCategories = ref<string[] | null>(null)
+
+function toggleCategory(category: string) {
+  const current = selectedCategories.value ?? []
+  const next = current.includes(category)
+    ? current.filter(c => c !== category)
+    : [...current, category]
+  selectedCategories.value = next.length ? next : null
+}
+function selectAllCategories() {
+  selectedCategories.value = null
+}
+
+/* ------------------------------ نمودارها ------------------------------ */
+
+const { success: successColor, warning: warningColor, primary: primaryColor } = useTailwindColors()
+
+/** نمودار ۱ – روند رضایت کلی عملکرد (rating در طول زمان) */
+const ratingTrend = computed(() => buildRatingTrend(reports.value, meta.value))
+const ratingTrendConfig = computed(() => ({
+  type: 'area',
+  height: 260,
+  series: ratingTrend.value.series.map(s => ({ name: s.name, data: s.data.map(p => p.y) })),
+  options: {
+    chart: {
+      fontFamily: 'Vazirmatn FD, sans-serif',
+      zoom: { enabled: false },
+      toolbar: { show: false },
+      defaultLocale: 'fa',
+      locales: [fa]
+    },
+    colors: [successColor.value],
+    dataLabels: { enabled: true, formatter: (v: number) => `${v}` },
+    stroke: { width: 2, curve: 'smooth' },
+    markers: { size: 5, hover: { size: 7 } },
+    grid: { row: { colors: ['transparent', 'transparent'], opacity: 0.5 } },
+    xaxis: {
+      categories: ratingTrend.value.series[0]?.data.map(p => p.x) ?? [],
+      labels: { rotate: -35, maxHeight: 70 }
+    },
+    yaxis: {
+      opposite: true,
+      min: ratingTrend.value.range?.min ?? undefined,
+      max: ratingTrend.value.range?.max ?? undefined,
+      forceNiceScale: true
+    },
+    legend: { position: 'top', horizontalAlign: 'right' },
+    tooltip: {
+      y: {
+        formatter: (val: number) =>
+          ratingTrend.value.range
+            ? `امتیاز: ${val} (مقیاس ${ratingTrend.value.range.min} تا ${ratingTrend.value.range.max})`
+            : `امتیاز: ${val}`
       }
-      return `<span class="${cls}">${match}</span>`
     }
-  )
+  }
+}))
+
+/** نمودار ۲ – روند رضایت وزنی (یک مقدار به‌ازای هر گزارش) */
+const weightedTrend = computed(() => buildWeightedTrend(reports.value))
+const weightedTrendConfig = computed(() => ({
+  type: 'area',
+  height: 260,
+  series: [
+    {
+      name: 'امتیاز وزنی',
+      data: weightedTrend.value.series[0]?.data.map(p => p.y) ?? []
+    }
+  ],
+  options: {
+    chart: {
+      fontFamily: 'Vazirmatn FD, sans-serif',
+      zoom: { enabled: false },
+      toolbar: { show: false },
+      defaultLocale: 'fa',
+      locales: [fa]
+    },
+    colors: [warningColor.value],
+    dataLabels: { enabled: true, formatter: (v: number) => `${v}` },
+    stroke: { width: 2, curve: 'smooth' },
+    markers: { size: 5, hover: { size: 7 } },
+    grid: { row: { colors: ['transparent', 'transparent'], opacity: 0.5 } },
+    xaxis: {
+      categories: weightedTrend.value.series[0]?.data.map(p => p.x) ?? [],
+      labels: { rotate: -35, maxHeight: 70 }
+    },
+    yaxis: { opposite: true, forceNiceScale: true },
+    tooltip: {
+      y: { formatter: (val: number) => `امتیاز وزنی محاسبه‌شده: ${val}` }
+    }
+  }
+}))
+
+/** نمودار ۳ – نمره‌ی سؤال‌ها برای پاسخ‌دهنده‌ی انتخابی (با فیلتر دسته) */
+const respondentScores = computed(() =>
+  buildRespondentScores(selectedReport.value, meta.value, selectedCategories.value)
+)
+const respondentChartConfig = computed(() => ({
+  type: 'bar',
+  height: 320,
+  series: [{ name: 'نمره', data: respondentScores.value.values }],
+  options: {
+    chart: {
+      fontFamily: 'Vazirmatn FD, sans-serif',
+      toolbar: { show: false },
+      defaultLocale: 'fa',
+      locales: [fa]
+    },
+    colors: [primaryColor.value],
+    legend: { show: false },
+    plotOptions: {
+      bar: { horizontal: false, endingShape: 'rounded', columnWidth: '55%' }
+    },
+    dataLabels: { enabled: true },
+    stroke: { show: true, width: 2, colors: ['transparent'] },
+    xaxis: {
+      categories: respondentScores.value.displayLabels,
+      labels: { rotate: -45, maxHeight: 110, trim: false },
+      tooltip: { enabled: false }
+    },
+    yaxis: { opposite: true, forceNiceScale: true },
+    tooltip: {
+      custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
+        const t = respondentScores.value.tooltips[dataPointIndex]
+        if (!t) return ''
+        const range = t.range ? ` — مقیاس ${t.range}` : ''
+        return `<div class="apexcharts-tooltip-title">${t.text}</div>` +
+          `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+          `<span class="apexcharts-tooltip-text">نمره: ${t.value}${range}</span></div>` +
+          `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+          `<span class="apexcharts-tooltip-text">دسته: ${t.category}</span></div>`
+      }
+    }
+  }
+}))
+
+/* ------------------------------ بازخورد UI ---------------------------- */
+
+const summaryLine = computed(() => {
+  const n = sortedReports.value.length
+  const faDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+  const faNum = (v: number | string) => String(v).replace(/\d/g, d => faDigits[+d])
+  if (!n) return ''
+  const first = sortedReports.value[0]?.submitted_at
+  const last = sortedReports.value[n - 1]?.submitted_at
+  const span =
+    first && last && first !== last
+      ? ` — از ${formatFaDateTime(first)} تا ${formatFaDateTime(last)}`
+      : ` — ${formatFaDateTime(last ?? '')}`
+  return `${faNum(n)} پاسخ ثبت‌شده${span}`
 })
 
-/** وضعیت کپی برای بازخورد «کپی شد» */
-const copied = ref(false)
-let copyTimer: ReturnType<typeof setTimeout> | null = null
+/** خلاصه‌ی وضعیت داده برای پیام‌های خالی */
+const hasAnyPoint = computed(
+  () => ratingTrend.value.pointCount > 0 || weightedTrend.value.pointCount > 0
+)
 
-async function copyJson() {
-  const text = prettyJson.value
-  if (!text) return
-  try {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
-    } else {
-      // fallback برای contextهای بدون Clipboard API
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    copied.value = true
-    if (copyTimer) clearTimeout(copyTimer)
-    copyTimer = setTimeout(() => (copied.value = false), 2000)
-  } catch {
-    /* در صورت رد شدن دسترسی، بی‌صدا رد می‌شود */
-  }
+function retry() {
+  void fetchStrategySurveyReport()
 }
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-4xl">
+  <div class="mx-auto w-full max-w-5xl">
     <BaseCard class="mb-6 overflow-hidden !rounded-xl">
       <!-- سربرگ کارت گزارش -->
-      <div class="px-6 sm:px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50/60 px-6 py-6 sm:px-8 dark:border-slate-800 dark:bg-slate-900/40">
         <div class="flex items-center gap-4">
-          <span class="w-12 h-12 rounded-lg bg-green-700 text-white flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-green-700 text-white">
+            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M3 3v16a2 2 0 0 0 2 2h16" />
               <path d="M18 17V9" />
               <path d="M13 17V5" />
@@ -108,149 +254,161 @@ async function copyJson() {
           </span>
           <div>
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">گزارش نظرسنجی راهبردی</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-6">
-              بازرسی داده‌های جمع‌آوری‌شده از سرویس توزیع نظرسنجی
-              <span v-if="stats?.result" class="inline-flex items-center gap-1 mx-1">
-                <span
-                  class="inline-block w-1.5 h-1.5 rounded-full"
-                  :class="stats.result.toUpperCase() === 'OK' ? 'bg-green-600' : 'bg-red-500'"
-                />
-                <span class="font-mono text-[11px]" dir="ltr">{{ stats.result }}</span>
-              </span>
-              <span v-if="stats?.count !== null && stats?.count !== undefined" class="text-slate-400">
-                ({{ stats.count }} مورد)
-              </span>
-            </p>
+            <p class="mt-0.5 text-sm leading-6 text-slate-500 dark:text-slate-400">{{ summaryLine }}</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <button
-            v-if="reportData !== null"
-            type="button"
-            class="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="isReportLoading"
-            @click="copyJson"
-          >
-            <svg v-if="copied" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-            <svg v-else viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-            </svg>
-            {{ copied ? 'کپی شد' : 'کپی JSON' }}
-          </button>
-
-          <button
-            type="button"
-            class="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-green-700 text-white text-xs font-bold transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25 disabled:opacity-60 disabled:cursor-not-allowed"
-            :disabled="isReportLoading"
-            @click="fetchStrategySurveyReport()"
-          >
-            <svg
-              v-if="isReportLoading"
-              class="w-3.5 h-3.5 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
-            </svg>
-            <svg v-else viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-              <path d="M21 3v6h-6" />
-            </svg>
-            {{ reportData === null ? 'دریافت گزارش' : 'دریافت مجدد' }}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-green-700 px-4 text-xs font-bold text-white transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25 disabled:cursor-not-allowed disabled:opacity-60"
+          :disabled="isReportLoading"
+          @click="retry"
+        >
+          <svg v-if="isReportLoading" class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+          {{ reports.length ? 'دریافت مجدد' : 'دریافت گزارش' }}
+        </button>
       </div>
 
-      <!-- بدنه: خطا / اسکلت / JSON Inspector -->
+      <!-- بدنه -->
       <div class="p-6 sm:p-8">
-        <!-- خطا -->
+        <!-- خطا (msg_description سرور عیناً) -->
         <div
           v-if="reportError"
-          class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-300"
+          class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
           role="alert"
         >
           <span class="flex items-center gap-2">
-            <Icon icon="lucide:cloud-alert" class="w-4 h-4 flex-shrink-0" />
+            <Icon icon="lucide:cloud-alert" class="h-4 w-4 flex-shrink-0" />
             {{ reportError }}
           </span>
           <button
             type="button"
-            class="rounded-md border border-red-300 dark:border-red-700 px-3 py-1.5 text-xs font-bold text-red-700 dark:text-red-200 transition-colors hover:bg-red-100 dark:hover:bg-red-900/40"
-            @click="fetchStrategySurveyReport()"
+            class="rounded-md border border-red-300 px-3 py-1.5 text-xs font-bold text-red-700 transition-colors hover:bg-red-100 dark:border-red-700 dark:text-red-200 dark:hover:bg-red-900/40"
+            @click="retry"
           >
             تلاش مجدد
           </button>
         </div>
 
         <!-- اسکلت بارگذاری -->
-        <div v-if="isReportLoading && reportData === null" class="space-y-3" aria-hidden="true">
-          <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-5">
-            <div class="h-3 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-1/4 mb-3" />
-            <div class="h-3 rounded bg-slate-100 dark:bg-slate-800/60 animate-pulse w-2/3 mb-2" />
-            <div class="h-3 rounded bg-slate-100 dark:bg-slate-800/60 animate-pulse w-1/2 mb-2" />
-            <div class="h-3 rounded bg-slate-100 dark:bg-slate-800/60 animate-pulse w-3/5" />
-          </div>
-          <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-5">
-            <div class="h-3 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-1/5 mb-3" />
-            <div class="h-3 rounded bg-slate-100 dark:bg-slate-800/60 animate-pulse w-3/4 mb-2" />
-            <div class="h-3 rounded bg-slate-100 dark:bg-slate-800/60 animate-pulse w-2/5" />
+        <div v-if="isReportLoading && reports.length === 0" class="space-y-4" aria-hidden="true">
+          <div v-for="n in 3" :key="n" class="rounded-lg border border-slate-200 p-5 dark:border-slate-800">
+            <div class="mb-4 h-4 w-1/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div class="h-40 animate-pulse rounded bg-slate-100 dark:bg-slate-800/60" />
           </div>
         </div>
 
-        <!-- بازرس JSON -->
-        <div v-else-if="reportData !== null" class="relative">
-          <div
-            class="rounded-lg border border-slate-700 bg-slate-900 dark:border-slate-700 overflow-hidden"
-            dir="ltr"
-          >
-            <div class="flex items-center justify-between px-4 py-2 border-b border-slate-700 bg-slate-800/70">
-              <span class="font-mono text-[11px] text-slate-400">GetStrategySurveyReport → response</span>
-              <span class="font-mono text-[10px] text-slate-500">JSON</span>
-            </div>
-            <pre
-              class="json-pre max-h-[32rem] overflow-auto p-4 text-xs sm:text-[13px] leading-6 font-mono text-slate-200"
-            ><code v-html="highlightedJson" /></pre>
-          </div>
-        </div>
-
-        <!-- حالت خالی (بدون داده و بدون خطا) -->
-        <div v-else-if="!reportError" class="py-10 text-center">
-          <div class="mx-auto w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
-            <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <!-- خالی -->
+        <div v-else-if="!isReportLoading && !reportError && reports.length === 0" class="py-10 text-center">
+          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800">
+            <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M3 3v16a2 2 0 0 0 2 2h16" />
               <path d="M18 17V9" />
               <path d="M13 17V5" />
               <path d="M8 17v-3" />
             </svg>
           </div>
-          <p class="text-sm text-slate-500 dark:text-slate-400">گزارشی برای نمایش دریافت نشده است.</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">هنوز پاسخی برای این نظرسنجی ثبت نشده است.</p>
         </div>
+
+        <!-- داشبورد -->
+        <template v-else>
+          <!-- نمودار ۱: روند رضایت کلی عملکرد -->
+          <section class="mb-8">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
+              <span class="text-[11px] text-slate-400">
+                امتیاز سؤال‌های «rating» در هر پاسخ‌نامه، برحسب زمان ثبت
+                <template v-if="ratingTrend.range"> — مقیاس {{ ratingTrend.range.min }} تا {{ ratingTrend.range.max }}</template>
+              </span>
+            </div>
+            <div v-if="ratingTrend.pointCount" class="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <AddonApexcharts v-bind="ratingTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+            </div>
+            <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+              هیچ پاسخ عددی از نوع rating در گزارش‌ها یافت نشد.
+            </p>
+          </section>
+
+          <!-- نمودار ۲: روند رضایت (وزنی) -->
+          <section class="mb-8">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
+              <span class="text-[11px] text-slate-400">
+                Σ امتیاز × وزن گره استراتژیک، به‌ازای هر پاسخ‌نامه
+                <template v-if="weightedTrend.skippedReports"> — ({{ weightedTrend.skippedReports }} پاسخ‌نامه بدون پاسخ وزنی معتبر)</template>
+              </span>
+            </div>
+            <div v-if="weightedTrend.pointCount" class="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <AddonApexcharts v-bind="weightedTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+            </div>
+            <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+              هیچ پاسخ وزنی معتبر (strategy_range_rating با وزن گره) در گزارش‌ها یافت نشد.
+            </p>
+          </section>
+
+          <!-- نمودار ۳: نمره‌ی سؤال‌ها به تفکیک دسته -->
+          <section>
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
+
+              <!-- انتخاب پاسخ‌دهنده -->
+              <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                پاسخ‌دهنده:
+                <select
+                  v-model="selectedResponseId"
+                  class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <option v-for="opt in respondentOptions" :key="opt.id" :value="opt.id">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <!-- کنترل دسته‌ها -->
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+                :class="(selectedCategories === null)
+                  ? 'border-green-700 bg-green-700 text-white'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
+                @click="selectAllCategories"
+              >
+                همه
+              </button>
+              <button
+                v-for="cat in categoryList"
+                :key="cat"
+                type="button"
+                class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+                :class="(selectedCategories ?? []).includes(cat)
+                  ? 'border-green-700 bg-green-700 text-white'
+                  : cat === UNMAPPED_CATEGORY
+                    ? 'border-dashed border-slate-300 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
+                @click="toggleCategory(cat)"
+              >
+                {{ cat }}
+              </button>
+            </div>
+
+            <div v-if="respondentScores.values.length" class="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <AddonApexcharts v-bind="respondentChartConfig" />
+            </div>
+            <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+              برای این پاسخ‌دهنده در دسته‌های انتخاب‌شده، پاسخ عددی وجود ندارد.
+            </p>
+          </section>
+        </template>
       </div>
     </BaseCard>
   </div>
 </template>
-
-<style scoped>
-/* هایلایت JSON – پالت صنعتی/اسلیت روی زمینه‌ی تیره */
-.json-pre :deep(.json-key) {
-  color: #7dd3fc;
-}
-.json-pre :deep(.json-string) {
-  color: #86efac;
-}
-.json-pre :deep(.json-number) {
-  color: #fcd34d;
-}
-.json-pre :deep(.json-boolean) {
-  color: #c4b5fd;
-}
-.json-pre :deep(.json-null) {
-  color: #94a3b8;
-  font-style: italic;
-}
-</style>

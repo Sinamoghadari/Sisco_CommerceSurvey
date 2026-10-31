@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import StrategySurveyReport from '~/components/Sisco_CommerceSurvey/StrategySurveyReport.vue'
+import { useSurveyApi } from '~/composables/CommerceSurvey/useSurveyApi'
 
 // تنظیمات متای صفحه‌ی گزارش‌دهی
 definePageMeta({
@@ -8,9 +10,18 @@ definePageMeta({
 })
 
 /**
- * نمای «گزارش‌دهی» – بازرسی داده‌های جمع‌آوری‌شده‌ی نظرسنجی راهبردی
- * (GetStrategySurveyReport). دریافت گزارش در خود کامپوننت مدیریت می‌شود.
+ * نمای «گزارش‌دهی» – داشبورد داده‌های نظرسنجی راهبردی (GetStrategySurveyReport).
+ * برای نگاشت تأییدشده‌ی question_id → دسته، متادیتای پرسشنامه از همان سرویس
+ * Access (همان منبع پرسشنامه) نیز دریافت می‌شود؛ نگاشت هرگز بر اساس متن سؤال
+ * یا عنوان گره انجام نمی‌شود.
  */
+const { categories: accessGroups, fetchSurvey } = useSurveyApi()
+
+onMounted(() => {
+  if (!accessGroups.value) {
+    void fetchSurvey()
+  }
+})
 </script>
 
 <template>
@@ -21,10 +32,10 @@ definePageMeta({
         گزارش‌دهی نظرسنجی
       </BaseHeading>
       <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-        بازرسی داده‌های نظرسنجی راهبردی – شرکت فولاد سیرجان ایرانیان
+        داشبورد داده‌های نظرسنجی راهبردی – شرکت فولاد سیرجان ایرانیان
       </p>
     </div>
 
-    <StrategySurveyReport />
+    <StrategySurveyReport :groups="accessGroups" />
   </div>
 </template>
