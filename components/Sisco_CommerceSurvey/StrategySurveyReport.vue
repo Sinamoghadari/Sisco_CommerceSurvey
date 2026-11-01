@@ -12,6 +12,7 @@ import {
   buildRespondentScores,
   buildSatisfactionDistribution,
   buildWeightedTrend,
+  categoryTooltipHtml,
   dateOptions,
   extractReports,
   filterReports,
@@ -245,7 +246,7 @@ const weightedTrendConfig = computed(() => ({
   }
 }))
 
-/** نمودار ۳ – نمره‌ی سؤال‌ها برای پاسخ‌دهنده‌ی انتخابی (با فیلتر دسته) */
+/** نمودار ۳ – نمره‌ی سؤال‌ها برای پاسخ‌دهنده‌ی انتخابی (با فیلتر دسته)؛ تولتیپ: نمره + وزن گره + دسته */
 const respondentScores = computed(() =>
   buildRespondentScores(selectedReport.value, meta.value, selectedCategories.value)
 )
@@ -302,16 +303,8 @@ const respondentChartConfig = computed(() => ({
     },
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
-      custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
-        const t = respondentScores.value.tooltips[dataPointIndex]
-        if (!t) return ''
-        const range = t.range ? ` — مقیاس ${t.range}` : ''
-        return `<div class="apexcharts-tooltip-title">${t.text}</div>` +
-          `<div class="apexcharts-tooltip-series-group" style="display:block">` +
-          `<span class="apexcharts-tooltip-text">نمره: ${t.value}${range}</span></div>` +
-          `<div class="apexcharts-tooltip-series-group" style="display:block">` +
-          `<span class="apexcharts-tooltip-text">دسته: ${t.category}</span></div>`
-      }
+      custom: ({ dataPointIndex }: { dataPointIndex: number }) =>
+        categoryTooltipHtml(respondentScores.value.tooltips[dataPointIndex])
     }
   }
 }))

@@ -262,7 +262,14 @@ export interface RespondentScoresResult {
   /** برچسب کوتاه‌شده‌ی نمایشی برای محور */
   displayLabels: string[]
   values: number[]
-  tooltips: Array<{ text: string; value: number; range: string | null; category: string }>
+  tooltips: Array<{
+    text: string
+    value: number
+    range: string | null
+    category: string
+    /** وزن گره (strategy_node_weight) برای نمایش در تولتیپ؛ نامعتبر → null */
+    weight: number | null
+  }>
 }
 
 /** کوتاه‌سازی برچسب بلند فارسی برای محور X */
@@ -314,11 +321,33 @@ export function buildRespondentScores(
       text,
       value: answer.number,
       range: formatRange(m.rangeMin, m.rangeMax),
-      category: m.category
+      category: m.category,
+      weight: isValidNumber(answer.strategy_node_weight)
+        ? (answer.strategy_node_weight as number)
+        : null
     })
   }
 
   return { labels, displayLabels, values, tooltips }
+}
+
+/**
+ * HTML سفارشی تولتیپ نمودار «نمره‌ی سؤال‌ها به تفکیک دسته»:
+ * نمره + وزن گره (strategy_node_weight) + دسته؛ وزن نامعتبر ← «—»
+ */
+export function categoryTooltipHtml(
+  t: RespondentScoresResult['tooltips'][number] | undefined
+): string {
+  if (!t) return ''
+  const range = t.range ? ` — مقیاس ${t.range}` : ''
+  const weight = t.weight !== null ? t.weight : '—'
+  return `<div class="apexcharts-tooltip-title">${t.text}</div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">نمره: ${t.value}${range}</span></div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">وزن گره: ${weight}</span></div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">دسته: ${t.category}</span></div>`
 }
 
 /* ===================== درصد رضایت (قرارداد مشترک) ===================== */
