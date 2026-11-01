@@ -30,9 +30,9 @@ export const SURVEY_FALLBACK_SUCCESS_MESSAGE = 'پاسخ شما با موفقی�
  * توکن‌های آزمایشی فاز تست – در هر تلاش ثبت، یکی به‌صورت تصادفی انتخاب می‌شود.
  */
 export const TEST_TOKENS = [
-  '0cfb2529ef87511f2b314dbf7640b66a5ecba69e82bd7a55e21ef6f0dfe98420',
-  '6a82d3cab153bd6a6cea95db807301f3053b850bf77030d1a4ca6bd92087162e',
-  '705479d831d147a19eab91fbfc73a9d26e645e4eee326f88d2057d87684f433d'
+  '409138c71f5788ef4ee16c6961f50d1e87c0ab6290f71601c775268399e066bd',
+  '76c188eb135a27b11fca3c769883a8bce78eabc6342107078da41ea8efdc001d',
+  'ca4d87e9721d773bddb65f4eb89f0ccfdbc66006aeb0d9fc0d6d4e4510c9789c'
 ]
 
 /** انتخاب تصادفی توکن در هر تلاش ثبت (بدون round-robin) */

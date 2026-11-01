@@ -6,28 +6,30 @@ import { ref } from 'vue'
  *   const api = useApi()
  *   const response = await api('/GetStrategySurveyReport', {
  *     method: 'POST',
- *     body: { distribution_id: distributionId }
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: { distribution_id: pickRandomTestToken() }
  *   })
  *
  * - useApi توکن احراز هویت (کوکی sis_token) را به‌صورت Bearer به درخواست
  *   می‌افزاید و مسیرهای نسبی را روی https://portal.sirjansteel.com/api
  *   سوار می‌کند؛ فراخوانی مستقیم $fetch بدون اعتبارنامه با
  *   access_denied از سمت سرور مواجه می‌شود.
- * - distribution_id از آرگومان ورودی یا route.query.distribution_id
- *   خوانده می‌شود؛ در نبود آن‌ها این فیلد در بدنه‌ی درخواست ارسال نمی‌شود
- *   (هیچ مقدار هاردکدشده‌ی منقضی‌شده‌ای باقی نمی‌ماند).
+ * - قرارداد سرویس: بدنه‌ی JSON دقیقاً { distribution_id: <TOKEN> } است و
+ *   مقدار آن یکی از توکن‌های فعال TEST_TOKENS است که در «هر فراخوانی»
+ *   به‌صورت تصادفی انتخاب می‌شود (نه زیر کلید token، نه در query string؛
+ *   هیچ fallback منقضی‌شده‌ای وجود ندارد).
  * - پاسخ خام سرویس بدون تغییر در reportData نگهداری می‌شود (JSON Inspector).
  */
 
 /**
  * توکن‌های آزمایشی فاز تست – در هر درخواست گزارش، یکی به‌صورت تصادفی
- * انتخاب و به‌صورت مقدار خام در body.token ارسال می‌شود (انتخاب در لحظه‌ی
- * درخواست، نه هنگام مقداردهی اولیه؛ بدون ترتیب round-robin).
+ * انتخاب و به‌عنوان مقدار distribution_id در بدنه ارسال می‌شود (انتخاب در
+ * لحظه‌ی درخواست، نه هنگام مقداردهی اولیه؛ بدون ترتیب round-robin).
  */
 export const TEST_TOKENS = [
-  '0cfb2529ef87511f2b314dbf7640b66a5ecba69e82bd7a55e21ef6f0dfe98420',
-  '6a82d3cab153bd6a6cea95db807301f3053b850bf77030d1a4ca6bd92087162e',
-  '705479d831d147a19eab91fbfc73a9d26e645e4eee326f88d2057d87684f433d'
+  '409138c71f5788ef4ee16c6961f50d1e87c0ab6290f71601c775268399e066bd',
+  '76c188eb135a27b11fca3c769883a8bce78eabc6342107078da41ea8efdc001d',
+  'ca4d87e9721d773bddb65f4eb89f0ccfdbc66006aeb0d9fc0d6d4e4510c9789c'
 ]
 
 /** انتخاب تصادفی توکن در هر درخواست گزارش (بدون round-robin) */
@@ -37,21 +39,6 @@ export function pickRandomTestToken(): string {
 
 /** مسیر نسبی سرویس گزارش (روی base مرکزی useApi سوار می‌شود) */
 export const SURVEY_REPORT_PATH = '/GetStrategySurveyReport'
-
-/** خواندن distribution_id از کوئری؛ در نبود آن رشته‌ی خالی (بدون fallback) */
-function resolveDistributionId(): string {
-  try {
-    const route = useRoute()
-    const raw = route?.query?.distribution_id ?? null
-    const first = Array.isArray(raw) ? raw[0] : raw
-    if (first && String(first).trim().length > 0) {
-      return String(first).trim()
-    }
-  } catch {
-    /* useRoute خارج از context Nuxt در دسترس نیست */
-  }
-  return ''
-}
 
 /** پیام خطای فارسی بر اساس خطای کلاینت مرکزی */
 function toReportError(e: any): string {
@@ -82,26 +69,24 @@ export function useStrategySurveyReport() {
   const reportData = ref<unknown>(null)
 
   /**
-   * دریافت گزارش از سرویس (با اعتبارنامه‌ی مرکزی پروژه).
+   * دریافت گزارش از سرویس – بدنه‌ی دقیق { distribution_id: <TOKEN> } که
+   * مقدار آن در هر فراخوانی تصادفی از TEST_TOKENS انتخاب می‌شود.
    * true → موفق (داده در reportData)؛ false → ناموفق (پیام در reportError).
    */
-  async function fetchStrategySurveyReport(
-    distributionId: string = resolveDistributionId()
-  ): Promise<boolean> {
+  async function fetchStrategySurveyReport(): Promise<boolean> {
     if (isReportLoading.value) return false
     reportError.value = null
     isReportLoading.value = true
     try {
       // کلاینت مرکزی پروژه: افزودن اعتبارنامه/توکن + base URL
       const api = useApi()
-      // توکن آزمایشی – در هر درخواست تصادفی انتخاب می‌شود (مقدار خام)
-      const requestBody: Record<string, unknown> = { token: pickRandomTestToken() }
-      if (distributionId) {
-        requestBody.distribution_id = distributionId
-      }
       const response: any = await api(SURVEY_REPORT_PATH, {
         method: 'POST',
-        body: requestBody
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          // مقدار distribution_id = توکن فعال انتخاب‌شده در همین فراخوانی
+          distribution_id: pickRandomTestToken()
+        }
       })
 
       if (
