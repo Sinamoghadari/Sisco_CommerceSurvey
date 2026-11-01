@@ -97,12 +97,12 @@ function selectAllCategories() {
 const isDark = useDark()
 const { success: successColor, warning: warningColor, primary: primaryColor } = useTailwindColors()
 
-/** رنگ خطوط محور: پررنگ (slate-600 در روشن، slate-400 در تیره) */
-const axisColor = computed(() => (isDark.value ? '#94a3b8' : '#475569'))
-/** رنگ برچسب تیک‌ها: پرکنتراست (slate-800 در روشن، slate-50 در تیره) */
-const tickColor = computed(() => (isDark.value ? '#f1f5f9' : '#1e293b'))
-/** رنگ خطوط شبکه: slate-300 در روشن، slate-700 در تیره */
-const gridColor = computed(() => (isDark.value ? '#334155' : '#cbd5e1'))
+/** رنگ خطوط محور: حداکثر وضوح (slate-700 در روشن، slate-300 در تیره) */
+const axisColor = computed(() => (isDark.value ? '#cbd5e1' : '#334155'))
+/** رنگ برچسب تیک‌ها: حداکثر کنتراست (slate-900 در روشن، slate-50 در تیره) */
+const tickColor = computed(() => (isDark.value ? '#f8fafc' : '#0f172a'))
+/** رنگ خطوط شبکه: slate-400 در روشن، slate-600 در تیره (کاملاً قابل مشاهده) */
+const gridColor = computed(() => (isDark.value ? '#475569' : '#94a3b8'))
 
 const faIntFormatter = (val: number) => Number(val).toLocaleString('fa-IR', { maximumFractionDigits: 0 })
 /** تیک‌های محور درصدی (با علامت ٪، حداکثر دو رقم اعشار) */
@@ -118,7 +118,7 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number, 
       labels: {
         rotate: xRotate,
         maxHeight: xMaxHeight,
-        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 }
+        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 700 }
       }
     },
     yaxis: {
@@ -127,7 +127,7 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number, 
       axisBorder: { show: true, color: axisColor.value, width: 2 },
       axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
-        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
+        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 700 },
         formatter: yAxisFormatter
       }
     },
@@ -144,7 +144,7 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number, 
 /** ظاهر مشترک برچسب‌های داده (سفید بولد روی پس‌زمینه‌ی تیره‌ی برچسب) */
 const boldWhiteDataLabels = {
   enabled: true,
-  style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] }
+  style: { fontSize: '13px', fontWeight: 700, colors: ['#ffffff'] }
 }
 
 /* ------------------------------ نمودارها ------------------------------ */
@@ -159,7 +159,7 @@ const ratingTrendConfig = computed(() => ({
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
       fontSize: 13,
-      fontWeight: 600,
+      fontWeight: 700,
       zoom: { enabled: false },
       toolbar: { show: false },
       defaultLocale: 'fa',
@@ -181,11 +181,11 @@ const ratingTrendConfig = computed(() => ({
       axisBorder: { show: true, color: axisColor.value, width: 2 },
       axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
-        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
+        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 700 },
         formatter: faIntFormatter
       }
     },
-    legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px', fontWeight: 600 },
+    legend: { position: 'top', horizontalAlign: 'right', fontSize: '13px', fontWeight: 700 },
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
       // جابه‌جایی رو به بالا تا تولتیپ نقطه‌ی فعال و برچسب‌ها را نپوشاند
@@ -218,7 +218,7 @@ const weightedTrendConfig = computed(() => ({
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
       fontSize: 13,
-      fontWeight: 600,
+      fontWeight: 700,
       zoom: { enabled: false },
       toolbar: { show: false },
       defaultLocale: 'fa',
@@ -251,13 +251,13 @@ const respondentScores = computed(() =>
 )
 const respondentChartConfig = computed(() => ({
   type: 'bar',
-  height: 380,
+  height: 420,
   series: [{ name: 'نمره', data: respondentScores.value.values }],
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
       fontSize: 13,
-      fontWeight: 600,
+      fontWeight: 700,
       toolbar: { show: false },
       defaultLocale: 'fa',
       locales: [fa]
@@ -270,15 +270,16 @@ const respondentChartConfig = computed(() => ({
     dataLabels: boldWhiteDataLabels,
     stroke: { show: true, width: 2, colors: ['transparent'] },
     xaxis: {
-      categories: respondentScores.value.displayLabels,
+      // متن کامل سؤال‌ها (بدون بریدگی با …) – خوانایی کامل بر زیبایی‌شناسی فاصله مقدم است
+      categories: respondentScores.value.labels,
       axisBorder: { show: true, color: axisColor.value, height: 2 },
       axisTicks: { show: true, color: axisColor.value, height: 6 },
       labels: {
         rotate: -45,
-        maxHeight: 170,
+        maxHeight: 220,
         trim: false,
         hideOverlappingLabels: false,
-        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 }
+        style: { colors: tickColor.value, fontSize: '11px', fontWeight: 700 }
       },
       tooltip: { enabled: false }
     },
@@ -288,14 +289,14 @@ const respondentChartConfig = computed(() => ({
       axisBorder: { show: true, color: axisColor.value, width: 2 },
       axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
-        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
+        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 700 },
         formatter: faIntFormatter
       }
     },
     grid: {
       borderColor: gridColor.value,
       strokeDashArray: 0,
-      padding: { bottom: 10 },
+      padding: { bottom: 20 },
       xaxis: { lines: { show: false } },
       yaxis: { lines: { show: true } }
     },
@@ -325,7 +326,7 @@ const distributionConfig = computed(() => ({
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
       fontSize: 13,
-      fontWeight: 600,
+      fontWeight: 700,
       toolbar: { show: false },
       defaultLocale: 'fa',
       locales: [fa]
@@ -335,12 +336,12 @@ const distributionConfig = computed(() => ({
     legend: {
       position: 'bottom',
       fontSize: '13px',
-      fontWeight: 600,
+      fontWeight: 700,
       labels: { colors: [tickColor.value] }
     },
     dataLabels: {
       enabled: true,
-      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
+      style: { fontSize: '13px', fontWeight: 700, colors: ['#ffffff'] },
       formatter: (v: number) => `${v}`
     },
     stroke: { width: 2 },

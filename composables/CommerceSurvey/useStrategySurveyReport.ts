@@ -13,18 +13,11 @@ import { ref } from 'vue'
  *   می‌افزاید و مسیرهای نسبی را روی https://portal.sirjansteel.com/api
  *   سوار می‌کند؛ فراخوانی مستقیم $fetch بدون اعتبارنامه با
  *   access_denied از سمت سرور مواجه می‌شود.
- * - distribution_id از route.query.distribution_id یا آرگومان ورودی
- *   خوانده می‌شود و در نبود آن‌ها مقدار پیش‌فرض
- *   SURVEY_DISTRIBUTION_ID_FALLBACK استفاده می‌گردد.
+ * - distribution_id از آرگومان ورودی یا route.query.distribution_id
+ *   خوانده می‌شود؛ در نبود آن‌ها این فیلد در بدنه‌ی درخواست ارسال نمی‌شود
+ *   (هیچ مقدار هاردکدشده‌ی منقضی‌شده‌ای باقی نمی‌ماند).
  * - پاسخ خام سرویس بدون تغییر در reportData نگهداری می‌شود (JSON Inspector).
  */
-
-/**
- * مقدار پیش‌فرض distribution_id (تا زمانی که شناسه‌ی توزیع واقعی از
- * مسیر ورود توزیع شود). در صورت وجود ?distribution_id= در آدرس صفحه،
- * همان مقدار اولویت دارد.
- */
-export const SURVEY_DISTRIBUTION_ID_FALLBACK = '3ef23fdeecad664aeedcb961a4561269988da62d1c6a12ce0951a7afc0bb8ede'
 
 /**
  * توکن‌های آزمایشی فاز تست – در هر درخواست گزارش، یکی به‌صورت تصادفی
@@ -45,7 +38,7 @@ export function pickRandomTestToken(): string {
 /** مسیر نسبی سرویس گزارش (روی base مرکزی useApi سوار می‌شود) */
 export const SURVEY_REPORT_PATH = '/GetStrategySurveyReport'
 
-/** خواندن distribution_id از کوئری؛ در نبود آن مقدار پیش‌فرض */
+/** خواندن distribution_id از کوئری؛ در نبود آن رشته‌ی خالی (بدون fallback) */
 function resolveDistributionId(): string {
   try {
     const route = useRoute()
@@ -57,7 +50,7 @@ function resolveDistributionId(): string {
   } catch {
     /* useRoute خارج از context Nuxt در دسترس نیست */
   }
-  return SURVEY_DISTRIBUTION_ID_FALLBACK
+  return ''
 }
 
 /** پیام خطای فارسی بر اساس خطای کلاینت مرکزی */
@@ -101,13 +94,14 @@ export function useStrategySurveyReport() {
     try {
       // کلاینت مرکزی پروژه: افزودن اعتبارنامه/توکن + base URL
       const api = useApi()
+      // توکن آزمایشی – در هر درخواست تصادفی انتخاب می‌شود (مقدار خام)
+      const requestBody: Record<string, unknown> = { token: pickRandomTestToken() }
+      if (distributionId) {
+        requestBody.distribution_id = distributionId
+      }
       const response: any = await api(SURVEY_REPORT_PATH, {
         method: 'POST',
-        body: {
-          distribution_id: distributionId,
-          // توکن آزمایشی – در هر درخواست تصادفی انتخاب می‌شود (مقدار خام)
-          token: pickRandomTestToken()
-        }
+        body: requestBody
       })
 
       if (
