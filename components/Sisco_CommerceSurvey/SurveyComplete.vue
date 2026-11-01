@@ -2,8 +2,7 @@
 /**
  * صفحه‌ی پایان نظرسنجی – نمایش تشکر و خلاصه‌ی اجرا.
  * پیام تأیید به‌صورت داینامیک از msg_description سرور خوانده می‌شود
- * (fallback فقط وقتی که سرور پیامی نداده باشد) و شناسه‌ی پاسخ ثبت‌شده
- * (response_id) در صورت وجود نمایش داده می‌شود.
+ * (fallback فقط وقتی که سرور پیامی نداده باشد)؛ بدون نمایش شناسه‌ی پاسخ‌دهنده.
  */
 import { computed } from 'vue'
 import { SURVEY_FALLBACK_SUCCESS_MESSAGE } from '~/composables/CommerceSurvey/useSurveySubmit'
@@ -14,12 +13,9 @@ const props = withDefaults(
     totalQuestions: number
     /** پیام دقیق سرور (msg_description) – در صورت ارسال */
     serverMessage?: string | null
-    /** شناسه‌ی پاسخ ثبت‌شده (response_id) – در صورت ارسال */
-    responseId?: string | null
   }>(),
   {
-    serverMessage: null,
-    responseId: null
+    serverMessage: null
   }
 )
 
@@ -44,15 +40,9 @@ const emit = defineEmits<{ (e: 'restart'): void }>()
       </div>
 
       <div class="px-8 pb-8">
-        <div class="mb-4 rounded-lg border border-slate-200 dark:border-slate-800 py-4">
+        <div class="mb-6 rounded-lg border border-slate-200 dark:border-slate-800 py-4">
           <p class="text-[11px] text-slate-400 mb-1 font-medium">پاسخ‌های ثبت‌شده</p>
           <p class="font-bold text-slate-900 dark:text-white text-lg" dir="ltr">{{ answeredCount }} / {{ totalQuestions }}</p>
-        </div>
-
-        <!-- شناسه‌ی پاسخ ثبت‌شده (response_id) -->
-        <div v-if="responseId" class="mb-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 py-3 px-4">
-          <p class="text-[11px] text-slate-400 mb-1 font-medium">شناسه‌ی پاسخ ثبت‌شده</p>
-          <p class="font-mono text-sm font-bold text-slate-700 dark:text-slate-200 break-all" dir="ltr">{{ responseId }}</p>
         </div>
 
         <BaseButton color="primary" variant="outline" @click="emit('restart')">

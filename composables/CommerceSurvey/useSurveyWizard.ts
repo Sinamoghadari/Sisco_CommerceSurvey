@@ -1,5 +1,12 @@
 import { computed, reactive, ref, watch } from 'vue'
-import type { QuestionCategory, SurveyCategoryGroup, SurveyOption, SurveyQuestion } from './useSurveyApi'
+import type {
+  ConditionalFollowUp,
+  QuestionCategory,
+  SurveyCategoryGroup,
+  SurveyOption,
+  SurveyQuestion
+} from './useSurveyApi'
+import { normalizeOptions } from './useSurveyApi'
 import type { SurveySelection } from './useSurveyDefinition'
 
 export type AnswerValue = number | string | string[] | null
@@ -131,6 +138,152 @@ export function resolveConditionalAnswer(
   }
 
   return resolvedLabels.filter(Boolean).join('، ')
+}
+
+/* ------------------- مودال بازبینی پاسخ‌ها پیش از ثبت --------------------- */
+
+/** ارقام فارسی برای نمایش اعداد پاسخ */
+const REVIEW_FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+
+/** عدد با ارقام فارسی */
+function faReviewNumber(n: number): string {
+  return String(n).replace(/\d/g, d => REVIEW_FA_DIGITS[+d])
+}
+
+/** آیا مقدار، پاسخ واقعی و غیرخالی است؟ (null/undefined/رشته‌ی خالی/آرایه‌ی خالی ← خیر) */
+export function isFilledAnswerValue(v: AnswerValue): boolean {
+  if (v === null || v === undefined) return false
+  if (Array.isArray(v)) return v.length > 0
+  if (typeof v === 'string') return v.trim().length > 0
+  return typeof v === 'number' && Number.isFinite(v)
+}
+
+/**
+ * متن‌های «سایر موارد»ی گزینه‌های سؤال تکمیلی که کاربر وارد کرده است
+ * (کلیدها در optionTexts: {questionId}__fu:{value}) – ورودی resolveConditionalAnswer.
+ */
+export function collectFollowUpCustomTexts(
+  questionId: string,
+  conditionalFollowUp: ConditionalFollowUp | null | undefined,
+  optionTexts: Record<string, string>
+): Record<string, string> {
+  const customTexts: Record<string, string> = {}
+  for (const opt of conditionalFollowUp?.options ?? []) {
+    if (typeof opt === 'string') continue
+    const value = String(opt.value ?? '')
+    if (!value) continue
+    const t = optionTexts[optionTextKey(questionId, value, true)]
+    if (typeof t === 'string' && t.trim()) customTexts[value] = t
+  }
+  return customTexts
+}
+
+/** یک پاسخِ آماده‌ی نمایش در مودال بازبینی */
+export interface ReviewItem {
+  /** متن سؤال */
+  questionText: string
+  /** پاسخ اصلی قالب‌بندی‌شده (عدد فارسی / برچسب گزینه‌ها / متن کاربر) */
+  answerText: string
+  /** پاسخ سؤال تکمیلی شرطی (در صورت وجود) */
+  followUpText: string | null
+}
+
+/** یک بخش از مودال بازبینی – عنوان دقیقاً برابر عنوان همان بخش در ویزارد */
+export interface ReviewSection {
+  id: string
+  title: string
+  isGeneral: boolean
+  items: ReviewItem[]
+}
+
+/** برچسب‌های گزینه‌های انتخاب‌شده (با افزودن متن need_text) با «، » */
+function formatSelectedLabels(
+  q: SurveyQuestion,
+  val: string[],
+  optionTexts: Record<string, string>
+): string {
+  const opts = normalizeOptions(q.options)
+  const parts: string[] = []
+  for (const v of val) {
+    const opt = opts.find(o => o.value === v || o.id === v)
+    if (!opt) {
+      parts.push(v)
+      continue
+    }
+    let label = opt.label
+    if (opt.needText) {
+      const t = optionTexts[optionTextKey(q._id, v, false)]
+      if (typeof t === 'string' && t.trim()) label += ` (${t.trim()})`
+    }
+    parts.push(label)
+  }
+  return parts.filter(Boolean).join('، ')
+}
+
+/** قالب‌بندی پاسخ اصلی بر اساس نوع سؤال (قرارداد یکسان با buildSubmitAnswers) */
+function formatReviewAnswer(
+  q: SurveyQuestion,
+  val: AnswerValue,
+  optionTexts: Record<string, string>
+): string {
+  switch (q.type) {
+    case 'strategy_range_rating':
+    case 'range_rating':
+    case 'rating':
+      return typeof val === 'number' && Number.isFinite(val) ? faReviewNumber(val) : String(val ?? '')
+    case 'text':
+      return String(val ?? '').trim()
+    case 'single_choice':
+    case 'multiple_choice':
+      return formatSelectedLabels(q, Array.isArray(val) ? val.map(String) : [String(val)], optionTexts)
+    default:
+      if (typeof val === 'number' && Number.isFinite(val)) return faReviewNumber(val)
+      if (Array.isArray(val)) return formatSelectedLabels(q, val.map(String), optionTexts)
+      return String(val ?? '').trim()
+  }
+}
+
+/** متن سؤال تکمیلی شرطی برای نمایش (برچسب‌های خوانا + متن «سایر موارد») */
+function reviewFollowUpText(
+  q: SurveyQuestion,
+  fuVal: AnswerValue,
+  optionTexts: Record<string, string>
+): string | null {
+  const fu = q.conditional_follow_up
+  if (!fu || !isFilledAnswerValue(fuVal)) return null
+  const resolved = resolveConditionalAnswer(fu, fuVal, collectFollowUpCustomTexts(q._id, fu, optionTexts))
+  const text = resolved.trim()
+  return text || null
+}
+
+/**
+ * ساخت بخش‌های مودال بازبینی پاسخ‌ها پیش از ثبت نهایی:
+ * هر بخش دقیقاً همان عنوان و ترتیب بخش‌های ویزارد است و فقط سؤال‌های
+ * پاسخ‌داده‌شده (به‌همراه سؤال تکمیلیِ نمایانِ آن‌ها) در خروجی می‌آیند.
+ */
+export function buildReviewSections(
+  displayGroups: DisplayGroup[],
+  answers: Record<string, AnswerValue>,
+  followUps: Record<string, AnswerValue>,
+  optionTexts: Record<string, string>
+): ReviewSection[] {
+  const sections: ReviewSection[] = []
+  for (const g of displayGroups) {
+    const items: ReviewItem[] = []
+    for (const q of g.questions) {
+      const val = answers[q._id] ?? null
+      if (!isFilledAnswerValue(val)) continue
+      items.push({
+        questionText: q.text,
+        answerText: formatReviewAnswer(q, val, optionTexts),
+        followUpText: reviewFollowUpText(q, followUps[q._id] ?? null, optionTexts)
+      })
+    }
+    if (items.length) {
+      sections.push({ id: g.id, title: g.title, isGeneral: g.isGeneral, items })
+    }
+  }
+  return sections
 }
 
 /**
@@ -269,10 +422,7 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
   }
 
   function isValueAnswered(v: AnswerValue): boolean {
-    if (v === null || v === undefined) return false
-    if (Array.isArray(v)) return v.length > 0
-    if (typeof v === 'string') return v.trim().length > 0
-    return typeof v === 'number' && Number.isFinite(v)
+    return isFilledAnswerValue(v)
   }
 
   /** سؤال تکمیلی فقط وقتی الزامی است که نمایان باشد */
@@ -501,16 +651,11 @@ export function useSurveyWizard(groups: () => SurveyCategoryGroup[]) {
         const fuDef = q.conditional_follow_up
         const condVal = getFollowUp(q)
         if (fuDef && condVal !== null && condVal !== undefined && String(condVal).trim() !== '') {
-          // متن‌های «سایر موارد» ذخیره‌شده در optionTexts (کلید: {id}__fu:{value})
-          const customTexts: Record<string, string> = {}
-          for (const opt of fuDef.options ?? []) {
-            if (typeof opt === 'string') continue
-            const value = String(opt.value ?? '')
-            if (!value) continue
-            const t = optionTexts[optionTextKey(q._id, value, true)]
-            if (typeof t === 'string' && t.trim()) customTexts[value] = t
-          }
-          const resolved = resolveConditionalAnswer(fuDef, condVal, customTexts)
+          const resolved = resolveConditionalAnswer(
+            fuDef,
+            condVal,
+            collectFollowUpCustomTexts(q._id, fuDef, optionTexts)
+          )
           if (resolved.trim() !== '') {
             entry.conditional_answer = resolved
           }

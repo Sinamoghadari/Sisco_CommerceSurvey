@@ -5,6 +5,7 @@ import type { SurveyFetchStatus } from '~/composables/CommerceSurvey/useSurveyAp
 import {
   useSurveyWizard,
   GENERAL_STEP_TITLE,
+  buildReviewSections,
   type SurveyCompletionPayload
 } from '~/composables/CommerceSurvey/useSurveyWizard'
 import type { SurveySelection } from '~/composables/CommerceSurvey/useSurveyDefinition'
@@ -64,6 +65,11 @@ function fa(n: number | string): string {
 }
 
 const isConfirmOpen = ref(false)
+
+/** بخش‌های مودال بازبینی – همه‌ی پاسخ‌های داده‌شده، دسته‌بندی‌شده مطابق بخش‌های ویزارد */
+const reviewSections = computed(() =>
+  buildReviewSections(wizard.displayGroups.value, wizard.answers, wizard.followUps, wizard.optionTexts)
+)
 
 const isEmptyView = computed(
   () => wizard.displayGroups.value.length === 0 || wizard.totalDisplayQuestions.value === 0
@@ -361,22 +367,64 @@ async function confirmSubmit() {
         </div>
       </BaseCard>
 
-      <!-- مودال تایید ثبت نهایی -->
+      <!-- مودال بازبینی و تأیید ثبت نهایی: نمایش همه‌ی پاسخ‌ها به تفکیک بخش -->
       <Transition name="fade">
         <div v-if="isConfirmOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" @click.self="isConfirmOpen = false">
-          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-md p-6 modal-panel">
-            <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">تایید ثبت نظرسنجی</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6 leading-7">
-              آیا از ثبت نهایی پاسخ‌های خود اطمینان دارید؟
+          <div
+            class="bg-white dark:bg-slate-900 rounded-lg shadow-lg w-full max-w-2xl p-6 modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-modal-title"
+          >
+            <h3 id="review-modal-title" class="text-xl font-bold text-gray-900 dark:text-white">تأیید ثبت نظرسنجی</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1.5 leading-7">
+              لطفاً پیش از ثبت نهایی، پاسخ‌های خود را بازبینی کنید.
             </p>
-            <div class="flex justify-end gap-2">
+
+            <!-- همه‌ی پاسخ‌ها، دسته‌بندی‌شده دقیقاً مطابق بخش‌های ویزارد -->
+            <div v-if="reviewSections.length" class="mt-5 max-h-[52vh] overflow-y-auto space-y-4">
+              <section
+                v-for="(section, i) in reviewSections"
+                :key="section.id"
+                class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+              >
+                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                  <span
+                    v-if="section.isGeneral"
+                    class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0"
+                  >
+                    <Icon icon="lucide:clipboard-check" class="w-3.5 h-3.5" />
+                  </span>
+                  <span
+                    v-else
+                    class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs font-bold flex items-center justify-center flex-shrink-0"
+                  >{{ fa(i + 1) }}</span>
+                  <h4 class="text-sm font-bold text-gray-900 dark:text-white">{{ section.title }}</h4>
+                </div>
+                <div class="px-4 divide-y divide-slate-100 dark:divide-slate-800">
+                  <div v-for="(item, j) in section.items" :key="j" class="py-3">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-6">{{ item.questionText }}</p>
+                    <p class="mt-1 text-sm font-bold text-gray-900 dark:text-white leading-6">{{ item.answerText }}</p>
+                    <p v-if="item.followUpText" class="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-6">
+                      <span class="font-bold">پاسخ تکمیلی:</span>
+                      {{ item.followUpText }}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <p v-else class="mt-5 text-sm text-slate-500 dark:text-slate-400 leading-7">
+              پاسخی برای بازبینی وجود ندارد.
+            </p>
+
+            <div class="mt-6 flex justify-end gap-2">
               <button
                 type="button"
                 class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="submit.isSubmitting.value"
                 @click="isConfirmOpen = false"
               >
-                خیر
+                بازگشت برای ویرایش
               </button>
               <button
                 type="button"
@@ -393,7 +441,7 @@ async function confirmSubmit() {
                 >
                   <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="42 18" />
                 </svg>
-                {{ submit.isSubmitting.value ? 'در حال ثبت…' : 'بله، ثبت شود' }}
+                {{ submit.isSubmitting.value ? 'در حال ثبت…' : 'تأیید و ثبت نهایی' }}
               </button>
             </div>
           </div>

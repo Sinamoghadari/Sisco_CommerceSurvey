@@ -48,6 +48,22 @@ const { categories, alreadyAnswered, status, error } = survey
     <Transition name="phase" mode="out-in">
       <!-- نمای ورود: دکمه‌ی شروع + راه‌های ارتباطی -->
       <div v-if="phase === 'select'" key="select" class="space-y-6">
+        <!-- کارت معرفی نظرسنجی (بالای دکمه‌ی شروع) -->
+        <div class="mx-auto w-full max-w-4xl rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 sm:px-8 py-7 text-center shadow-sm">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            فرم ارزیابی رضایت مشتریان
+          </h2>
+          <p class="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-8 font-medium max-w-2xl mx-auto">
+            لطفاً با اختصاص چند دقیقه زمان و تکمیل این فرم، ما را در بهبود کیفیت محصولات و خدمات خود یاری فرمایید.
+          </p>
+          <div class="mt-4 inline-flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-right">
+            <Icon icon="lucide:info" class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <span class="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-300 leading-6">
+              توجه فرمائید برای پر کردن سوالات هر بخش، ابتدا بخش قبلی می بایست تکمیل گردد
+            </span>
+          </div>
+        </div>
+
         <div class="mx-auto w-full max-w-4xl flex flex-col items-center gap-3">
           <BaseButton
             type="button"
@@ -90,7 +106,6 @@ const { categories, alreadyAnswered, status, error } = survey
         :answered-count="completion.answeredCount"
         :total-questions="completion.totalQuestions"
         :server-message="completion.serverMessage"
-        :response-id="completion.responseId"
         @restart="restart"
       />
     </Transition>
