@@ -29,6 +29,9 @@ export interface ReportAnswer {
 export interface SurveyReport {
   response_id?: string
   submitted_at?: string
+  /** مشتری/ارائه‌دهنده‌ی پاسخ (فیلدهای اختیاری سرویس) */
+  provider_id?: unknown
+  provider_name?: unknown
   answers?: ReportAnswer[]
 }
 
@@ -238,22 +241,8 @@ export function buildWeightedTrend(reports: SurveyReport[]): WeightedTrendResult
   let skipped = 0
 
   for (const report of sorted) {
-    const weighted = (report.answers ?? [])
-      .filter(
-        a =>
-          a.question_type === 'strategy_range_rating' &&
-          isValidNumber(a.number) &&
-          isValidNumber(a.strategy_node_weight)
-      )
-      .reduce((sum, a) => sum + (a.number as number) * (a.strategy_node_weight as number), 0)
-
-    const hasValid = (report.answers ?? []).some(
-      a =>
-        a.question_type === 'strategy_range_rating' &&
-        isValidNumber(a.number) &&
-        isValidNumber(a.strategy_node_weight)
-    )
-    if (!hasValid) {
+    const weighted = reportWeightedScore(report)
+    if (weighted === null) {
       skipped++
       continue
     }
@@ -330,4 +319,153 @@ export function buildRespondentScores(
   }
 
   return { labels, displayLabels, values, tooltips }
+}
+
+/* ===================== درصد رضایت (قرارداد مشترک) ===================== */
+
+/**
+ * تبدیل مشترک امتیاز رضایت به درصد – طبق مشخصات:
+ *   8.18 → 0.81 (تقسیم بر ۱۰ و قطع به دو رقم اعشار؛ بدون بازتفسیر به ۸۱٫۸)
+ * این تابع تنها مرجع تبدیل برای نمودار «روند رضایت» و نمودار دایره‌ای است.
+ */
+export function satisfactionPercent(value: number): number {
+  if (!isValidNumber(value)) return 0
+  return Math.floor((value / 10) * 100) / 100
+}
+
+/** قالب‌بندی درصدِ تبدیل‌شده با علامت ٪ (ارقام فارسی، حداکثر دو رقم اعشار) */
+export function formatPercentValue(converted: number): string {
+  const v = isValidNumber(converted) ? converted : 0
+  return `${v.toLocaleString('fa-IR', { maximumFractionDigits: 2 })}٪`
+}
+
+/* ===================== فیلتر مشتری و تاریخ میلادی ===================== */
+
+/** نام مشتری پاسخ‌نامه؛ در نبود نام، شناسه؛ در نبود هر دو، «نامشخص» */
+export function reportProviderName(report: SurveyReport): string {
+  const name = typeof report.provider_name === 'string' ? report.provider_name.trim() : ''
+  if (name) return name
+  const id = typeof report.provider_id === 'string' ? report.provider_id.trim() : ''
+  return id || 'نامشخص'
+}
+
+/** بخش تاریخ (میلادی) از submitted_at به شکل YYYY-MM-DD؛ نامعتبر → null */
+export function reportDatePart(report: SurveyReport): string | null {
+  const raw = typeof report.submitted_at === 'string' ? report.submitted_at : ''
+  if (!/^\d{4}-\d{2}-\d{2}/.test(raw)) return null
+  return raw.slice(0, 10)
+}
+
+/** فهرست مشتریان متمایز (بدون مقادیر خالی؛ برای فیلتر «نام مشتری») */
+export function providerOptions(reports: SurveyReport[]): string[] {
+  const out = new Set<string>()
+  for (const r of reports) {
+    const name = typeof r.provider_name === 'string' ? r.provider_name.trim() : ''
+    if (name) out.add(name)
+  }
+  return [...out].sort((a, b) => a.localeCompare(b, 'fa'))
+}
+
+/** فهرست تاریخ‌های میلادی متمایز، صعودی (برای فیلتر «تاریخ میلادی») */
+export function dateOptions(reports: SurveyReport[]): string[] {
+  const out = new Set<string>()
+  for (const r of reports) {
+    const d = reportDatePart(r)
+    if (d) out.add(d)
+  }
+  return [...out].sort()
+}
+
+export interface ReportFilters {
+  /** نام مشتری انتخابی؛ رشته‌ی خالی = همه */
+  provider: string
+  /** تاریخ میلادی YYYY-MM-DD؛ رشته‌ی خالی = همه */
+  date: string
+}
+
+/** اعمال ترکیبی دو فیلتر (AND) روی گزارش‌ها */
+export function filterReports(reports: SurveyReport[], filters: ReportFilters): SurveyReport[] {
+  return reports.filter(r => {
+    if (filters.provider && reportProviderName(r) !== filters.provider) return false
+    if (filters.date && reportDatePart(r) !== filters.date) return false
+    return true
+  })
+}
+
+/* ===================== نمودار دایره‌ای توزیع رضایت ===================== */
+
+/** امتیاز وزنی یک گزارش: Σ(number × strategy_node_weight) روی پاسخ‌های معتبر؛ بدون پاسخ معتبر → null */
+export function reportWeightedScore(report: SurveyReport): number | null {
+  let sum = 0
+  let hasValid = false
+  for (const a of report.answers ?? []) {
+    if (
+      a.question_type === 'strategy_range_rating' &&
+      isValidNumber(a.number) &&
+      isValidNumber(a.strategy_node_weight)
+    ) {
+      sum += (a.number as number) * (a.strategy_node_weight as number)
+      hasValid = true
+    }
+  }
+  return hasValid ? sum : null
+}
+
+/** نوارهای رضایت با برچسب و رنگ دقیق مشخصات */
+export const SATISFACTION_BANDS = [
+  { name: 'ضعیف', color: '#dc2626' },
+  { name: 'متوسط', color: '#eab308' },
+  { name: 'خوب', color: '#4ade80' },
+  { name: 'عالی', color: '#15803d' }
+] as const
+
+/** طبقه‌بندی درصد رضایت به یکی از چهار نوار (مرزها: ۴۰، ۶۰، ۸۰) */
+export function classifySatisfactionBand(percent: number): number {
+  if (percent < 40) return 0
+  if (percent < 60) return 1
+  if (percent < 80) return 2
+  return 3
+}
+
+export interface SatisfactionDistribution {
+  labels: string[]
+  values: number[]
+  colors: string[]
+  /** تعداد کل مشتریان واردشده در توزیع */
+  customerCount: number
+}
+
+/**
+ * توزیع رضایت مشتریان روی «همه‌ی گزارش‌ها» (مستقل از فیلترها):
+ *  - امتیاز هر گزارش = reportWeightedScore (همان فرمول روند رضایت)
+ *  - امتیاز مشتری = میانگین امتیاز گزارش‌های او (تجمیع صریح؛ هر مشتری
+ *    صرف‌نظر از تعداد پاسخ‌نامه‌ها یک‌بار در توزیع می‌آید)
+ *  - درصد مشتری با همان satisfactionPercent مشترک تبدیل و به نوارها
+ *    طبقه‌بندی می‌شود؛ هر برش = تعداد مشتریان آن نوار.
+ */
+export function buildSatisfactionDistribution(reports: SurveyReport[]): SatisfactionDistribution {
+  // تجمیع صریح به‌ازای هر مشتری
+  const scoresByCustomer = new Map<string, number[]>()
+  for (const report of reports) {
+    const score = reportWeightedScore(report)
+    if (score === null) continue
+    const key = reportProviderName(report)
+    const list = scoresByCustomer.get(key) ?? []
+    list.push(score)
+    scoresByCustomer.set(key, list)
+  }
+
+  const counts = [0, 0, 0, 0]
+  for (const scores of scoresByCustomer.values()) {
+    const avg = scores.reduce((sum, v) => sum + v, 0) / scores.length
+    const percent = satisfactionPercent(avg)
+    counts[classifySatisfactionBand(percent)]!++
+  }
+
+  return {
+    labels: SATISFACTION_BANDS.map(b => b.name),
+    values: counts,
+    colors: SATISFACTION_BANDS.map(b => b.color),
+    customerCount: scoresByCustomer.size
+  }
 }

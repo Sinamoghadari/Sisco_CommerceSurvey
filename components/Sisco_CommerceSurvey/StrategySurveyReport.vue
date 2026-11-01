@@ -9,19 +9,29 @@ import {
   buildQuestionMeta,
   buildRatingTrend,
   buildRespondentScores,
+  buildSatisfactionDistribution,
   buildWeightedTrend,
+  dateOptions,
   extractReports,
+  filterReports,
   formatFaDateTime,
+  formatPercentValue,
+  providerOptions,
+  satisfactionPercent,
   sortReportsChronologically,
   UNMAPPED_CATEGORY
 } from '~/composables/CommerceSurvey/useSurveyReportDashboard'
 
 /**
  * داشبورد «گزارش‌دهی» بر اساس پاسخ واقعی POST /GetStrategySurveyReport:
- *  - کارت ۱: دو نمودار روند کنار هم در یک کارت واحد (grid lg:grid-cols-2)
- *  - کارت ۲: نمره‌ی سؤال‌ها به تفکیک دسته در کارت مستقل زیر کارت روند
- * نمودارها با AddonApexcharts (کتابخانه‌ی موجود پروژه – ApexCharts) رسم
- * می‌شوند؛ محورها/خطوط شبکه با کنتراست بالا و سازگار با حالت تیره.
+ *  - فیلتر «نام مشتری» + فیلتر «تاریخ میلادی» (ترکیبی) روی نمودارهای روند
+ *    و تفکیک دسته اعمال می‌شود.
+ *  - کارت ۱: دو نمودار روند کنار هم در یک کارت واحد
+ *  - کارت ۲: نمره‌ی سؤال‌ها به تفکیک دسته
+ *  - کارت ۳: «توزیع رضایت مشتریان» – نمودار دایره‌ای روی همه‌ی داده‌ها،
+ *    مستقل از فیلترها
+ * «روند رضایت» با همان تبدیل مشترک satisfactionPercent به درصد نمایش داده
+ * می‌شود (۸٫۱۸ → ۰٫۸۱٪) و نمودار دایره‌ای نیز از همین تبدیل استفاده می‌کند.
  */
 
 const props = defineProps<{
@@ -41,7 +51,23 @@ onMounted(() => {
 /* ----------------------------- داده‌ی پایه ----------------------------- */
 
 const reports = computed(() => extractReports(reportData.value))
-const sortedReports = computed(() => sortReportsChronologically(reports.value))
+
+/* ------------------------ فیلتر مشتری و تاریخ ------------------------ */
+
+/** «نام مشتری» – رشته‌ی خالی = همه */
+const providerFilter = ref('')
+/** «تاریخ میلادی» (YYYY-MM-DD) – رشته‌ی خالی = همه */
+const dateFilter = ref('')
+
+const providerFilterOptions = computed(() => providerOptions(reports.value))
+const dateFilterOptions = computed(() => dateOptions(reports.value))
+
+/** گزارش‌های فیلترشده (ترکیب دو فیلتر) – مبنای نمودارهای روند و تفکیک */
+const filteredReports = computed(() =>
+  filterReports(reports.value, { provider: providerFilter.value, date: dateFilter.value })
+)
+
+const sortedReports = computed(() => sortReportsChronologically(filteredReports.value))
 const meta = computed(() => buildQuestionMeta(props.groups))
 
 /** گزینه‌های پاسخ‌دهنده (قدیمی → جدید؛ کلید پایدار: response_id) */
@@ -52,7 +78,7 @@ const respondentOptions = computed(() =>
   }))
 )
 
-/** پاسخ‌دهنده‌ی انتخابی – پیش‌فرض: جدیدترین گزارش */
+/** پاسخ‌دهنده‌ی انتخابی – پیش‌فرض: جدیدترین گزارشِ مجموعه‌ی فیلترشده */
 const selectedResponseId = ref<string>('')
 watch(
   respondentOptions,
@@ -74,7 +100,7 @@ const selectedReport = computed(
 
 /* --------------------------- فیلتر دسته‌ها --------------------------- */
 
-const categoryList = computed(() => buildCategoryList(meta.value, reports.value))
+const categoryList = computed(() => buildCategoryList(meta.value, filteredReports.value))
 /** null = همه‌ی دسته‌ها */
 const selectedCategories = ref<string[] | null>(null)
 
@@ -102,9 +128,11 @@ const tickColor = computed(() => (isDark.value ? '#f1f5f9' : '#1e293b'))
 const gridColor = computed(() => (isDark.value ? '#334155' : '#cbd5e1'))
 
 const faIntFormatter = (val: number) => Number(val).toLocaleString('fa-IR', { maximumFractionDigits: 0 })
+/** تیک‌های محور درصدی (با علامت ٪، حداکثر دو رقم اعشار) */
+const faPercentFormatter = (val: number) => formatPercentValue(val)
 
-/** قطعات مشترک محورها برای هر سه نمودار (کنتراست یکنواخت) */
-function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number) {
+/** قطعات مشترک محورها – برچسب‌ها همیشه بولد و پرکنتراست */
+function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number, yAxisFormatter = faIntFormatter) {
   return {
     xaxis: {
       categories: xCategories,
@@ -123,7 +151,7 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number) 
       axisTicks: { show: true, color: axisColor.value, width: 6 },
       labels: {
         style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
-        formatter: faIntFormatter
+        formatter: yAxisFormatter
       }
     },
     grid: {
@@ -136,10 +164,16 @@ function sharedAxes(xCategories: string[], xRotate: number, xMaxHeight: number) 
   }
 }
 
+/** ظاهر مشترک برچسب‌های داده (سفید بولد روی پس‌زمینه‌ی تیره‌ی برچسب) */
+const boldWhiteDataLabels = {
+  enabled: true,
+  style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] }
+}
+
 /* ------------------------------ نمودارها ------------------------------ */
 
-/** نمودار ۱ – روند رضایت کلی عملکرد (rating در طول زمان) */
-const ratingTrend = computed(() => buildRatingTrend(reports.value, meta.value))
+/** نمودار ۱ – روند رضایت کلی عملکرد (rating در طول زمان) – تابع فیلترها */
+const ratingTrend = computed(() => buildRatingTrend(filteredReports.value, meta.value))
 const ratingTrendConfig = computed(() => ({
   type: 'area',
   height: 260,
@@ -156,18 +190,12 @@ const ratingTrendConfig = computed(() => ({
     },
     colors: [successColor.value],
     dataLabels: {
-      enabled: true,
-      // سفید خالص روی پس‌زمینه‌ی تیره‌ی برچسب‌ها برای خوانایی کامل
-      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
+      ...boldWhiteDataLabels,
       formatter: (v: number) => `${v}`
     },
     stroke: { width: 2, curve: 'smooth' },
     markers: { size: 5, hover: { size: 7 } },
-    ...sharedAxes(
-      ratingTrend.value.series[0]?.data.map(p => p.x) ?? [],
-      -35,
-      70
-    ),
+    ...sharedAxes(ratingTrend.value.series[0]?.data.map(p => p.x) ?? [], -35, 70),
     yaxis: {
       opposite: true,
       min: ratingTrend.value.range?.min ?? undefined,
@@ -195,15 +223,18 @@ const ratingTrendConfig = computed(() => ({
   }
 }))
 
-/** نمودار ۲ – روند رضایت وزنی (یک مقدار به‌ازای هر گزارش) */
-const weightedTrend = computed(() => buildWeightedTrend(reports.value))
+/** نمودار ۲ – روند رضایت وزنی به‌صورت درصد (تبدیل مشترک: ۸٫۱۸ → ۰٫۸۱٪) */
+const weightedTrend = computed(() => buildWeightedTrend(filteredReports.value))
+const weightedPercentPoints = computed(() =>
+  (weightedTrend.value.series[0]?.data ?? []).map(p => ({ x: p.x, y: satisfactionPercent(p.y) }))
+)
 const weightedTrendConfig = computed(() => ({
   type: 'area',
   height: 260,
   series: [
     {
-      name: 'امتیاز وزنی',
-      data: weightedTrend.value.series[0]?.data.map(p => p.y) ?? []
+      name: 'درصد رضایت',
+      data: weightedPercentPoints.value.map(p => p.y)
     }
   ],
   options: {
@@ -218,24 +249,21 @@ const weightedTrendConfig = computed(() => ({
     },
     colors: [warningColor.value],
     dataLabels: {
-      enabled: true,
-      // سفید خالص روی پس‌زمینه‌ی تیره‌ی برچسب‌ها برای خوانایی کامل
-      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
-      // حداکثر دو رقم اعشار بدون صفرهای انتهایی (مثلاً 8.29 به‌جای 8.290000)
-      formatter: (v: number) => Number(v.toFixed(2))
+      ...boldWhiteDataLabels,
+      formatter: (v: number) => formatPercentValue(v)
     },
     stroke: { width: 2, curve: 'smooth' },
     markers: { size: 5, hover: { size: 7 } },
     ...sharedAxes(
-      weightedTrend.value.series[0]?.data.map(p => p.x) ?? [],
+      weightedPercentPoints.value.map(p => p.x),
       -35,
-      70
+      70,
+      faPercentFormatter
     ),
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
-      // جابه‌جایی رو به بالا تا تولتیپ نقطه‌ی فعال و برچسب‌ها را نپوشاند
       offsetY: -25,
-      y: { formatter: (val: number) => `امتیاز وزنی محاسبه‌شده: ${Number(val.toFixed(2))}` }
+      y: { formatter: (val: number) => `درصد رضایت: ${formatPercentValue(val)}` }
     }
   }
 }))
@@ -262,16 +290,8 @@ const respondentChartConfig = computed(() => ({
     plotOptions: {
       bar: { horizontal: false, endingShape: 'rounded', columnWidth: '55%' }
     },
-    dataLabels: {
-      enabled: true,
-      style: { fontSize: '13px', fontWeight: 600, colors: [tickColor.value] }
-    },
+    dataLabels: boldWhiteDataLabels,
     stroke: { show: true, width: 2, colors: ['transparent'] },
-    ...sharedAxes(
-      respondentScores.value.displayLabels,
-      -45,
-      170
-    ),
     xaxis: {
       categories: respondentScores.value.displayLabels,
       axisBorder: { show: true, color: axisColor.value, height: 2 },
@@ -284,6 +304,16 @@ const respondentChartConfig = computed(() => ({
         style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 }
       },
       tooltip: { enabled: false }
+    },
+    yaxis: {
+      opposite: true,
+      forceNiceScale: true,
+      axisBorder: { show: true, color: axisColor.value, width: 2 },
+      axisTicks: { show: true, color: axisColor.value, width: 6 },
+      labels: {
+        style: { colors: tickColor.value, fontSize: '13px', fontWeight: 600 },
+        formatter: faIntFormatter
+      }
     },
     grid: {
       borderColor: gridColor.value,
@@ -304,6 +334,42 @@ const respondentChartConfig = computed(() => ({
           `<div class="apexcharts-tooltip-series-group" style="display:block">` +
           `<span class="apexcharts-tooltip-text">دسته: ${t.category}</span></div>`
       }
+    }
+  }
+}))
+
+/** نمودار دایره‌ای «توزیع رضایت مشتریان» – روی همه‌ی گزارش‌ها، مستقل از فیلترها */
+const distribution = computed(() => buildSatisfactionDistribution(reports.value))
+const distributionConfig = computed(() => ({
+  type: 'pie',
+  height: 320,
+  series: distribution.value.values,
+  options: {
+    chart: {
+      fontFamily: 'Vazirmatn FD, sans-serif',
+      fontSize: 13,
+      fontWeight: 600,
+      toolbar: { show: false },
+      defaultLocale: 'fa',
+      locales: [fa]
+    },
+    labels: distribution.value.labels,
+    colors: distribution.value.colors,
+    legend: {
+      position: 'bottom',
+      fontSize: '13px',
+      fontWeight: 600,
+      labels: { colors: [tickColor.value] }
+    },
+    dataLabels: {
+      enabled: true,
+      style: { fontSize: '13px', fontWeight: 600, colors: ['#ffffff'] },
+      formatter: (v: number) => `${v}`
+    },
+    stroke: { width: 2 },
+    tooltip: {
+      theme: isDark.value ? 'dark' : 'light',
+      y: { formatter: (val: number) => `${val} مشتری` }
     }
   }
 }))
@@ -390,98 +456,158 @@ function retry() {
       </div>
     </BaseCard>
 
-    <!-- ==================== کارت ۱: نمودارهای روند ==================== -->
-    <BaseCard v-else class="mb-6 overflow-hidden !rounded-xl">
-      <div class="p-4 sm:p-6">
-        <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
-          <!-- نمودار ۱: روند رضایت کلی عملکرد -->
-          <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-            <header class="mb-3">
-              <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
-            </header>
-            <div class="mt-auto">
-              <div v-if="ratingTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-                <AddonApexcharts v-bind="ratingTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
-              </div>
-              <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-                هیچ پاسخ عددی از نوع rating در گزارش‌ها یافت نشد.
-              </p>
-            </div>
-          </section>
-
-          <!-- نمودار ۲: روند رضایت (وزنی) -->
-          <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-            <header class="mb-3">
-              <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
-            </header>
-            <div class="mt-auto">
-              <div v-if="weightedTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-                <AddonApexcharts v-bind="weightedTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
-              </div>
-              <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-                هیچ پاسخ وزنی معتبر (strategy_range_rating با وزن گره) در گزارش‌ها یافت نشد.
-              </p>
-            </div>
-          </section>
-        </div>
-      </div>
-    </BaseCard>
-
-    <!-- ==================== کارت ۲: تفکیک دسته ==================== -->
-    <BaseCard v-if="reports.length" class="overflow-hidden !rounded-xl">
-      <div class="p-4 sm:p-6">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
-
-          <!-- انتخاب پاسخ‌دهنده -->
+    <template v-else>
+      <!-- ==================== نوار فیلترها ==================== -->
+      <BaseCard class="mb-6 !rounded-xl">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
+          <!-- فیلتر نام مشتری -->
           <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-            پاسخ‌دهنده:
+            نام مشتری:
             <select
-              v-model="selectedResponseId"
+              v-model="providerFilter"
               class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             >
-              <option v-for="opt in respondentOptions" :key="opt.id" :value="opt.id">
-                {{ opt.label }}
-              </option>
+              <option value="">همه</option>
+              <option v-for="p in providerFilterOptions" :key="p" :value="p">{{ p }}</option>
             </select>
           </label>
-        </div>
 
-        <!-- کنترل دسته‌ها -->
-        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <!-- فیلتر تاریخ میلادی (بر اساس بخش تاریخ submitted_at) -->
+          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+            تاریخ میلادی:
+            <select
+              v-model="dateFilter"
+              class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              dir="ltr"
+            >
+              <option value="">همه</option>
+              <option v-for="d in dateFilterOptions" :key="d" :value="d">{{ d }}</option>
+            </select>
+          </label>
+
+          <!-- پاک‌کردن فیلترها -->
           <button
+            v-if="providerFilter || dateFilter"
             type="button"
-            class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
-            :class="(selectedCategories === null)
-              ? 'border-green-700 bg-green-700 text-white'
-              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
-            @click="selectAllCategories"
+            class="mr-auto rounded-md border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+            @click="providerFilter = ''; dateFilter = ''"
           >
-            همه
+            حذف فیلترها
           </button>
-          <button
-            v-for="cat in categoryList"
-            :key="cat"
-            type="button"
-            class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
-            :class="(selectedCategories ?? []).includes(cat)
-              ? 'border-green-700 bg-green-700 text-white'
-              : cat === UNMAPPED_CATEGORY
-                ? 'border-dashed border-slate-300 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+        </div>
+      </BaseCard>
+
+      <!-- ==================== کارت ۱: نمودارهای روند ==================== -->
+      <BaseCard class="mb-6 overflow-hidden !rounded-xl">
+        <div class="p-4 sm:p-6">
+          <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+            <!-- نمودار ۱: روند رضایت کلی عملکرد -->
+            <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+              <header class="mb-3">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
+              </header>
+              <div class="mt-auto">
+                <div v-if="ratingTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+                  <AddonApexcharts v-bind="ratingTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+                </div>
+                <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+                  هیچ پاسخ عددی از نوع rating در گزارش‌های فیلترشده یافت نشد.
+                </p>
+              </div>
+            </section>
+
+            <!-- نمودار ۲: روند رضایت (درصد) -->
+            <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+              <header class="mb-3">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
+              </header>
+              <div class="mt-auto">
+                <div v-if="weightedTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+                  <AddonApexcharts v-bind="weightedTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+                </div>
+                <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+                  هیچ پاسخ وزنی معتبر (strategy_range_rating با وزن گره) در گزارش‌های فیلترشده یافت نشد.
+                </p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </BaseCard>
+
+      <!-- ==================== کارت ۲: تفکیک دسته ==================== -->
+      <BaseCard class="overflow-hidden !rounded-xl">
+        <div class="p-4 sm:p-6">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
+
+            <!-- انتخاب پاسخ‌دهنده (از میان گزارش‌های فیلترشده) -->
+            <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              پاسخ‌دهنده:
+              <select
+                v-model="selectedResponseId"
+                class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              >
+                <option v-for="opt in respondentOptions" :key="opt.id" :value="opt.id">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <!-- کنترل دسته‌ها -->
+          <div class="mb-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+              :class="(selectedCategories === null)
+                ? 'border-green-700 bg-green-700 text-white'
                 : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
-            @click="toggleCategory(cat)"
-          >
-            {{ cat }}
-          </button>
-        </div>
+              @click="selectAllCategories"
+            >
+              همه
+            </button>
+            <button
+              v-for="cat in categoryList"
+              :key="cat"
+              type="button"
+              class="rounded-full border px-3 py-1 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25"
+              :class="(selectedCategories ?? []).includes(cat)
+                ? 'border-green-700 bg-green-700 text-white'
+                : cat === UNMAPPED_CATEGORY
+                  ? 'border-dashed border-slate-300 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'"
+              @click="toggleCategory(cat)"
+            >
+              {{ cat }}
+            </button>
+          </div>
 
-        <div v-if="respondentScores.values.length" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-          <AddonApexcharts v-bind="respondentChartConfig" />
+          <div v-if="respondentScores.values.length" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+            <AddonApexcharts v-bind="respondentChartConfig" />
+          </div>
+          <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+            برای این پاسخ‌دهنده در دسته‌های انتخاب‌شده، پاسخ عددی وجود ندارد.
+          </p>
         </div>
-        <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-          برای این پاسخ‌دهنده در دسته‌های انتخاب‌شده، پاسخ عددی وجود ندارد.
-        </p>
-      </div>
-    </BaseCard>
+      </BaseCard>
+
+      <!-- ==================== کارت ۳: توزیع رضایت مشتریان (بدون فیلتر) ==================== -->
+      <BaseCard class="mt-6 overflow-hidden !rounded-xl">
+        <div class="p-4 sm:p-6">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">توزیع رضایت مشتریان</h3>
+            <span class="text-[11px] font-medium text-slate-400">
+              بر اساس همه‌ی پاسخ‌نامه‌ها (مستقل از فیلترها)
+            </span>
+          </div>
+          <div v-if="distribution.customerCount" class="mx-auto max-w-xl rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+            <AddonApexcharts v-bind="distributionConfig" />
+          </div>
+          <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+            هیچ پاسخ وزنی معتبری برای محاسبه‌ی توزیع رضایت وجود ندارد.
+          </p>
+        </div>
+      </BaseCard>
+    </template>
   </div>
 </template>

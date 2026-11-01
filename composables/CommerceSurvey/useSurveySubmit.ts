@@ -5,13 +5,16 @@ import type { SurveySubmitAnswers } from './useSurveyWizard'
  * اتصال به سرویس ثبت پاسخ‌های نظرسنجی:
  *   POST {surveySubmitUrl}
  *   Content-Type: application/json
- *   { "token": "...", "answers": { "<question_id>": { "<question_type>": <value>, "conditional_answer"?: <value> } } }
+ *   { "token": "...", "answers": { ... } }
+ *
+ * فاز تست: در هر تلاش ثبت، یکی از توکن‌های آزمایشی به‌صورت تصادفی انتخاب و
+ * به‌صورت مقدار خام در body.token ارسال می‌شود (انتخاب در لحظه‌ی Submit،
+ * نه یک‌بار در ابتدای صفحه؛ بدون ترتیب round-robin و بدون منبع توکن دیگر).
  *
  * - آدرس سرویس از runtimeConfig.public.surveySubmitUrl خوانده می‌شود
  *   (پیش‌فرض: https://portal.sirjansteel.com/api/SurveyDistribution/Submit).
- * - توکن از route.query.token خوانده می‌شود و در نبود آن، مقدار پیش‌فرض
- *   SURVEY_TOKEN_FALLBACK استفاده می‌گردد.
  * - پاسخ موفق: هر پاسخ 2xx (و در صورت وجود فیلد result، مقدار OK).
+ * - msg_description سرور به‌صورت داینامیک در serverMessage نگه داشته می‌شود.
  */
 
 /** آدرس پیش‌فرض ثبت پاسخ‌ها */
@@ -24,10 +27,18 @@ export const DEFAULT_SURVEY_SUBMIT_URL = 'https://portal.sirjansteel.com/api/Sur
 export const SURVEY_FALLBACK_SUCCESS_MESSAGE = 'پاسخ شما با موفقیت ثبت شد.'
 
 /**
- * توکن پیش‌فرض (قابل استفاده تا زمانی که توکن واقعی از مسیر ورود توزیع شود).
- * در صورت وجود ?token= در آدرس صفحه، همان مقدار اولویت دارد.
+ * توکن‌های آزمایشی فاز تست – در هر تلاش ثبت، یکی به‌صورت تصادفی انتخاب می‌شود.
  */
-export const SURVEY_TOKEN_FALLBACK = '3ef23fdeecad664aeedcb961a4561269988da62d1c6a12ce0951a7afc0bb8ede'
+export const TEST_TOKENS = [
+  '0cfb2529ef87511f2b314dbf7640b66a5ecba69e82bd7a55e21ef6f0dfe98420',
+  '6a82d3cab153bd6a6cea95db807301f3053b850bf77030d1a4ca6bd92087162e',
+  '705479d831d147a19eab91fbfc73a9d26e645e4eee326f88d2057d87684f433d'
+]
+
+/** انتخاب تصادفی توکن در هر تلاش ثبت (بدون round-robin) */
+export function pickRandomTestToken(): string {
+  return TEST_TOKENS[Math.floor(Math.random() * TEST_TOKENS.length)]!
+}
 
 export interface SurveySubmitOptions {
   /** سریالایز پاسخ‌های ویزارد به ساختار answers سرویس */
@@ -36,21 +47,6 @@ export interface SurveySubmitOptions {
   answeredCount: () => number
   /** تعداد کل پاسخ‌های مورد انتظار */
   totalQuestions: () => number
-}
-
-/** توکن را از کوئری می‌خواند؛ در نبود آن مقدار پیش‌فرض بازگردانده می‌شود */
-function resolveToken(): string {
-  try {
-    const route = useRoute()
-    const raw = route?.query?.token ?? null
-    const first = Array.isArray(raw) ? raw[0] : raw
-    if (first && String(first).trim().length > 0) {
-      return String(first).trim()
-    }
-  } catch {
-    /* useRoute خارج از context Nuxt در دسترس نیست */
-  }
-  return SURVEY_TOKEN_FALLBACK
 }
 
 /** آدرس سرویس ثبت (با امکان بازنویسی از runtimeConfig) */
@@ -125,7 +121,8 @@ export function useSurveySubmit(options: SurveySubmitOptions) {
     submitError.value = null
     isSubmitting.value = true
     try {
-      const token = resolveToken()
+      // توکن آزمایشی در هر تلاش تصادفی انتخاب می‌شود
+      const token = pickRandomTestToken()
       const answers = options.buildAnswers()
       const response = await $fetch<Record<string, unknown>>(resolveSubmitUrl(), {
         method: 'POST',
