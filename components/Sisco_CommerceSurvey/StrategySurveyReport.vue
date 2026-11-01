@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useDark } from '@vueuse/core'
 import fa from 'apexcharts/dist/locales/fa.json'
 import { useStrategySurveyReport } from '~/composables/CommerceSurvey/useStrategySurveyReport'
@@ -8,6 +8,7 @@ import {
   buildCategoryList,
   buildQuestionMeta,
   buildRatingTrend,
+  buildReportSummary,
   buildRespondentScores,
   buildSatisfactionDistribution,
   buildWeightedTrend,
@@ -15,6 +16,7 @@ import {
   extractReports,
   filterReports,
   formatFaDateTime,
+  formatJalaliDate,
   formatPercentValue,
   providerOptions,
   satisfactionPercent,
@@ -24,7 +26,7 @@ import {
 
 /**
  * داشبورد «گزارش‌دهی» بر اساس پاسخ واقعی POST /GetStrategySurveyReport:
- *  - فیلتر «نام مشتری» + فیلتر «تاریخ میلادی» (ترکیبی) روی نمودارهای روند
+ *  - فیلتر «نام مشتری» + فیلتر «تاریخ شمسی» (ترکیبی) روی نمودارهای روند
  *    و تفکیک دسته اعمال می‌شود.
  *  - کارت ۱: دو نمودار روند کنار هم در یک کارت واحد
  *  - کارت ۲: نمره‌ی سؤال‌ها به تفکیک دسته
@@ -56,7 +58,7 @@ const reports = computed(() => extractReports(reportData.value))
 
 /** «نام مشتری» – رشته‌ی خالی = همه */
 const providerFilter = ref('')
-/** «تاریخ میلادی» (YYYY-MM-DD) – رشته‌ی خالی = همه */
+/** «تاریخ شمسی» – مقدار فیلتر میلادی (YYYY-MM-DD)؛ رشته‌ی خالی = همه */
 const dateFilter = ref('')
 
 const providerFilterOptions = computed(() => providerOptions(reports.value))
@@ -70,33 +72,8 @@ const filteredReports = computed(() =>
 const sortedReports = computed(() => sortReportsChronologically(filteredReports.value))
 const meta = computed(() => buildQuestionMeta(props.groups))
 
-/** گزینه‌های پاسخ‌دهنده (قدیمی → جدید؛ کلید پایدار: response_id) */
-const respondentOptions = computed(() =>
-  sortedReports.value.map(r => ({
-    id: String(r.response_id ?? ''),
-    label: `${formatFaDateTime(r.submitted_at ?? '')}${r.response_id ? ` — ${String(r.response_id).slice(-6)}` : ''}`
-  }))
-)
-
-/** پاسخ‌دهنده‌ی انتخابی – پیش‌فرض: جدیدترین گزارشِ مجموعه‌ی فیلترشده */
-const selectedResponseId = ref<string>('')
-watch(
-  respondentOptions,
-  opts => {
-    if (!opts.length) {
-      selectedResponseId.value = ''
-      return
-    }
-    if (!opts.some(o => o.id === selectedResponseId.value)) {
-      selectedResponseId.value = opts[opts.length - 1]!.id
-    }
-  },
-  { immediate: true }
-)
-
-const selectedReport = computed(
-  () => sortedReports.value.find(r => String(r.response_id ?? '') === selectedResponseId.value) ?? null
-)
+/** نمودار تفکیک دسته همیشه جدیدترین گزارشِ مجموعه‌ی فیلترشده را نشان می‌دهد */
+const selectedReport = computed(() => sortedReports.value[sortedReports.value.length - 1] ?? null)
 
 /* --------------------------- فیلتر دسته‌ها --------------------------- */
 
@@ -376,18 +353,20 @@ const distributionConfig = computed(() => ({
 
 /* ------------------------------ بازخورد UI ---------------------------- */
 
+/**
+ * خلاصه‌ی سراسری و غیرتعاملی: همیشه از کل گزارش‌های فیلترنشده محاسبه
+ * می‌شود و با تغییر فیلترها تغییر نمی‌کند.
+ * قالب: {تعداد} پاسخ ثبت شده - از {قدیمی‌ترین} تا {جدیدترین}
+ */
 const summaryLine = computed(() => {
-  const n = sortedReports.value.length
+  const summary = buildReportSummary(reports.value)
+  if (!summary.count) return ''
   const faDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
   const faNum = (v: number | string) => String(v).replace(/\d/g, d => faDigits[+d])
-  if (!n) return ''
-  const first = sortedReports.value[0]?.submitted_at
-  const last = sortedReports.value[n - 1]?.submitted_at
-  const span =
-    first && last && first !== last
-      ? ` — از ${formatFaDateTime(first)} تا ${formatFaDateTime(last)}`
-      : ` — ${formatFaDateTime(last ?? '')}`
-  return `${faNum(n)} پاسخ ثبت‌شده${span}`
+  if (!summary.earliest || !summary.latest) {
+    return `${faNum(summary.count)} پاسخ ثبت شده`
+  }
+  return `${faNum(summary.count)} پاسخ ثبت شده - از ${formatFaDateTime(summary.earliest)} تا ${formatFaDateTime(summary.latest)}`
 })
 
 /** تلاش مجدد فقط از بنر خطا (دریافت اولیه خودکار است) */
@@ -457,102 +436,100 @@ function retry() {
     </BaseCard>
 
     <template v-else>
-      <!-- ==================== نوار فیلترها ==================== -->
-      <BaseCard class="mb-6 !rounded-xl">
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
-          <!-- فیلتر نام مشتری -->
-          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-            نام مشتری:
-            <select
-              v-model="providerFilter"
-              class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <option value="">همه</option>
-              <option v-for="p in providerFilterOptions" :key="p" :value="p">{{ p }}</option>
-            </select>
-          </label>
-
-          <!-- فیلتر تاریخ میلادی (بر اساس بخش تاریخ submitted_at) -->
-          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-            تاریخ میلادی:
-            <select
-              v-model="dateFilter"
-              class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-              dir="ltr"
-            >
-              <option value="">همه</option>
-              <option v-for="d in dateFilterOptions" :key="d" :value="d">{{ d }}</option>
-            </select>
-          </label>
-
-          <!-- پاک‌کردن فیلترها -->
-          <button
-            v-if="providerFilter || dateFilter"
-            type="button"
-            class="mr-auto rounded-md border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-            @click="providerFilter = ''; dateFilter = ''"
-          >
-            حذف فیلترها
-          </button>
-        </div>
-      </BaseCard>
-
-      <!-- ==================== کارت ۱: نمودارهای روند ==================== -->
-      <BaseCard class="mb-6 overflow-hidden !rounded-xl">
-        <div class="p-4 sm:p-6">
-          <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
-            <!-- نمودار ۱: روند رضایت کلی عملکرد -->
-            <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-              <header class="mb-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
-              </header>
-              <div class="mt-auto">
-                <div v-if="ratingTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-                  <AddonApexcharts v-bind="ratingTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
-                </div>
-                <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-                  هیچ پاسخ عددی از نوع rating در گزارش‌های فیلترشده یافت نشد.
-                </p>
-              </div>
-            </section>
-
-            <!-- نمودار ۲: روند رضایت (درصد) -->
-            <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-              <header class="mb-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
-              </header>
-              <div class="mt-auto">
-                <div v-if="weightedTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-                  <AddonApexcharts v-bind="weightedTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
-                </div>
-                <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-                  هیچ پاسخ وزنی معتبر (strategy_range_rating با وزن گره) در گزارش‌های فیلترشده یافت نشد.
-                </p>
-              </div>
-            </section>
+      <!-- ======== ردیف بالایی: کارت توزیع (راست) + کارت روندها با فیلترها (چپ) ======== -->
+      <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+        <!-- کارت توزیع رضایت مشتریان: بالا-راست، مستقل از فیلترها -->
+        <BaseCard class="overflow-hidden !rounded-xl">
+          <div class="p-4 sm:p-6">
+            <h3 class="mb-3 text-sm font-bold text-slate-900 dark:text-white">توزیع رضایت مشتریان</h3>
+            <div v-if="distribution.customerCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+              <AddonApexcharts v-bind="distributionConfig" />
+            </div>
+            <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+              هیچ پاسخ وزنی معتبری برای محاسبه‌ی توزیع رضایت وجود ندارد.
+            </p>
           </div>
-        </div>
-      </BaseCard>
+        </BaseCard>
 
-      <!-- ==================== کارت ۲: تفکیک دسته ==================== -->
-      <BaseCard class="overflow-hidden !rounded-xl">
-        <div class="p-4 sm:p-6">
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
+        <!-- کارت نمودارهای روند (سمت چپ توزیع) + فیلترها (فقط روی نمودارهای فیلترپذیر اثر دارند) -->
+        <BaseCard class="overflow-hidden !rounded-xl lg:col-span-2">
+          <div class="p-4 sm:p-6">
+            <!-- نوار فیلترها -->
+            <div class="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/40">
+              <!-- فیلتر نام مشتری -->
+              <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                نام مشتری:
+                <select
+                  v-model="providerFilter"
+                  class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <option value="">همه</option>
+                  <option v-for="p in providerFilterOptions" :key="p" :value="p">{{ p }}</option>
+                </select>
+              </label>
 
-            <!-- انتخاب پاسخ‌دهنده (از میان گزارش‌های فیلترشده) -->
-            <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-              پاسخ‌دهنده:
-              <select
-                v-model="selectedResponseId"
-                class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              <!-- فیلتر تاریخ شمسی: نمایش جلالی، مقدار فیلتر میلادی (تطابق با submitted_at) -->
+              <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                تاریخ شمسی:
+                <select
+                  v-model="dateFilter"
+                  class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <option value="">همه</option>
+                  <option v-for="d in dateFilterOptions" :key="d" :value="d">{{ formatJalaliDate(d) }}</option>
+                </select>
+              </label>
+
+              <!-- پاک‌کردن فیلترها -->
+              <button
+                v-if="providerFilter || dateFilter"
+                type="button"
+                class="mr-auto rounded-md border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+                @click="providerFilter = ''; dateFilter = ''"
               >
-                <option v-for="opt in respondentOptions" :key="opt.id" :value="opt.id">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </label>
+                حذف فیلترها
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 items-stretch gap-6 2xl:grid-cols-2">
+              <!-- نمودار ۱: روند رضایت کلی عملکرد -->
+              <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                <header class="mb-3">
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت کلی عملکرد</h3>
+                </header>
+                <div class="mt-auto">
+                  <div v-if="ratingTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+                    <AddonApexcharts v-bind="ratingTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+                  </div>
+                  <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+                    هیچ پاسخ عددی از نوع rating در گزارش‌های فیلترشده یافت نشد.
+                  </p>
+                </div>
+              </section>
+
+              <!-- نمودار ۲: روند رضایت (درصد) -->
+              <section class="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                <header class="mb-3">
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white">روند رضایت</h3>
+                </header>
+                <div class="mt-auto">
+                  <div v-if="weightedTrend.pointCount" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+                    <AddonApexcharts v-bind="weightedTrendConfig" class="ltr:-ms-4 rtl:-me-4" />
+                  </div>
+                  <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
+                    هیچ پاسخ وزنی معتبر (strategy_range_rating با وزن گره) در گزارش‌های فیلترشده یافت نشد.
+                  </p>
+                </div>
+              </section>
+            </div>
           </div>
+        </BaseCard>
+      </div>
+
+      <!-- ==================== کارت تفکیک دسته (بدون فیلتر پاسخ‌دهنده) ==================== -->
+      <BaseCard class="mt-6 overflow-hidden !rounded-xl">
+        <div class="p-4 sm:p-6">
+          <h3 class="mb-4 text-sm font-bold text-slate-900 dark:text-white">نمره‌ی سؤال‌ها به تفکیک دسته</h3>
 
           <!-- کنترل دسته‌ها -->
           <div class="mb-4 flex flex-wrap items-center gap-2">
@@ -587,24 +564,6 @@ function retry() {
           </div>
           <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
             برای این پاسخ‌دهنده در دسته‌های انتخاب‌شده، پاسخ عددی وجود ندارد.
-          </p>
-        </div>
-      </BaseCard>
-
-      <!-- ==================== کارت ۳: توزیع رضایت مشتریان (بدون فیلتر) ==================== -->
-      <BaseCard class="mt-6 overflow-hidden !rounded-xl">
-        <div class="p-4 sm:p-6">
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">توزیع رضایت مشتریان</h3>
-            <span class="text-[11px] font-medium text-slate-400">
-              بر اساس همه‌ی پاسخ‌نامه‌ها (مستقل از فیلترها)
-            </span>
-          </div>
-          <div v-if="distribution.customerCount" class="mx-auto max-w-xl rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
-            <AddonApexcharts v-bind="distributionConfig" />
-          </div>
-          <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-            هیچ پاسخ وزنی معتبری برای محاسبه‌ی توزیع رضایت وجود ندارد.
           </p>
         </div>
       </BaseCard>

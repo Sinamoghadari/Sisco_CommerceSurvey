@@ -383,6 +383,62 @@ export interface ReportFilters {
   date: string
 }
 
+/**
+ * برچسب تاریخ شمسی (جلالی) برای یک تاریخ میلادی YYYY-MM-DD – با
+ * Intl/fa-IR (تقویم پیش‌فرض فارسی؛ بدون کتابخانه‌ی جدید).
+ * مقدار فیلتر همچنان میلادی می‌ماند تا با submitted_at مطابقت کند.
+ */
+export function formatJalaliDate(yyyyMmDd: string): string {
+  try {
+    const d = new Date(`${yyyyMmDd}T00:00:00Z`)
+    if (Number.isNaN(d.getTime())) return yyyyMmDd
+    return new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'UTC'
+    }).format(d)
+  } catch {
+    return yyyyMmDd
+  }
+}
+
+export interface ReportSummary {
+  count: number
+  earliest: string | null
+  latest: string | null
+}
+
+/**
+ * خلاصه‌ی سراسری گزارش‌ها (همیشه از کل داده‌ی فیلترنشده):
+ * تعداد کل + قدیمی‌ترین/جدیدترین submitted_at.
+ */
+export function buildReportSummary(reports: SurveyReport[]): ReportSummary {
+  let count = 0
+  let earliest: number | null = null
+  let latest: number | null = null
+  let earliestRaw: string | null = null
+  let latestRaw: string | null = null
+
+  for (const r of reports) {
+    count++
+    const raw = typeof r.submitted_at === 'string' ? r.submitted_at : ''
+    if (!raw) continue
+    const t = new Date(raw).getTime()
+    if (Number.isNaN(t)) continue
+    if (earliest === null || t < earliest) {
+      earliest = t
+      earliestRaw = raw
+    }
+    if (latest === null || t > latest) {
+      latest = t
+      latestRaw = raw
+    }
+  }
+
+  return { count, earliest: earliestRaw, latest: latestRaw }
+}
+
 /** اعمال ترکیبی دو فیلتر (AND) روی گزارش‌ها */
 export function filterReports(reports: SurveyReport[], filters: ReportFilters): SurveyReport[] {
   return reports.filter(r => {
@@ -411,19 +467,23 @@ export function reportWeightedScore(report: SurveyReport): number | null {
   return hasValid ? sum : null
 }
 
-/** نوارهای رضایت با برچسب و رنگ دقیق مشخصات */
+/** نوارهای رضایت با برچسب دقیق و رنگ‌های ثابت */
 export const SATISFACTION_BANDS = [
-  { name: 'ضعیف', color: '#dc2626' },
-  { name: 'متوسط', color: '#eab308' },
-  { name: 'خوب', color: '#4ade80' },
-  { name: 'عالی', color: '#15803d' }
+  { name: 'ضعیف(<40%)', color: '#dc2626' },
+  { name: 'متوسط(40-60%)', color: '#eab308' },
+  { name: 'خوب(60-80%)', color: '#4ade80' },
+  { name: 'عالی(>80%)', color: '#15803d' }
 ] as const
 
-/** طبقه‌بندی درصد رضایت به یکی از چهار نوار (مرزها: ۴۰، ۶۰، ۸۰) */
+/**
+ * طبقه‌بندی درصد رضایت به یکی از چهار نوار – مرزبندی بدون هم‌پوشانی:
+ *   < 40 → ضعیف | 40 تا کمتر از 60 → متوسط | 60 تا 80 (شامل 80) → خوب |
+ *   بالای 80 → عالی
+ */
 export function classifySatisfactionBand(percent: number): number {
   if (percent < 40) return 0
   if (percent < 60) return 1
-  if (percent < 80) return 2
+  if (percent <= 80) return 2
   return 3
 }
 

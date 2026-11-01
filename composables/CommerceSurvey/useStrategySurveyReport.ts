@@ -26,6 +26,22 @@ import { ref } from 'vue'
  */
 export const SURVEY_DISTRIBUTION_ID_FALLBACK = '3ef23fdeecad664aeedcb961a4561269988da62d1c6a12ce0951a7afc0bb8ede'
 
+/**
+ * توکن‌های آزمایشی فاز تست – در هر درخواست گزارش، یکی به‌صورت تصادفی
+ * انتخاب و به‌صورت مقدار خام در body.token ارسال می‌شود (انتخاب در لحظه‌ی
+ * درخواست، نه هنگام مقداردهی اولیه؛ بدون ترتیب round-robin).
+ */
+export const TEST_TOKENS = [
+  '0cfb2529ef87511f2b314dbf7640b66a5ecba69e82bd7a55e21ef6f0dfe98420',
+  '6a82d3cab153bd6a6cea95db807301f3053b850bf77030d1a4ca6bd92087162e',
+  '705479d831d147a19eab91fbfc73a9d26e645e4eee326f88d2057d87684f433d'
+]
+
+/** انتخاب تصادفی توکن در هر درخواست گزارش (بدون round-robin) */
+export function pickRandomTestToken(): string {
+  return TEST_TOKENS[Math.floor(Math.random() * TEST_TOKENS.length)]!
+}
+
 /** مسیر نسبی سرویس گزارش (روی base مرکزی useApi سوار می‌شود) */
 export const SURVEY_REPORT_PATH = '/GetStrategySurveyReport'
 
@@ -88,7 +104,9 @@ export function useStrategySurveyReport() {
       const response: any = await api(SURVEY_REPORT_PATH, {
         method: 'POST',
         body: {
-          distribution_id: distributionId
+          distribution_id: distributionId,
+          // توکن آزمایشی – در هر درخواست تصادفی انتخاب می‌شود (مقدار خام)
+          token: pickRandomTestToken()
         }
       })
 
