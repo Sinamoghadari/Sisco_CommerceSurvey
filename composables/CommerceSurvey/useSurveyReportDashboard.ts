@@ -163,7 +163,8 @@ export function buildCategoryList(
 
 export interface TrendSeries {
   name: string
-  data: Array<{ x: string; y: number }>
+  /** y می‌تواند null باشد (برش روزانه‌ای که این سری داده‌ای ندارد – شکاف صادقانه) */
+  data: Array<{ x: string; y: number | null }>
 }
 
 export interface RatingTrendResult {
@@ -253,6 +254,152 @@ export function buildWeightedTrend(reports: SurveyReport[]): WeightedTrendResult
     series: data.length ? [{ name: 'امتیاز وزنی', data }] : [],
     pointCount: data.length,
     skippedReports: skipped
+  }
+}
+
+/* ============ حالت تجمیعی چندانتخابی: میانگین حسابی روزانه ============ */
+
+/** یک برش زمانی روزانه: میانگین حسابی مقادیر گزارش‌های همان روز */
+export interface DailyAveragePoint {
+  /** تاریخ میلادی YYYY-MM-DD برش (گزارش‌های بی‌تاریخ: «—») */
+  date: string
+  /** برچسب نمایشی شمسی برش (formatJalaliDate) */
+  label: string
+  /** میانگین حسابی مقادیر آن روز */
+  value: number
+  /** تعداد مقادیر واردشده در میانگین */
+  count: number
+}
+
+/**
+ * گروه‌بندی گزارش‌های مرتب‌شده بر حسب روز (بخش تاریخ submitted_at) و
+ * محاسبه‌ی «میانگین حسابی» خروجی metric در هر برش.
+ * گزارش‌های با metric نامعتبر (null) از میانگین حذف می‌شوند – هرگز صفر
+ * فرض نمی‌شوند؛ ترتیب برش‌ها صعودی زمانی است.
+ */
+export function averageReportsByDate(
+  reports: SurveyReport[],
+  metric: (report: SurveyReport) => number | null
+): DailyAveragePoint[] {
+  const buckets = new Map<string, number[]>()
+  for (const report of sortReportsChronologically(reports)) {
+    const value = metric(report)
+    if (value === null || !isValidNumber(value)) continue
+    const key = reportDatePart(report) ?? '—'
+    const list = buckets.get(key) ?? []
+    list.push(value)
+    buckets.set(key, list)
+  }
+  return [...buckets.entries()].map(([date, values]) => ({
+    date,
+    label: date === '—' ? '—' : formatJalaliDate(date),
+    value: values.reduce((sum, v) => sum + v, 0) / values.length,
+    count: values.length
+  }))
+}
+
+/**
+ * روند رضایت (وزنی) در حالت تجمیعی چندانتخابی:
+ * میانگین حسابی «امتیاز وزنی» گزارش‌های هم‌روز ← یک نقطه به‌ازای هر برش
+ * روزانه (برچسب شمسی). درصد نهایی بعداً با همان تبدیل مشترک
+ * satisfactionPercent روی میانگین اعمال می‌شود.
+ */
+export function buildWeightedTrendAveraged(reports: SurveyReport[]): WeightedTrendResult {
+  let evaluated = 0
+  const metric = (report: SurveyReport): number | null => {
+    const score = reportWeightedScore(report)
+    if (score !== null) evaluated++
+    return score
+  }
+  const points = averageReportsByDate(reports, metric)
+  const data = points.map(p => ({ x: p.label, y: p.value }))
+  const total = sortReportsChronologically(reports).length
+  return {
+    series: data.length ? [{ name: 'امتیاز وزنی', data }] : [],
+    pointCount: data.length,
+    skippedReports: total - evaluated
+  }
+}
+
+/**
+ * نمودار «روند رضایت کلی عملکرد» در حالت تجمیعی چندانتخابی:
+ * برش‌های روزانه از پاسخ‌های rating ساخته می‌شود و مقدار هر سری در هر
+ * برش = میانگین حسابی امتیازهای همان سؤال در آن روز. سری‌های فاقد داده
+ * در یک برش null می‌گیرند (شکاف واقعی، نه صفر).
+ */
+export function buildRatingTrendAveraged(
+  reports: SurveyReport[],
+  meta: ReturnType<typeof buildQuestionMeta>
+): RatingTrendResult {
+  const sorted = sortReportsChronologically(reports)
+  const sliceKeys: string[] = []
+  const sliceIndex = new Map<string, number>()
+  interface QuestionBucket {
+    name: string
+    buckets: Map<number, number[]>
+    ranges: Set<string>
+  }
+  const byQuestion = new Map<string, QuestionBucket>()
+
+  for (const report of sorted) {
+    const day = reportDatePart(report)
+    for (const answer of report.answers ?? []) {
+      if (answer.question_type !== 'rating') continue
+      if (!isValidNumber(answer.number)) continue
+      const key = day ?? '—'
+      if (!sliceIndex.has(key)) {
+        sliceIndex.set(key, sliceKeys.length)
+        sliceKeys.push(key)
+      }
+      const qid = String(answer.question_id ?? 'بدون شناسه')
+      if (!byQuestion.has(qid)) {
+        const m = answer.question_id ? meta.byQuestionId.get(answer.question_id) : undefined
+        const ranges = new Set<string>()
+        if (m && m.rangeMin !== null && m.rangeMax !== null) {
+          ranges.add(`${m.rangeMin}..${m.rangeMax}`)
+        }
+        byQuestion.set(qid, {
+          name: answer.question_text?.trim() || `سؤال ${qid}`,
+          buckets: new Map(),
+          ranges
+        })
+      }
+      const q = byQuestion.get(qid)!
+      const idx = sliceIndex.get(key)!
+      const list = q.buckets.get(idx) ?? []
+      list.push(answer.number)
+      q.buckets.set(idx, list)
+    }
+  }
+
+  const series: TrendSeries[] = [...byQuestion.values()].map(q => ({
+    name: q.name,
+    data: sliceKeys.map((key, idx) => {
+      const list = q.buckets.get(idx)
+      return {
+        x: key === '—' ? '—' : formatJalaliDate(key),
+        y: list ? list.reduce((sum, v) => sum + v, 0) / list.length : null
+      }
+    })
+  }))
+
+  const allRanges = new Set<string>()
+  for (const q of byQuestion.values()) {
+    for (const r of q.ranges) allRanges.add(r)
+  }
+  let range: { min: number; max: number } | null = null
+  if (allRanges.size === 1) {
+    const [min, max] = allRanges.values().next().value!.split('..').map(Number)
+    range = { min, max }
+  }
+
+  return {
+    series,
+    range,
+    pointCount: series.reduce(
+      (acc, s) => acc + s.data.filter(p => p.y !== null).length,
+      0
+    )
   }
 }
 
@@ -350,6 +497,143 @@ export function categoryTooltipHtml(
     `<span class="apexcharts-tooltip-text">دسته: ${t.category}</span></div>`
 }
 
+/* ============ حالت تجمیعی: میانگین نمره‌ی هر دسته across responses ============ */
+
+/** آمار میانگین یک دسته در حالت تجمیعی */
+export interface CategoryAverageStat {
+  /** عنوان دسته */
+  category: string
+  /** میانگین حسابی نمره‌های معتبر دسته */
+  mean: number
+  /** میانگین وزن گره پاسخ‌های شمرده‌شده؛ بدون وزن معتبر → null */
+  weight: number | null
+  /** تعداد پاسخ‌های عددی واردشده در میانگین */
+  answerCount: number
+  /** تعداد پاسخ‌دهنده‌های متمایز */
+  respondentCount: number
+}
+
+export interface CategoryAveragesResult {
+  /** عنوان دسته‌ها (ترتیب متادیتا، سپس دسته‌های جدید) */
+  labels: string[]
+  /** میانگین نمره‌ی هر دسته */
+  values: number[]
+  tooltips: CategoryAverageStat[]
+  pointCount: number
+}
+
+/**
+ * نمودار «نمره‌ی سؤال‌ها به تفکیک دسته» در حالت تجمیعی چندانتخابی:
+ * میانگین حسابی نمره‌ی هر دسته across همه‌ی گزارش‌های منطبق با فیلترهای
+ * چندانتخابی. ترتیب دسته‌ها از متادیتای سؤال‌ها (سپس نگاشت گره، سپس
+ * «سایر») حفظ می‌شود؛ وزن گره به‌صورت میانگین وزن پاسخ‌های شمرده‌شده‌ی
+ * همان دسته گزارش می‌شود.
+ */
+export function buildCategoryAverages(
+  reports: SurveyReport[],
+  meta: ReturnType<typeof buildQuestionMeta>,
+  selectedCategories: string[] | null
+): CategoryAveragesResult {
+  // ترتیب پایدار دسته‌ها: متادیتای سؤال‌ها ← نگاشت گره‌ها ← سایر
+  const order: string[] = []
+  const seen = new Set<string>()
+  const pushCategory = (c: string) => {
+    if (!seen.has(c)) {
+      seen.add(c)
+      order.push(c)
+    }
+  }
+  for (const m of meta.byQuestionId.values()) pushCategory(m.category)
+  for (const n of meta.byStrategyNodeId.values()) pushCategory(n.category)
+  pushCategory(UNMAPPED_CATEGORY)
+
+  interface Acc {
+    sum: number
+    count: number
+    weightSum: number
+    weightCount: number
+    respondents: Set<string>
+  }
+  const acc = new Map<string, Acc>()
+  const ensure = (category: string): Acc => {
+    pushCategory(category)
+    let a = acc.get(category)
+    if (!a) {
+      a = { sum: 0, count: 0, weightSum: 0, weightCount: 0, respondents: new Set() }
+      acc.set(category, a)
+    }
+    return a
+  }
+
+  reports.forEach((report, reportIndex) => {
+    const respondentKey = String(report.response_id ?? `#${reportIndex}`)
+    for (const answer of report.answers ?? []) {
+      if (!isValidNumber(answer.number)) continue
+      const category = resolveAnswerCategory(answer, meta).category
+      if (selectedCategories && selectedCategories.length > 0) {
+        if (!selectedCategories.includes(category)) continue
+      }
+      const a = ensure(category)
+      a.sum += answer.number
+      a.count++
+      a.respondents.add(respondentKey)
+      if (isValidNumber(answer.strategy_node_weight)) {
+        a.weightSum += answer.strategy_node_weight as number
+        a.weightCount++
+      }
+    }
+  })
+
+  const labels: string[] = []
+  const values: number[] = []
+  const tooltips: CategoryAverageStat[] = []
+  for (const category of order) {
+    const a = acc.get(category)
+    if (!a || a.count === 0) continue
+    labels.push(category)
+    values.push(a.sum / a.count)
+    tooltips.push({
+      category,
+      mean: a.sum / a.count,
+      weight: a.weightCount > 0 ? a.weightSum / a.weightCount : null,
+      answerCount: a.count,
+      respondentCount: a.respondents.size
+    })
+  }
+
+  return { labels, values, tooltips, pointCount: values.length }
+}
+
+/** عدد با حداکثر دو رقم اعشار (فارسی) برای تولتیپ میانگین */
+function faCompactNumber(v: number): string {
+  return v.toLocaleString('fa-IR', { maximumFractionDigits: 2 })
+}
+
+/** عدد صحیح فارسی */
+function faIntFa(v: number): string {
+  return v.toLocaleString('fa-IR', { maximumFractionDigits: 0 })
+}
+
+/**
+ * HTML سفارشی تولتیپ نمودار تفکیک دسته در حالت تجمیعی:
+ * میانگین نمره + وزن گره + تعداد پاسخ + تعداد پاسخ‌دهنده.
+ */
+export function categoryAverageTooltipHtml(
+  t: CategoryAverageStat | undefined
+): string {
+  if (!t) return ''
+  const weight = t.weight !== null ? faCompactNumber(t.weight) : '—'
+  return `<div class="apexcharts-tooltip-title">${t.category}</div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">میانگین نمره: ${faCompactNumber(t.mean)}</span></div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">وزن گره: ${weight}</span></div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">تعداد پاسخ: ${faIntFa(t.answerCount)}</span></div>` +
+    `<div class="apexcharts-tooltip-series-group" style="display:block">` +
+    `<span class="apexcharts-tooltip-text">تعداد پاسخ‌دهنده: ${faIntFa(t.respondentCount)}</span></div>`
+}
+
 /* ===================== درصد رضایت (قرارداد مشترک) ===================== */
 
 /**
@@ -406,10 +690,10 @@ export function dateOptions(reports: SurveyReport[]): string[] {
 }
 
 export interface ReportFilters {
-  /** نام مشتری انتخابی؛ رشته‌ی خالی = همه */
-  provider: string
-  /** تاریخ میلادی YYYY-MM-DD؛ رشته‌ی خالی = همه */
-  date: string
+  /** نام‌های مشتری انتخاب‌شده (چندانتخابی)؛ آرایه‌ی خالی = همه */
+  providers: string[]
+  /** تاریخ‌های میلادی YYYY-MM-DD انتخاب‌شده (چندانتخابی)؛ آرایه‌ی خالی = همه */
+  dates: string[]
 }
 
 /**
@@ -468,11 +752,15 @@ export function buildReportSummary(reports: SurveyReport[]): ReportSummary {
   return { count, earliest: earliestRaw, latest: latestRaw }
 }
 
-/** اعمال ترکیبی دو فیلتر (AND) روی گزارش‌ها */
+/**
+ * اعمال ترکیبی دو فیلتر چندانتخابی (AND بین گروه‌ها، OR درون هر گروه):
+ *  - هر گروه خالی = بدون محدودیت (همه)
+ *  - در غیر این صورت مقدار باید در فهرست انتخابی همان گروه باشد
+ */
 export function filterReports(reports: SurveyReport[], filters: ReportFilters): SurveyReport[] {
   return reports.filter(r => {
-    if (filters.provider && reportProviderName(r) !== filters.provider) return false
-    if (filters.date && reportDatePart(r) !== filters.date) return false
+    if (filters.providers.length > 0 && !filters.providers.includes(reportProviderName(r))) return false
+    if (filters.dates.length > 0 && !filters.dates.includes(reportDatePart(r) ?? '')) return false
     return true
   })
 }

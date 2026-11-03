@@ -1,11 +1,17 @@
 <script setup lang="ts">
 /**
  * کارت «راه‌های ارتباطی با ما» – صفحه‌ی ورود نظرسنجی.
+ * معماری آکاردئونی: هر دو بخش («راه‌های ارتباطی با ما» و «دپارتمان فروش»)
+ * به‌صورت جمع‌شونده‌ی compact و به‌طور پیش‌فرض بسته رندر می‌شوند تا صفحه‌ی
+ * ورود بدون اسکرول عمودی در دید اول جا شود:
+ *  - «سایت شرکت» خودش یک آیتم جمع‌شونده است و با کلیک، نشانی باز می‌شود.
+ *  - اعضای دپارتمان فروش زیر جمع‌شونده‌ی «سایر اعضای دپارتمان فروش»
+ *    گروه شده‌اند و با کلیک روی هر عضو، مشخصات او باز می‌شود.
  * آیکون‌ها به‌صورت SVG درون‌خطی (stroke = currentColor) رندر می‌شوند تا
- * هیچ وابستگی به مسیر فایل خارجی وجود نداشته باشد و رنگ‌آمیزی مستقیم با
- * کلاس‌های متن انجام شود (بدون فیلترهای شکننده‌ی invert/sepia که در hover
- * ناپدید می‌شدند).
+ * هیچ وابستگی به مسیر فایل خارجی وجود نداشته باشد.
+ * شماره‌های همراه شخصی به‌کلی حذف شده‌اند؛ فقط شماره‌های داخلی/دفتری.
  */
+import { ref } from 'vue'
 
 interface ContactChannel {
   id: string
@@ -21,26 +27,16 @@ interface ContactChannel {
 
 interface SalesMember {
   name: string
-  mobile: string
-  mobileTel: string
   internal: string
   internalTel: string
 }
 
 const channels: ContactChannel[] = [
   {
-    id: 'site',
-    label: 'سایت شرکت',
-    value: 'sisco.midhco.com',
-    href: 'http://sisco.midhco.com',
-    icon: 'globe',
-    ltr: true
-  },
-  {
     id: 'email',
     label: 'ایمیل فروش',
-    value: 'sales@sisco.midhco.com',
-    href: 'mailto:sales@sisco.midhco.com',
+    value: 'sales@sisco.midhco.ir',
+    href: 'mailto:sales@sisco.midhco.ir',
     icon: 'email',
     ltr: true
   },
@@ -77,6 +73,13 @@ const channels: ContactChannel[] = [
   }
 ]
 
+/** دامنه‌ی رسمی شرکت – آیتم جمع‌شونده‌ی «سایت شرکت» */
+const website = {
+  label: 'سایت شرکت',
+  value: 'sisco.midhco.ir',
+  href: 'https://sisco.midhco.ir'
+}
+
 const salesChief = {
   name: 'رضا سرداری',
   role: 'رئیس فروش',
@@ -84,38 +87,103 @@ const salesChief = {
   phoneTel: '03431245716'
 }
 
+/** فقط شماره‌ی داخلی – بدون شماره‌ی همراه شخصی */
 const salesMembers: SalesMember[] = [
-  { name: 'حامد فطرس', mobile: '۰۹۱۳۲۹۸۵۱۱۴', mobileTel: '09132985114', internal: '۰۳۴۳۱۲۴۵۷۱۵', internalTel: '03431245715' },
-  { name: 'علی فتحی زاده', mobile: '۰۹۱۳۳۸۷۵۳۹۷', mobileTel: '09133875397', internal: '۰۳۴۳۱۲۴۵۷۱۸', internalTel: '03431245718' },
-  { name: 'سیامک فرح بخش', mobile: '۰۹۱۳۷۶۷۶۰۴۶', mobileTel: '09137676046', internal: '۰۳۴۳۱۲۴۵۷۸۷', internalTel: '03431245787' },
-  { name: 'مجید جلالی', mobile: '۰۹۱۳۵۴۰۶۰۴۶', mobileTel: '09135406046', internal: '۰۳۴۳۱۲۴۵۷۹۵', internalTel: '03431245795' },
-  { name: 'فرخ کاردان', mobile: '۰۹۱۳۸۸۶۸۳۱۸', mobileTel: '09138868318', internal: '۰۳۴۳۱۲۴۵۷۹۲', internalTel: '03431245792' }
+  { name: 'حامد فطرس', internal: '۰۳۴۳۱۲۴۵۷۱۵', internalTel: '03431245715' },
+  { name: 'علی فتحی زاده', internal: '۰۳۴۳۱۲۴۵۷۱۸', internalTel: '03431245718' },
+  { name: 'سیامک فرح بخش', internal: '۰۳۴۳۱۲۴۵۷۸۷', internalTel: '03431245787' },
+  { name: 'مجید جلالی', internal: '۰۳۴۳۱۲۴۵۷۹۵', internalTel: '03431245795' },
+  { name: 'فرخ کاردان', internal: '۰۳۴۳۱۲۴۵۷۹۲', internalTel: '03431245792' }
 ]
+
+/* ------------------------- وضعیت آکاردئون‌ها ------------------------- */
+
+/** بخش «راه‌های ارتباطی با ما» – پیش‌فرض بسته */
+const isChannelsOpen = ref(false)
+/** آیتم جمع‌شونده‌ی «سایت شرکت» */
+const isWebsiteOpen = ref(false)
+/** بخش «دپارتمان فروش» – پیش‌فرض بسته */
+const isSalesOpen = ref(false)
+/** جمع‌شونده‌ی «سایر اعضای دپارتمان فروش» */
+const isMembersOpen = ref(false)
+/** عضوی که مشخصاتش باز است (یکی در هر لحظه) */
+const expandedMember = ref<string | null>(null)
+
+function toggleMember(name: string) {
+  expandedMember.value = expandedMember.value === name ? null : name
+}
 </script>
 
 <template>
   <BaseCard class="overflow-hidden">
-    <!-- سربرگ کارت -->
-    <div class="relative border-b border-slate-200 bg-slate-50/80 px-8 py-7 dark:border-slate-800 dark:bg-slate-900/40">
-      <div class="flex items-center gap-4">
-        <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-green-700 text-white">
-          <!-- آیکون هدست (درون‌خطی) -->
-          <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">راه‌های ارتباطی با ما</h2>
-          <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-            جهت هرگونه ارتباط (انتقادات، پیشنهادات، شکایات و …) از راه‌های زیر استفاده کنید:
-          </p>
-        </div>
-      </div>
-    </div>
+    <!-- ================= آکاردئون ۱: راه‌های ارتباطی با ما ================= -->
+    <button
+      type="button"
+      class="flex w-full items-center gap-4 bg-slate-50/80 px-5 py-4 text-right transition-colors hover:bg-slate-100/80 dark:bg-slate-900/40 dark:hover:bg-slate-800/40 sm:px-8"
+      :aria-expanded="isChannelsOpen"
+      @click="isChannelsOpen = !isChannelsOpen"
+    >
+      <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-700 text-white">
+        <!-- آیکون هدست (درون‌خطی) -->
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+        </svg>
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-base font-bold text-gray-900 dark:text-white">راه‌های ارتباطی با ما</span>
+        <span class="mt-0.5 block truncate text-xs leading-5 text-slate-500 dark:text-slate-400">
+          جهت هرگونه ارتباط (انتقادات، پیشنهادات، شکایات و …)
+        </span>
+      </span>
+      <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="isChannelsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
 
-    <!-- کانال‌های ارتباطی -->
-    <div class="border-b border-slate-200 px-8 py-6 dark:border-slate-800">
+    <div v-if="isChannelsOpen" class="border-t border-slate-200 px-5 py-5 dark:border-slate-800 sm:px-8">
+      <!-- آیتم جمع‌شونده‌ی «سایت شرکت» + بقیه‌ی کانال‌ها -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- سایت شرکت: آیتم جمع‌شونده – با کلیک، نشانی باز می‌شود -->
+        <div class="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <button
+            type="button"
+            class="group flex w-full items-center gap-3.5 p-4 text-right"
+            :aria-expanded="isWebsiteOpen"
+            @click="isWebsiteOpen = !isWebsiteOpen"
+          >
+            <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 text-green-700 dark:border-slate-700 dark:bg-slate-800 dark:text-green-400">
+              <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="mb-0.5 block text-base font-semibold text-slate-600 dark:text-slate-300">{{ website.label }}</span>
+              <span class="block truncate text-sm font-bold text-gray-900 dark:text-white">{{ isWebsiteOpen ? 'برای مشاهده کلیک کنید' : 'بازکردن نشانی' }}</span>
+            </span>
+            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="isWebsiteOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <a
+            v-if="isWebsiteOpen"
+            :href="website.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 border-t border-slate-200 px-4 py-3 text-sm font-bold text-green-700 transition-colors hover:bg-green-50 hover:text-green-800 dark:border-slate-800 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:text-green-300"
+            dir="ltr"
+          >
+            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 3h6v6" />
+              <path d="M10 14 21 3" />
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            </svg>
+            {{ website.value }}
+          </a>
+        </div>
+
+        <!-- بقیه‌ی کانال‌ها -->
         <component
           :is="channel.href ? 'a' : 'div'"
           v-for="channel in channels"
@@ -170,24 +238,33 @@ const salesMembers: SalesMember[] = [
       </div>
     </div>
 
-    <!-- دپارتمان فروش -->
-    <div class="px-8 py-6">
-      <div class="mb-4 flex items-center gap-3">
-        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <!-- آیکون کیف کار (درون‌خطی) -->
-          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            <rect width="20" height="14" x="2" y="6" rx="2" />
-          </svg>
-        </span>
-        <h3 class="text-base font-bold text-gray-900 dark:text-white">دپارتمان فروش</h3>
-        <div class="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-      </div>
+    <!-- ================= آکاردئون ۲: دپارتمان فروش ================= -->
+    <button
+      type="button"
+      class="flex w-full items-center gap-4 border-t border-slate-200 px-5 py-4 text-right transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40 sm:px-8"
+      :aria-expanded="isSalesOpen"
+      @click="isSalesOpen = !isSalesOpen"
+    >
+      <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <!-- آیکون کیف کار (درون‌خطی) -->
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          <rect width="20" height="14" x="2" y="6" rx="2" />
+        </svg>
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-base font-bold text-gray-900 dark:text-white">دپارتمان فروش</span>
+        <span class="mt-0.5 block truncate text-xs leading-5 text-slate-500 dark:text-slate-400">رئیس و اعضای دپارتمان فروش</span>
+      </span>
+      <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="isSalesOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
 
-      <!-- رئیس فروش -->
+    <div v-if="isSalesOpen" class="border-t border-slate-200 px-5 py-5 dark:border-slate-800 sm:px-8">
+      <!-- رئیس فروش (شماره‌ی دفتری) -->
       <div class="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-900/10">
         <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md bg-green-700 text-white">
-          <!-- آیکون کاربران (درون‌خطی) -->
           <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
@@ -213,31 +290,54 @@ const salesMembers: SalesMember[] = [
         </a>
       </div>
 
-      <!-- سایر اعضا -->
-      <p class="mb-3 text-lg font-bold text-gray-900 dark:text-white">سایر اعضای دپارتمان فروش:</p>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- سایر اعضا: جمع‌شونده‌ی گروه -->
+      <button
+        type="button"
+        class="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3 text-right transition-colors hover:bg-slate-100/70 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800/60"
+        :aria-expanded="isMembersOpen"
+        @click="isMembersOpen = !isMembersOpen"
+      >
+        <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span class="flex-1 text-sm font-bold text-gray-900 dark:text-white">سایر اعضای دپارتمان فروش</span>
+        <span class="text-[11px] font-bold text-slate-400">{{ salesMembers.length }} نفر</span>
+        <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="isMembersOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      <!-- فهرست اعضا: کلیک روی هر عضو ← بازشدن مشخصات -->
+      <div v-if="isMembersOpen" class="mt-3 space-y-2">
         <div
           v-for="member in salesMembers"
           :key="member.name"
-          class="rounded-lg border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+          class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-900/60"
         >
-          <p class="mb-2.5 flex items-center gap-2">
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 px-4 py-3 text-right transition-colors hover:bg-slate-100/70 dark:hover:bg-slate-800/60"
+            :aria-expanded="expandedMember === member.name"
+            @click="toggleMember(member.name)"
+          >
+            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            <span class="text-base font-bold text-gray-900 dark:text-white">{{ member.name }}</span>
-          </p>
-          <div class="space-y-1.5 text-xs">
-            <p class="flex items-center justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">همراه:</span>
-              <a :href="`tel:${member.mobileTel}`" dir="ltr" class="font-bold text-gray-900 transition-colors hover:text-green-700 dark:text-white dark:hover:text-green-400">
-                {{ member.mobile }}
-              </a>
-            </p>
-            <p class="flex items-center justify-between gap-2">
+            <span class="flex-1 text-sm font-bold text-gray-900 dark:text-white">{{ member.name }}</span>
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-transform" :class="expandedMember === member.name ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div v-if="expandedMember === member.name" class="border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+            <p class="flex items-center justify-between gap-2 text-xs">
               <span class="text-slate-500 dark:text-slate-400">داخلی:</span>
-              <a :href="`tel:${member.internalTel}`" dir="ltr" class="font-bold text-gray-900 transition-colors hover:text-green-700 dark:text-white dark:hover:text-green-400">
+              <a
+                :href="`tel:${member.internalTel}`"
+                dir="ltr"
+                class="font-bold text-gray-900 transition-colors hover:text-green-700 dark:text-white dark:hover:text-green-400"
+              >
                 {{ member.internal }}
               </a>
             </p>

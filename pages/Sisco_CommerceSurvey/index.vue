@@ -26,8 +26,7 @@ const {
   startSurvey,
   retryFetch,
   changeSelection,
-  completeSurvey,
-  restart
+  completeSurvey
 } = useCommerceSurvey()
 
 const { categories, alreadyAnswered, status, error } = survey
@@ -106,7 +105,6 @@ const { categories, alreadyAnswered, status, error } = survey
         :answered-count="completion.answeredCount"
         :total-questions="completion.totalQuestions"
         :server-message="completion.serverMessage"
-        @restart="restart"
       />
     </Transition>
   </div>

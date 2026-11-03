@@ -2,7 +2,9 @@
 /**
  * صفحه‌ی پایان نظرسنجی – نمایش تشکر و خلاصه‌ی اجرا.
  * پیام تأیید به‌صورت داینامیک از msg_description سرور خوانده می‌شود
- * (fallback فقط وقتی که سرور پیامی نداده باشد)؛ بدون نمایش شناسه‌ی پاسخ‌دهنده.
+ * (fallback فقط وقتی که سرور پیامی نداده باشد)؛ بدون نمایش شناسه‌ی
+ * پاسخ‌دهنده و بدون دکمه‌ی «شروع نظرسنجی جدید» (جلوگیری از چرخه‌ی ثبت
+ * مجدد از نمای تکمیل).
  */
 import { computed } from 'vue'
 import { SURVEY_FALLBACK_SUCCESS_MESSAGE } from '~/composables/CommerceSurvey/useSurveySubmit'
@@ -21,8 +23,6 @@ const props = withDefaults(
 
 /** پیام نمایشی: عین سرور، و در نبود آن پیام پیش‌فرض */
 const displayMessage = computed(() => props.serverMessage?.trim() || SURVEY_FALLBACK_SUCCESS_MESSAGE)
-
-const emit = defineEmits<{ (e: 'restart'): void }>()
 </script>
 
 <template>
@@ -45,12 +45,6 @@ const emit = defineEmits<{ (e: 'restart'): void }>()
           <p class="font-bold text-slate-900 dark:text-white text-lg" dir="ltr">{{ answeredCount }} / {{ totalQuestions }}</p>
         </div>
 
-        <BaseButton color="primary" variant="outline" @click="emit('restart')">
-          <span class="flex items-center gap-2">
-            <Icon icon="lucide:rotate-ccw" class="w-4 h-4" />
-            شروع نظرسنجی جدید
-          </span>
-        </BaseButton>
       </div>
     </BaseCard>
   </div>

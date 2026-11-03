@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDark } from '@vueuse/core'
 import fa from 'apexcharts/dist/locales/fa.json'
 import { useStrategySurveyReport } from '~/composables/CommerceSurvey/useStrategySurveyReport'
 import type { SurveyCategoryGroup } from '~/composables/CommerceSurvey/useSurveyApi'
 import {
+  buildCategoryAverages,
   buildCategoryList,
   buildQuestionMeta,
   buildRatingTrend,
+  buildRatingTrendAveraged,
   buildReportSummary,
   buildRespondentScores,
   buildSatisfactionDistribution,
   buildWeightedTrend,
+  buildWeightedTrendAveraged,
+  categoryAverageTooltipHtml,
   categoryTooltipHtml,
   dateOptions,
   extractReports,
@@ -49,6 +53,11 @@ onMounted(() => {
   if (reportData.value === null && !isReportLoading.value) {
     void fetchStrategySurveyReport()
   }
+  document.addEventListener('click', onDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick)
 })
 
 /* ----------------------------- داده‌ی پایه ----------------------------- */
@@ -57,18 +66,81 @@ const reports = computed(() => extractReports(reportData.value))
 
 /* ------------------------ فیلتر مشتری و تاریخ ------------------------ */
 
-/** «نام مشتری» – رشته‌ی خالی = همه */
-const providerFilter = ref('')
-/** «تاریخ شمسی» – مقدار فیلتر میلادی (YYYY-MM-DD)؛ رشته‌ی خالی = همه */
-const dateFilter = ref('')
+/** «نام مشتری» – چندانتخابی؛ آرایه‌ی خالی = همه */
+const selectedProviders = ref<string[]>([])
+/** «تاریخ شمسی» – چندانتخابی (مقدار فیلتر میلادی YYYY-MM-DD)؛ آرایه‌ی خالی = همه */
+const selectedDates = ref<string[]>([])
 
 const providerFilterOptions = computed(() => providerOptions(reports.value))
 const dateFilterOptions = computed(() => dateOptions(reports.value))
 
-/** گزارش‌های فیلترشده (ترکیب دو فیلتر) – مبنای نمودارهای روند و تفکیک */
+/** گزارش‌های فیلترشده (ترکیب دو فیلتر چندانتخابی) – مبنای نمودارهای روند و تفکیک */
 const filteredReports = computed(() =>
-  filterReports(reports.value, { provider: providerFilter.value, date: dateFilter.value })
+  filterReports(reports.value, { providers: selectedProviders.value, dates: selectedDates.value })
 )
+
+/**
+ * حالت تجمیعی: با انتخاب «بیش از یک» مشتری یا تاریخ، گزارش‌هاAcross همه‌ی
+ * انتخاب‌ها تجمیع و میانگین حسابی محاسبه می‌شود؛ انتخاب تکی/بدون انتخاب
+ * همان رفتار قبلی (تک‌مشتری/تک‌تاریخ/همه‌ی داده) را حفظ می‌کند.
+ */
+const isAggregateMode = computed(
+  () => selectedProviders.value.length > 1 || selectedDates.value.length > 1
+)
+
+/* ------------------- منوی بازشو چندانتخابی (باز/بسته) ------------------- */
+
+const isProviderMenuOpen = ref(false)
+const isDateMenuOpen = ref(false)
+const providerMenuRoot = ref<HTMLElement | null>(null)
+const dateMenuRoot = ref<HTMLElement | null>(null)
+
+/** بستن منوها با کلیک بیرون از آن‌ها */
+function onDocumentClick(e: MouseEvent) {
+  const target = e.target as Node | null
+  if (isProviderMenuOpen.value && providerMenuRoot.value && !providerMenuRoot.value.contains(target)) {
+    isProviderMenuOpen.value = false
+  }
+  if (isDateMenuOpen.value && dateMenuRoot.value && !dateMenuRoot.value.contains(target)) {
+    isDateMenuOpen.value = false
+  }
+}
+
+function toggleInList(list: string[], value: string): string[] {
+  return list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+}
+
+function toggleProvider(p: string) {
+  selectedProviders.value = toggleInList(selectedProviders.value, p)
+}
+
+function toggleDate(d: string) {
+  selectedDates.value = toggleInList(selectedDates.value, d)
+}
+
+function selectAllProviders() {
+  selectedProviders.value = []
+}
+
+function selectAllDates() {
+  selectedDates.value = []
+}
+
+function clearTrendFilters() {
+  selectedProviders.value = []
+  selectedDates.value = []
+  isProviderMenuOpen.value = false
+  isDateMenuOpen.value = false
+}
+
+const FILTER_FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+
+/** خلاصه‌ی انتخاب برای دکمه‌ی فیلتر: همه / نام تکی / «n مورد» */
+function filterSummary(list: string[]): string {
+  if (list.length === 0) return 'همه'
+  if (list.length === 1) return list[0]!
+  return `${String(list.length).replace(/\d/g, d => FILTER_FA_DIGITS[+d])} مورد`
+}
 
 const sortedReports = computed(() => sortReportsChronologically(filteredReports.value))
 const meta = computed(() => buildQuestionMeta(props.groups))
@@ -150,8 +222,15 @@ const boldWhiteDataLabels = {
 
 /* ------------------------------ نمودارها ------------------------------ */
 
-/** نمودار ۱ – روند رضایت کلی عملکرد (rating در طول زمان) – تابع فیلترها */
-const ratingTrend = computed(() => buildRatingTrend(filteredReports.value, meta.value))
+/**
+ * نمودار ۱ – روند رضایت کلی عملکرد – تابع فیلترها؛ در حالت تجمیعی
+ * چندانتخابی، مقدار هر برش روزانه = میانگین حسابی امتیازهای همان روز.
+ */
+const ratingTrend = computed(() =>
+  isAggregateMode.value
+    ? buildRatingTrendAveraged(filteredReports.value, meta.value)
+    : buildRatingTrend(filteredReports.value, meta.value)
+)
 const ratingTrendConfig = computed(() => ({
   type: 'area',
   height: 260,
@@ -201,8 +280,16 @@ const ratingTrendConfig = computed(() => ({
   }
 }))
 
-/** نمودار ۲ – روند رضایت وزنی به‌صورت درصد (تبدیل مشترک: ۸٫۱۸ → ۰٫۸۱٪) */
-const weightedTrend = computed(() => buildWeightedTrend(filteredReports.value))
+/**
+ * نمودار ۲ – روند رضایت (درصد) – در حالت تجمیعی چندانتخابی، میانگین
+ * حسابی امتیاز وزنی گزارش‌های هم‌روز محاسبه و سپس با تبدیل مشترک
+ * satisfactionPercent به درصد تبدیل می‌شود (۸٫۱۸ → ۰٫۸۱٪).
+ */
+const weightedTrend = computed(() =>
+  isAggregateMode.value
+    ? buildWeightedTrendAveraged(filteredReports.value)
+    : buildWeightedTrend(filteredReports.value)
+)
 const weightedPercentPoints = computed(() =>
   (weightedTrend.value.series[0]?.data ?? []).map(p => ({ x: p.x, y: satisfactionPercent(p.y) }))
 )
@@ -246,14 +333,48 @@ const weightedTrendConfig = computed(() => ({
   }
 }))
 
-/** نمودار ۳ – نمره‌ی سؤال‌ها برای پاسخ‌دهنده‌ی انتخابی (با فیلتر دسته)؛ تولتیپ: نمره + وزن گره + دسته */
+/** نمودار ۳ – حالت تکی: نمره‌ی سؤال‌های جدیدترین گزارش (تولتیپ: نمره + وزن گره + دسته) */
 const respondentScores = computed(() =>
   buildRespondentScores(selectedReport.value, meta.value, selectedCategories.value)
 )
+
+/**
+ * نمودار ۳ – حالت تجمیعی: میانگین نمره‌ی هر دسته across همه‌ی گزارش‌های
+ * منطبق با فیلترهای چندانتخابی (تولتیپ: میانگین + وزن گره + شمارنده‌ها).
+ */
+const categoryAverages = computed(() =>
+  isAggregateMode.value
+    ? buildCategoryAverages(filteredReports.value, meta.value, selectedCategories.value)
+    : null
+)
+
+/** شکل یکسان‌شده‌ی نمودار تفکیک برای هر دو حالت (تکی/تجمیعی) */
+const categoryChart = computed(() => {
+  const avg = categoryAverages.value
+  if (avg) {
+    return {
+      averaged: true as const,
+      name: 'میانگین نمره',
+      labels: avg.labels,
+      values: avg.values,
+      scoreTooltips: [] as ReturnType<typeof buildRespondentScores>['tooltips'],
+      avgTooltips: avg.tooltips
+    }
+  }
+  return {
+    averaged: false as const,
+    name: 'نمره',
+    labels: respondentScores.value.labels,
+    values: respondentScores.value.values,
+    scoreTooltips: respondentScores.value.tooltips,
+    avgTooltips: [] as ReturnType<typeof buildCategoryAverages>['tooltips']
+  }
+})
+
 const respondentChartConfig = computed(() => ({
   type: 'bar',
   height: 420,
-  series: [{ name: 'نمره', data: respondentScores.value.values }],
+  series: [{ name: categoryChart.value.name, data: categoryChart.value.values }],
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
@@ -271,8 +392,8 @@ const respondentChartConfig = computed(() => ({
     dataLabels: boldWhiteDataLabels,
     stroke: { show: true, width: 2, colors: ['transparent'] },
     xaxis: {
-      // متن کامل سؤال‌ها (بدون بریدگی با …) – خوانایی کامل بر زیبایی‌شناسی فاصله مقدم است
-      categories: respondentScores.value.labels,
+      // برچسب کامل (متن سؤال در حالت تکی / عنوان دسته در حالت تجمیعی)
+      categories: categoryChart.value.labels,
       axisBorder: { show: true, color: axisColor.value, height: 2 },
       axisTicks: { show: true, color: axisColor.value, height: 6 },
       labels: {
@@ -304,7 +425,9 @@ const respondentChartConfig = computed(() => ({
     tooltip: {
       theme: isDark.value ? 'dark' : 'light',
       custom: ({ dataPointIndex }: { dataPointIndex: number }) =>
-        categoryTooltipHtml(respondentScores.value.tooltips[dataPointIndex])
+        categoryChart.value.averaged
+          ? categoryAverageTooltipHtml(categoryChart.value.avgTooltips[dataPointIndex])
+          : categoryTooltipHtml(categoryChart.value.scoreTooltips[dataPointIndex])
     }
   }
 }))
@@ -448,38 +571,90 @@ function retry() {
         <!-- کارت نمودارهای روند (سمت چپ توزیع) + فیلترها (فقط روی نمودارهای فیلترپذیر اثر دارند) -->
         <BaseCard class="overflow-hidden !rounded-xl lg:col-span-2">
           <div class="p-4 sm:p-6">
-            <!-- نوار فیلترها -->
+            <!-- نوار فیلترها (چندانتخابی) -->
             <div class="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/40">
-              <!-- فیلتر نام مشتری -->
-              <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <!-- فیلتر نام مشتری: چندانتخابی با چک‌باکس -->
+              <div class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                 نام مشتری:
-                <select
-                  v-model="providerFilter"
-                  class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="">همه</option>
-                  <option v-for="p in providerFilterOptions" :key="p" :value="p">{{ p }}</option>
-                </select>
-              </label>
+                <div ref="providerMenuRoot" class="relative">
+                  <button
+                    type="button"
+                    class="flex h-9 min-w-[130px] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 transition-colors hover:border-green-600/50 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    :aria-expanded="isProviderMenuOpen"
+                    aria-haspopup="listbox"
+                    @click="isProviderMenuOpen = !isProviderMenuOpen"
+                  >
+                    <span class="max-w-[180px] truncate">{{ filterSummary(selectedProviders) }}</span>
+                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 flex-shrink-0 transition-transform" :class="isProviderMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div
+                    v-if="isProviderMenuOpen"
+                    class="absolute start-0 z-30 mt-1 max-h-64 min-w-[230px] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                    role="listbox"
+                    aria-multiselectable="true"
+                  >
+                    <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                      <input type="checkbox" class="accent-green-700" :checked="selectedProviders.length === 0" @change="selectAllProviders" />
+                      همه
+                    </label>
+                    <label
+                      v-for="p in providerFilterOptions"
+                      :key="p"
+                      class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <input type="checkbox" class="accent-green-700" :checked="selectedProviders.includes(p)" @change="toggleProvider(p)" />
+                      {{ p }}
+                    </label>
+                  </div>
+                </div>
+              </div>
 
-              <!-- فیلتر تاریخ شمسی: نمایش جلالی، مقدار فیلتر میلادی (تطابق با submitted_at) -->
-              <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <!-- فیلتر تاریخ شمسی: چندانتخابی؛ نمایش جلالی، مقدار میلادی (تطابق با submitted_at) -->
+              <div class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                 تاریخ شمسی:
-                <select
-                  v-model="dateFilter"
-                  class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="">همه</option>
-                  <option v-for="d in dateFilterOptions" :key="d" :value="d">{{ formatJalaliDate(d) }}</option>
-                </select>
-              </label>
+                <div ref="dateMenuRoot" class="relative">
+                  <button
+                    type="button"
+                    class="flex h-9 min-w-[130px] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 transition-colors hover:border-green-600/50 focus:outline-none focus:ring-4 focus:ring-green-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    :aria-expanded="isDateMenuOpen"
+                    aria-haspopup="listbox"
+                    @click="isDateMenuOpen = !isDateMenuOpen"
+                  >
+                    <span class="max-w-[180px] truncate">{{ filterSummary(selectedDates.map(d => formatJalaliDate(d))) }}</span>
+                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 flex-shrink-0 transition-transform" :class="isDateMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <div
+                    v-if="isDateMenuOpen"
+                    class="absolute start-0 z-30 mt-1 max-h-64 min-w-[160px] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                    role="listbox"
+                    aria-multiselectable="true"
+                  >
+                    <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                      <input type="checkbox" class="accent-green-700" :checked="selectedDates.length === 0" @change="selectAllDates" />
+                      همه
+                    </label>
+                    <label
+                      v-for="d in dateFilterOptions"
+                      :key="d"
+                      class="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <input type="checkbox" class="accent-green-700" :checked="selectedDates.includes(d)" @change="toggleDate(d)" />
+                      {{ formatJalaliDate(d) }}
+                    </label>
+                  </div>
+                </div>
+              </div>
 
               <!-- پاک‌کردن فیلترها -->
               <button
-                v-if="providerFilter || dateFilter"
+                v-if="selectedProviders.length > 0 || selectedDates.length > 0"
                 type="button"
                 class="mr-auto rounded-md border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-                @click="providerFilter = ''; dateFilter = ''"
+                @click="clearTrendFilters"
               >
                 حذف فیلترها
               </button>
@@ -553,11 +728,11 @@ function retry() {
             </button>
           </div>
 
-          <div v-if="respondentScores.values.length" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
+          <div v-if="categoryChart.values.length" class="rounded-md bg-slate-50/60 p-2 dark:bg-slate-900/40">
             <AddonApexcharts v-bind="respondentChartConfig" />
           </div>
           <p v-else class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-slate-800">
-            برای این پاسخ‌دهنده در دسته‌های انتخاب‌شده، پاسخ عددی وجود ندارد.
+            در دسته‌های انتخاب‌شده برای گزارش‌های فیلترشده، پاسخ عددی یافت نشد.
           </p>
         </div>
       </BaseCard>
