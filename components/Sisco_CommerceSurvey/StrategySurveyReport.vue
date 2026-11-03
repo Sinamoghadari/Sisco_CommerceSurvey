@@ -9,12 +9,12 @@ import {
   buildCategoryList,
   buildQuestionMeta,
   buildRatingTrend,
-  buildRatingTrendAveraged,
+  buildRatingTrendMultiCustomer,
   buildReportSummary,
   buildRespondentScores,
   buildSatisfactionDistribution,
   buildWeightedTrend,
-  buildWeightedTrendAveraged,
+  buildWeightedTrendMultiCustomer,
   categoryAverageTooltipHtml,
   categoryTooltipHtml,
   dateOptions,
@@ -80,12 +80,19 @@ const filteredReports = computed(() =>
 )
 
 /**
- * حالت تجمیعی: با انتخاب «بیش از یک» مشتری یا تاریخ، گزارش‌هاAcross همه‌ی
- * انتخاب‌ها تجمیع و میانگین حسابی محاسبه می‌شود؛ انتخاب تکی/بدون انتخاب
- * همان رفتار قبلی (تک‌مشتری/تک‌تاریخ/همه‌ی داده) را حفظ می‌کند.
+ * نمودارهای روند: با انتخاب «بیش از یک» مشتری، هر مشتری خط روند مستقل
+ * خود را دارد (بدون ادغام یا میانگین) تا روند个体‌ها کنار هم مقایسه شود؛
+ * انتخاب تکی یا «همه» همان رفتار قبلی (نقاط تکی در طول زمان) را دارد.
  */
-const isAggregateMode = computed(
-  () => selectedProviders.value.length > 1 || selectedDates.value.length > 1
+const isMultiCustomer = computed(() => selectedProviders.value.length > 1)
+
+/**
+ * نمودار تفکیک دسته: میانگین حسابی across همه‌ی گزارش‌های منطبق – «همه»
+ * (انتخاب خالی) نیز تجمیعی است؛ تنها حالت تک‌مشتری + تک‌تاریخ همان نمای
+ * قبلیِ «جدیدترین پاسخ» می‌ماند.
+ */
+const isCategoryAggregate = computed(
+  () => !(selectedProviders.value.length === 1 && selectedDates.value.length === 1)
 )
 
 /* ------------------- منوی بازشو چندانتخابی (باز/بسته) ------------------- */
@@ -220,15 +227,27 @@ const boldWhiteDataLabels = {
   style: { fontSize: '13px', fontWeight: 700, colors: ['#ffffff'] }
 }
 
+/** پالت چند-سری: یک رنگ متمایز برای خط روند هر مشتری */
+const MULTI_SERIES_COLORS = [
+  '#15803d',
+  '#0e7490',
+  '#b45309',
+  '#7c3aed',
+  '#be185d',
+  '#4d7c0f',
+  '#1d4ed8',
+  '#b91c1c'
+]
+
 /* ------------------------------ نمودارها ------------------------------ */
 
 /**
- * نمودار ۱ – روند رضایت کلی عملکرد – تابع فیلترها؛ در حالت تجمیعی
- * چندانتخابی، مقدار هر برش روزانه = میانگین حسابی امتیازهای همان روز.
+ * نمودار ۱ – روند رضایت کلی عملکرد – تابع فیلترها؛ با چند مشتری انتخابی،
+ * هر مشتری سری مستقل خود را دارد (بدون ادغام در یک خط میانگین).
  */
 const ratingTrend = computed(() =>
-  isAggregateMode.value
-    ? buildRatingTrendAveraged(filteredReports.value, meta.value)
+  isMultiCustomer.value
+    ? buildRatingTrendMultiCustomer(filteredReports.value, meta.value)
     : buildRatingTrend(filteredReports.value, meta.value)
 )
 const ratingTrendConfig = computed(() => ({
@@ -245,7 +264,8 @@ const ratingTrendConfig = computed(() => ({
       defaultLocale: 'fa',
       locales: [fa]
     },
-    colors: [successColor.value],
+    // با چند سری (یک خط برای هر مشتری) پالت متمایز به‌جای رنگ واحد
+    colors: ratingTrend.value.series.length > 1 ? MULTI_SERIES_COLORS : [successColor.value],
     dataLabels: {
       ...boldWhiteDataLabels,
       formatter: (v: number) => `${v}`
@@ -281,27 +301,25 @@ const ratingTrendConfig = computed(() => ({
 }))
 
 /**
- * نمودار ۲ – روند رضایت (درصد) – در حالت تجمیعی چندانتخابی، میانگین
- * حسابی امتیاز وزنی گزارش‌های هم‌روز محاسبه و سپس با تبدیل مشترک
- * satisfactionPercent به درصد تبدیل می‌شود (۸٫۱۸ → ۰٫۸۱٪).
+ * نمودار ۲ – روند رضایت (درصد) – با چند مشتری انتخابی، هر مشتری سری
+ * مستقل خود را دارد؛ درصد هر نقطه با همان تبدیل مشترک satisfactionPercent
+ * (۸٫۱۸ → ۰٫۸۱٪) روی امتیاز وزنی «خودِ آن سری» اعمال می‌شود.
  */
 const weightedTrend = computed(() =>
-  isAggregateMode.value
-    ? buildWeightedTrendAveraged(filteredReports.value)
+  isMultiCustomer.value
+    ? buildWeightedTrendMultiCustomer(filteredReports.value)
     : buildWeightedTrend(filteredReports.value)
 )
-const weightedPercentPoints = computed(() =>
-  (weightedTrend.value.series[0]?.data ?? []).map(p => ({ x: p.x, y: satisfactionPercent(p.y) }))
+const weightedPercentSeries = computed(() =>
+  weightedTrend.value.series.map(s => ({
+    name: s.name,
+    data: s.data.map(p => (p.y === null ? null : satisfactionPercent(p.y)))
+  }))
 )
 const weightedTrendConfig = computed(() => ({
   type: 'area',
   height: 260,
-  series: [
-    {
-      name: 'درصد رضایت',
-      data: weightedPercentPoints.value.map(p => p.y)
-    }
-  ],
+  series: weightedPercentSeries.value,
   options: {
     chart: {
       fontFamily: 'Vazirmatn FD, sans-serif',
@@ -312,7 +330,7 @@ const weightedTrendConfig = computed(() => ({
       defaultLocale: 'fa',
       locales: [fa]
     },
-    colors: [warningColor.value],
+    colors: weightedPercentSeries.value.length > 1 ? MULTI_SERIES_COLORS : [warningColor.value],
     dataLabels: {
       ...boldWhiteDataLabels,
       formatter: (v: number) => formatPercentValue(v)
@@ -320,7 +338,7 @@ const weightedTrendConfig = computed(() => ({
     stroke: { width: 2, curve: 'smooth' },
     markers: { size: 5, hover: { size: 7 } },
     ...sharedAxes(
-      weightedPercentPoints.value.map(p => p.x),
+      weightedTrend.value.series[0]?.data.map(p => p.x) ?? [],
       -35,
       70,
       faPercentFormatter
@@ -340,10 +358,11 @@ const respondentScores = computed(() =>
 
 /**
  * نمودار ۳ – حالت تجمیعی: میانگین نمره‌ی هر دسته across همه‌ی گزارش‌های
- * منطبق با فیلترهای چندانتخابی (تولتیپ: میانگین + وزن گره + شمارنده‌ها).
+ * منطبق (شامل حالت «همه») – به‌جز تک‌مشتری + تک‌تاریخ که نمای تک‌پاسخ
+ * جدیدترین گزارش می‌ماند (تولتیپ: میانگین + وزن گره + شمارنده‌ها).
  */
 const categoryAverages = computed(() =>
-  isAggregateMode.value
+  isCategoryAggregate.value
     ? buildCategoryAverages(filteredReports.value, meta.value, selectedCategories.value)
     : null
 )

@@ -257,139 +257,126 @@ export function buildWeightedTrend(reports: SurveyReport[]): WeightedTrendResult
   }
 }
 
-/* ============ حالت تجمیعی چندانتخابی: میانگین حسابی روزانه ============ */
+/* ============ چند-سری روند: یک خط مستقل به‌ازای هر مشتری ============ */
 
-/** یک برش زمانی روزانه: میانگین حسابی مقادیر گزارش‌های همان روز */
-export interface DailyAveragePoint {
-  /** تاریخ میلادی YYYY-MM-DD برش (گزارش‌های بی‌تاریخ: «—») */
-  date: string
-  /** برچسب نمایشی شمسی برش (formatJalaliDate) */
-  label: string
-  /** میانگین حسابی مقادیر آن روز */
-  value: number
-  /** تعداد مقادیر واردشده در میانگین */
-  count: number
-}
-
-/**
- * گروه‌بندی گزارش‌های مرتب‌شده بر حسب روز (بخش تاریخ submitted_at) و
- * محاسبه‌ی «میانگین حسابی» خروجی metric در هر برش.
- * گزارش‌های با metric نامعتبر (null) از میانگین حذف می‌شوند – هرگز صفر
- * فرض نمی‌شوند؛ ترتیب برش‌ها صعودی زمانی است.
- */
-export function averageReportsByDate(
-  reports: SurveyReport[],
-  metric: (report: SurveyReport) => number | null
-): DailyAveragePoint[] {
-  const buckets = new Map<string, number[]>()
+/** مشتریان به ترتیب اولین حضور در گزارش‌های مرتب‌شده‌ی زمانی */
+function customerOrder(reports: SurveyReport[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
   for (const report of sortReportsChronologically(reports)) {
-    const value = metric(report)
-    if (value === null || !isValidNumber(value)) continue
-    const key = reportDatePart(report) ?? '—'
-    const list = buckets.get(key) ?? []
-    list.push(value)
-    buckets.set(key, list)
+    const name = reportProviderName(report)
+    if (!seen.has(name)) {
+      seen.add(name)
+      out.push(name)
+    }
   }
-  return [...buckets.entries()].map(([date, values]) => ({
-    date,
-    label: date === '—' ? '—' : formatJalaliDate(date),
-    value: values.reduce((sum, v) => sum + v, 0) / values.length,
-    count: values.length
-  }))
+  return out
+}
+
+/** برچسب‌های زمانی متحد (اجتماع زمان‌های پاسخ) به ترتیب زمانی – بستر هم‌ترازی سری‌ها */
+function sharedTimeLabels(reports: SurveyReport[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const report of sortReportsChronologically(reports)) {
+    const x = report.submitted_at ? formatFaDateTime(report.submitted_at) : '—'
+    if (!seen.has(x)) {
+      seen.add(x)
+      out.push(x)
+    }
+  }
+  return out
+}
+
+/** میانگین مقادیر یک سلول (چند پاسخ با برچسب زمانی یکسان) یا null */
+function meanOfSlots(list: number[] | undefined): number | null {
+  if (!list || list.length === 0) return null
+  return list.reduce((sum, v) => sum + v, 0) / list.length
 }
 
 /**
- * روند رضایت (وزنی) در حالت تجمیعی چندانتخابی:
- * میانگین حسابی «امتیاز وزنی» گزارش‌های هم‌روز ← یک نقطه به‌ازای هر برش
- * روزانه (برچسب شمسی). درصد نهایی بعداً با همان تبدیل مشترک
- * satisfactionPercent روی میانگین اعمال می‌شود.
+ * «روند رضایت کلی عملکرد» با چند مشتری انتخابی:
+ * به‌جای ادغام/میانگین، هر مشتری خط روند مستقل خود را دارد (نقاط پاسخ
+ * خودش در طول زمان). اگر فقط یک سؤال rating در کل مجموعه باشد نام سری
+ * همان نام مشتری است؛ در غیر این صورت «مشتری — متن سؤال».
+ * سری‌ها روی برچسب‌های زمانی متحد هم‌تراز می‌شوند و بدون داده null
+ * می‌گیرند (شکاف واقعی، نه صفر).
  */
-export function buildWeightedTrendAveraged(reports: SurveyReport[]): WeightedTrendResult {
-  let evaluated = 0
-  const metric = (report: SurveyReport): number | null => {
-    const score = reportWeightedScore(report)
-    if (score !== null) evaluated++
-    return score
-  }
-  const points = averageReportsByDate(reports, metric)
-  const data = points.map(p => ({ x: p.label, y: p.value }))
-  const total = sortReportsChronologically(reports).length
-  return {
-    series: data.length ? [{ name: 'امتیاز وزنی', data }] : [],
-    pointCount: data.length,
-    skippedReports: total - evaluated
-  }
-}
-
-/**
- * نمودار «روند رضایت کلی عملکرد» در حالت تجمیعی چندانتخابی:
- * برش‌های روزانه از پاسخ‌های rating ساخته می‌شود و مقدار هر سری در هر
- * برش = میانگین حسابی امتیازهای همان سؤال در آن روز. سری‌های فاقد داده
- * در یک برش null می‌گیرند (شکاف واقعی، نه صفر).
- */
-export function buildRatingTrendAveraged(
+export function buildRatingTrendMultiCustomer(
   reports: SurveyReport[],
   meta: ReturnType<typeof buildQuestionMeta>
 ): RatingTrendResult {
   const sorted = sortReportsChronologically(reports)
-  const sliceKeys: string[] = []
-  const sliceIndex = new Map<string, number>()
-  interface QuestionBucket {
-    name: string
-    buckets: Map<number, number[]>
-    ranges: Set<string>
-  }
-  const byQuestion = new Map<string, QuestionBucket>()
+  const labels = sharedTimeLabels(reports)
+  const customers = customerOrder(reports)
 
+  // سؤال‌های rating به ترتیب اولین حضور
+  const questionOrder: Array<{ id: string; name: string }> = []
+  const seenQuestions = new Set<string>()
   for (const report of sorted) {
-    const day = reportDatePart(report)
     for (const answer of report.answers ?? []) {
       if (answer.question_type !== 'rating') continue
       if (!isValidNumber(answer.number)) continue
-      const key = day ?? '—'
-      if (!sliceIndex.has(key)) {
-        sliceIndex.set(key, sliceKeys.length)
-        sliceKeys.push(key)
-      }
       const qid = String(answer.question_id ?? 'بدون شناسه')
-      if (!byQuestion.has(qid)) {
-        const m = answer.question_id ? meta.byQuestionId.get(answer.question_id) : undefined
-        const ranges = new Set<string>()
-        if (m && m.rangeMin !== null && m.rangeMax !== null) {
-          ranges.add(`${m.rangeMin}..${m.rangeMax}`)
-        }
-        byQuestion.set(qid, {
-          name: answer.question_text?.trim() || `سؤال ${qid}`,
-          buckets: new Map(),
-          ranges
+      if (!seenQuestions.has(qid)) {
+        seenQuestions.add(qid)
+        questionOrder.push({
+          id: qid,
+          name: answer.question_text?.trim() || `سؤال ${qid}`
         })
       }
-      const q = byQuestion.get(qid)!
-      const idx = sliceIndex.get(key)!
-      const list = q.buckets.get(idx) ?? []
+    }
+  }
+  const singleQuestion = questionOrder.length === 1
+
+  // سلوت مقادیر: کلید «مشتری|سؤال|برچسب زمانی» (میانگین چند پاسخ هم‌زمان)
+  const slots = new Map<string, number[]>()
+  for (const report of sorted) {
+    const x = report.submitted_at ? formatFaDateTime(report.submitted_at) : '—'
+    const customer = reportProviderName(report)
+    for (const answer of report.answers ?? []) {
+      if (answer.question_type !== 'rating') continue
+      if (!isValidNumber(answer.number)) continue
+      const qid = String(answer.question_id ?? 'بدون شناسه')
+      const key = `${customer}|${qid}|${x}`
+      const list = slots.get(key) ?? []
       list.push(answer.number)
-      q.buckets.set(idx, list)
+      slots.set(key, list)
     }
   }
 
-  const series: TrendSeries[] = [...byQuestion.values()].map(q => ({
-    name: q.name,
-    data: sliceKeys.map((key, idx) => {
-      const list = q.buckets.get(idx)
-      return {
-        x: key === '—' ? '—' : formatJalaliDate(key),
-        y: list ? list.reduce((sum, v) => sum + v, 0) / list.length : null
+  // بازه‌ی مقیاس – ثبت یک‌باره به‌ازای هر سؤال (مطابق حالت تکی)
+  const ranges = new Set<string>()
+  const rangeSeen = new Set<string>()
+  for (const report of sorted) {
+    for (const answer of report.answers ?? []) {
+      if (answer.question_type !== 'rating') continue
+      const qid = String(answer.question_id ?? 'بدون شناسه')
+      if (rangeSeen.has(qid)) continue
+      rangeSeen.add(qid)
+      const m = answer.question_id ? meta.byQuestionId.get(answer.question_id) : undefined
+      if (m && m.rangeMin !== null && m.rangeMax !== null) {
+        ranges.add(`${m.rangeMin}..${m.rangeMax}`)
       }
-    })
-  }))
-
-  const allRanges = new Set<string>()
-  for (const q of byQuestion.values()) {
-    for (const r of q.ranges) allRanges.add(r)
+    }
   }
+
+  const series: TrendSeries[] = []
+  for (const customer of customers) {
+    for (const question of questionOrder) {
+      const cell = (label: string): number | null =>
+        meanOfSlots(slots.get(`${customer}|${question.id}|${label}`))
+      // فقط سری‌هایی که این مشتری واقعاً داده‌ای برای آن‌ها دارد
+      if (!labels.some(label => slots.has(`${customer}|${question.id}|${label}`))) continue
+      series.push({
+        name: singleQuestion ? customer : `${customer} — ${question.name}`,
+        data: labels.map(label => ({ x: label, y: cell(label) }))
+      })
+    }
+  }
+
   let range: { min: number; max: number } | null = null
-  if (allRanges.size === 1) {
-    const [min, max] = allRanges.values().next().value!.split('..').map(Number)
+  if (ranges.size === 1) {
+    const [min, max] = ranges.values().next().value!.split('..').map(Number)
     range = { min, max }
   }
 
@@ -400,6 +387,52 @@ export function buildRatingTrendAveraged(
       (acc, s) => acc + s.data.filter(p => p.y !== null).length,
       0
     )
+  }
+}
+
+/**
+ * «روند رضایت» (امتیاز وزنی) با چند مشتری انتخابی:
+ * هر مشتری یک سری مستقل؛ مقدار هر نقطه = امتیاز وزنی همان گزارش
+ * (میانگین در برخورد برچسب زمانی یکسان). درصد نهایی در کامپوننت با
+ * همان تبدیل مشترک satisfactionPercent اعمال می‌شود.
+ */
+export function buildWeightedTrendMultiCustomer(reports: SurveyReport[]): WeightedTrendResult {
+  const sorted = sortReportsChronologically(reports)
+  const labels = sharedTimeLabels(reports)
+  const customers = customerOrder(reports)
+
+  const slots = new Map<string, number[]>()
+  let evaluated = 0
+  for (const report of sorted) {
+    const score = reportWeightedScore(report)
+    if (score === null) continue
+    evaluated++
+    const x = report.submitted_at ? formatFaDateTime(report.submitted_at) : '—'
+    const key = `${reportProviderName(report)}|${x}`
+    const list = slots.get(key) ?? []
+    list.push(score)
+    slots.set(key, list)
+  }
+
+  const series: TrendSeries[] = []
+  for (const customer of customers) {
+    if (!labels.some(label => slots.has(`${customer}|${label}`))) continue
+    series.push({
+      name: customer,
+      data: labels.map(label => ({
+        x: label,
+        y: meanOfSlots(slots.get(`${customer}|${label}`))
+      }))
+    })
+  }
+
+  return {
+    series,
+    pointCount: series.reduce(
+      (acc, s) => acc + s.data.filter(p => p.y !== null).length,
+      0
+    ),
+    skippedReports: sorted.length - evaluated
   }
 }
 

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 /**
  * کارت «راه‌های ارتباطی با ما» – صفحه‌ی ورود نظرسنجی.
- * معماری آکاردئونی: هر دو بخش («راه‌های ارتباطی با ما» و «دپارتمان فروش»)
- * به‌صورت جمع‌شونده‌ی compact و به‌طور پیش‌فرض بسته رندر می‌شوند تا صفحه‌ی
- * ورود بدون اسکرول عمودی در دید اول جا شود:
- *  - «سایت شرکت» خودش یک آیتم جمع‌شونده است و با کلیک، نشانی باز می‌شود.
- *  - اعضای دپارتمان فروش زیر جمع‌شونده‌ی «سایر اعضای دپارتمان فروش»
- *    گروه شده‌اند و با کلیک روی هر عضو، مشخصات او باز می‌شود.
+ * معماری آکاردئونی یکسان برای «همه‌ی» کانال‌ها (سایت، ایمیل، لینکدین،
+ * اینستاگرام، دبیرخانه، صدای مشتری): هر کانال یک جمع‌شونده‌ی compact
+ * است و با کلیک، نشانی/لینک خود را باز می‌کند (و با کلیک دوباره بسته
+ * می‌شود) تا صفحه‌ی ورود بدون اسکرول عمودی در دید اول جا شود.
+ * بخش «دپارتمان فروش» نیز جمع‌شونده است؛ اعضا زیر جمع‌شونده‌ی «سایر
+ * اعضای دپارتمان فروش» گروه شده‌اند و با کلیک روی هر عضو، مشخصات او
+ * باز می‌شود.
  * آیکون‌ها به‌صورت SVG درون‌خطی (stroke = currentColor) رندر می‌شوند تا
  * هیچ وابستگی به مسیر فایل خارجی وجود نداشته باشد.
  * شماره‌های همراه شخصی به‌کلی حذف شده‌اند؛ فقط شماره‌های داخلی/دفتری.
@@ -16,8 +17,9 @@ import { ref } from 'vue'
 interface ContactChannel {
   id: string
   label: string
+  /** مقدار واقعی که با بازشدن آکاردئون نمایش داده می‌شود */
   value: string
-  href?: string
+  href: string
   /** کلید آیکون درون‌خطی */
   icon: 'globe' | 'email' | 'linkedin' | 'instagram' | 'phone' | 'headset'
   note?: string
@@ -25,13 +27,15 @@ interface ContactChannel {
   ltr?: boolean
 }
 
-interface SalesMember {
-  name: string
-  internal: string
-  internalTel: string
-}
-
 const channels: ContactChannel[] = [
+  {
+    id: 'site',
+    label: 'سایت شرکت',
+    value: 'sisco.midhco.ir',
+    href: 'https://sisco.midhco.ir',
+    icon: 'globe',
+    ltr: true
+  },
   {
     id: 'email',
     label: 'ایمیل فروش',
@@ -73,11 +77,10 @@ const channels: ContactChannel[] = [
   }
 ]
 
-/** دامنه‌ی رسمی شرکت – آیتم جمع‌شونده‌ی «سایت شرکت» */
-const website = {
-  label: 'سایت شرکت',
-  value: 'sisco.midhco.ir',
-  href: 'https://sisco.midhco.ir'
+interface SalesMember {
+  name: string
+  internal: string
+  internalTel: string
 }
 
 const salesChief = {
@@ -100,8 +103,13 @@ const salesMembers: SalesMember[] = [
 
 /** بخش «راه‌های ارتباطی با ما» – پیش‌فرض بسته */
 const isChannelsOpen = ref(false)
-/** آیتم جمع‌شونده‌ی «سایت شرکت» */
-const isWebsiteOpen = ref(false)
+/** کانال بازِ فعلی (همه‌ی کانال‌ها الگوی یکسان جمع‌شونده دارند) */
+const expandedChannel = ref<string | null>(null)
+
+function toggleChannel(id: string) {
+  expandedChannel.value = expandedChannel.value === id ? null : id
+}
+
 /** بخش «دپارتمان فروش» – پیش‌فرض بسته */
 const isSalesOpen = ref(false)
 /** جمع‌شونده‌ی «سایر اعضای دپارتمان فروش» */
@@ -141,100 +149,85 @@ function toggleMember(name: string) {
     </button>
 
     <div v-if="isChannelsOpen" class="border-t border-slate-200 px-5 py-5 dark:border-slate-800 sm:px-8">
-      <!-- آیتم جمع‌شونده‌ی «سایت شرکت» + بقیه‌ی کانال‌ها -->
+      <!-- همه‌ی کانال‌ها: آیتم جمع‌شونده با الگوی یکسان (مثل «سایت شرکت») -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- سایت شرکت: آیتم جمع‌شونده – با کلیک، نشانی باز می‌شود -->
-        <div class="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div
+          v-for="channel in channels"
+          :key="channel.id"
+          class="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+        >
+          <!-- سرآیند جمع‌شونده‌ی کانال -->
           <button
             type="button"
             class="group flex w-full items-center gap-3.5 p-4 text-right"
-            :aria-expanded="isWebsiteOpen"
-            @click="isWebsiteOpen = !isWebsiteOpen"
+            :aria-expanded="expandedChannel === channel.id"
+            @click="toggleChannel(channel.id)"
           >
-            <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 text-green-700 dark:border-slate-700 dark:bg-slate-800 dark:text-green-400">
-              <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 text-green-700 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-green-400">
+              <!-- آیکون‌های درون‌خطی -->
+              <svg v-if="channel.icon === 'globe'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                 <path d="M2 12h20" />
               </svg>
+              <svg v-else-if="channel.icon === 'email'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              <svg v-else-if="channel.icon === 'linkedin'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4V8h4v1.5" />
+                <rect width="4" height="12" x="2" y="9" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+              <svg v-else-if="channel.icon === 'instagram'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <path d="M17.5 6.5h.01" />
+              </svg>
+              <svg v-else-if="channel.icon === 'phone'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+              </svg>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="mb-0.5 block text-base font-semibold text-slate-600 dark:text-slate-300">{{ website.label }}</span>
-              <span class="block truncate text-sm font-bold text-gray-900 dark:text-white">{{ isWebsiteOpen ? 'برای مشاهده کلیک کنید' : 'بازکردن نشانی' }}</span>
+              <span class="mb-0.5 block text-base font-semibold text-slate-600 dark:text-slate-300">{{ channel.label }}</span>
+              <span
+                class="block truncate text-sm font-bold transition-colors"
+                :class="expandedChannel === channel.id
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-gray-900 group-hover:text-green-700 dark:text-white dark:group-hover:text-green-400'"
+              >
+                {{ expandedChannel === channel.id ? 'بستن' : 'برای مشاهده کلیک کنید' }}
+              </span>
             </span>
-            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="isWebsiteOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform" :class="expandedChannel === channel.id ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
-          <a
-            v-if="isWebsiteOpen"
-            :href="website.href"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex items-center gap-2 border-t border-slate-200 px-4 py-3 text-sm font-bold text-green-700 transition-colors hover:bg-green-50 hover:text-green-800 dark:border-slate-800 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:text-green-300"
-            dir="ltr"
-          >
-            <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M15 3h6v6" />
-              <path d="M10 14 21 3" />
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            </svg>
-            {{ website.value }}
-          </a>
-        </div>
 
-        <!-- بقیه‌ی کانال‌ها -->
-        <component
-          :is="channel.href ? 'a' : 'div'"
-          v-for="channel in channels"
-          :key="channel.id"
-          :href="channel.href"
-          :target="channel.href?.startsWith('http') ? '_blank' : undefined"
-          :rel="channel.href?.startsWith('http') ? 'noopener noreferrer' : undefined"
-          class="group flex items-center gap-3.5 rounded-lg border border-slate-200 bg-white p-4 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-600/25 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800/60"
-        >
-          <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 text-green-700 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-green-400">
-            <!-- آیکون‌های درون‌خطی -->
-            <svg v-if="channel.icon === 'globe'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-              <path d="M2 12h20" />
-            </svg>
-            <svg v-else-if="channel.icon === 'email'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-            <svg v-else-if="channel.icon === 'linkedin'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4V8h4v1.5" />
-              <rect width="4" height="12" x="2" y="9" />
-              <circle cx="4" cy="4" r="2" />
-            </svg>
-            <svg v-else-if="channel.icon === 'instagram'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-              <path d="M17.5 6.5h.01" />
-            </svg>
-            <svg v-else-if="channel.icon === 'phone'" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-            <svg v-else viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
-            </svg>
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="mb-0.5 block text-base font-semibold text-slate-600 dark:text-slate-300">{{ channel.label }}</span>
-            <span
-              class="block truncate text-sm font-bold text-gray-900 transition-colors group-hover:text-green-700 dark:text-white dark:group-hover:text-green-400"
+          <!-- بدنه‌ی بازشده: نشانی/لینک کانال -->
+          <div v-if="expandedChannel === channel.id" class="border-t border-slate-200 dark:border-slate-800">
+            <a
+              :href="channel.href"
+              :target="channel.href.startsWith('http') ? '_blank' : undefined"
+              :rel="channel.href.startsWith('http') ? 'noopener noreferrer' : undefined"
+              class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-green-700 transition-colors hover:bg-green-50 hover:text-green-800 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:text-green-300"
               :dir="channel.ltr ? 'ltr' : undefined"
-              :class="channel.ltr ? 'text-left' : ''"
             >
-              {{ channel.value }}
-            </span>
-            <span v-if="channel.note" class="mt-0.5 block text-[10px] leading-4 text-slate-400">
+              <svg viewBox="0 0 24 24" class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M15 3h6v6" />
+                <path d="M10 14 21 3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              </svg>
+              <span class="break-all">{{ channel.value }}</span>
+            </a>
+            <p v-if="channel.note" class="border-t border-slate-100 px-4 py-2 text-[11px] leading-5 text-slate-400 dark:border-slate-800">
               {{ channel.note }}
-            </span>
-          </span>
-        </component>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
