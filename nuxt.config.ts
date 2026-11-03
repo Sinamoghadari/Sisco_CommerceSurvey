@@ -117,6 +117,17 @@ export default defineNuxtConfig({
       // mapbox config
       mapboxToken: '', // set it via NUXT_PUBLIC_MAPBOX_TOKEN env
       siteUrl: '', // set it via NUXT_PUBLIC_SITE_URL
+
+      // سرویس توزیع نظرسنجی (Survey Distribution API)
+      // قابل بازنویسی با متغیر محیطی NUXT_PUBLIC_SURVEY_API_URL
+      surveyApiUrl: 'https://portal.sirjansteel.com/api/SurveyDistribution/Access',
+
+      // نقطه‌ی ثبت پاسخ‌های نظرسنجی
+      // قابل بازنویسی با متغیر محیطی NUXT_PUBLIC_SURVEY_SUBMIT_URL
+      surveySubmitUrl: 'https://portal.sirjansteel.com/api/SurveyDistribution/Submit',
+
+      // گزارش نظرسنجی راهبردی از طریق کلاینت مرکزی useApi فراخوانی می‌شود
+      // (مسیر نسبی /GetStrategySurveyReport روی base مرکزی سوار می‌گردد).
     },
   },
 

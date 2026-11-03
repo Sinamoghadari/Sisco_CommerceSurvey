@@ -1,0 +1,4 @@
+<Project>
+  <!-- CI invokes build/ErgonomyCatchRule.ps1 as ERGONOMY001. Keeping this opt-in avoids
+       requiring PowerShell on developer machines while making the policy enforceable in CI. -->
+</Project>
