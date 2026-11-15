@@ -6,7 +6,7 @@ import type { OrganizationRecord } from '~/composables/Sisco_WorkExperiences/use
 
 // تنظیمات متای صفحه
 definePageMeta({
-  layout: 'sisco-work-experiences',
+  layout: false,
   title: 'سوابق کاری پرسنل',
 })
 
@@ -45,7 +45,7 @@ function removeOrganization(id: string) {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-6xl">
+  <div class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
     <!-- سرتیتر صفحه -->
     <div class="mb-6 flex items-center gap-3">
       <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/25">

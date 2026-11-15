@@ -58,6 +58,27 @@ defineEmits<{
               >
                 اطلاعات تماس سازمان: {{ organization.contact }}
               </p>
+              <p class="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-600 dark:text-muted-300">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="h-3.5 w-3.5 flex-shrink-0 text-muted-400 dark:text-muted-500"
+                >
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                <span class="flex-shrink-0 font-medium">فایل بیمه سازمان:</span>
+                <span
+                  class="truncate text-muted-500 dark:text-muted-400"
+                  :title="`${organization.insuranceFileName} (فایل انتخاب‌شده، بارگذاری‌نشده)`"
+                >
+                  {{ organization.insuranceFileName }}
+                </span>
+              </p>
             </div>
           </div>
 
@@ -78,7 +99,7 @@ defineEmits<{
         </header>
 
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[760px] border-collapse text-right">
+          <table class="w-full min-w-[680px] border-collapse text-right">
             <caption class="sr-only">
               سوابق کاری سازمان {{ organization.name }}
             </caption>
@@ -95,9 +116,6 @@ defineEmits<{
                 </th>
                 <th scope="col" class="px-4 py-2.5 text-center text-xs font-black text-muted-600 dark:text-muted-300">
                   سابقه بیمه(روز)
-                </th>
-                <th scope="col" class="px-4 py-2.5 text-center text-xs font-black text-muted-600 dark:text-muted-300">
-                  فایل بیمه
                 </th>
                 <th scope="col" class="px-4 py-2.5 text-center text-xs font-black text-muted-600 dark:text-muted-300">
                   توضیحات
@@ -121,28 +139,6 @@ defineEmits<{
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-center text-sm text-muted-800 dark:text-muted-100">
                   {{ experience.insuranceDays.toLocaleString('fa-IR') }}
-                </td>
-                <td class="px-4 py-2.5 text-center text-xs text-muted-600 dark:text-muted-300">
-                  <span
-                    v-if="experience.insuranceFileName"
-                    class="inline-flex max-w-[12rem] items-center gap-1.5"
-                    :title="`${experience.insuranceFileName} (فایل انتخاب‌شده، بارگذاری‌نشده)`"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="h-3.5 w-3.5 flex-shrink-0"
-                    >
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                    <span class="truncate">{{ experience.insuranceFileName }}</span>
-                  </span>
-                  <span v-else class="text-muted-400 dark:text-muted-500">—</span>
                 </td>
                 <td class="max-w-[15rem] px-4 py-2.5 text-center text-xs leading-5 text-muted-600 dark:text-muted-300">
                   <span v-if="experience.description" class="line-clamp-2" :title="experience.description">

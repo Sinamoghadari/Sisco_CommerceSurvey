@@ -13,7 +13,7 @@ defineEmits<{
 <template>
   <div>
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[900px] border-collapse text-right">
+      <table class="w-full min-w-[960px] border-collapse text-right">
         <caption class="sr-only">
           لیست اطلاعات تحصیلی ثبت‌شده در این صفحه
         </caption>
@@ -21,6 +21,9 @@ defineEmits<{
           <tr>
             <th scope="col" class="px-4 py-3 text-center text-xs font-black text-muted-600 dark:text-muted-300">
               مقطع تحصیلی
+            </th>
+            <th scope="col" class="px-4 py-3 text-center text-xs font-black text-muted-600 dark:text-muted-300">
+              شهر تحصیل
             </th>
             <th scope="col" class="px-4 py-3 text-center text-xs font-black text-muted-600 dark:text-muted-300">
               رشته تحصیلی
@@ -48,7 +51,7 @@ defineEmits<{
 
         <tbody class="divide-y divide-muted-200 bg-white dark:divide-muted-800 dark:bg-muted-900">
           <tr v-if="records.length === 0">
-            <td colspan="8" class="px-4 py-12 text-center text-sm text-muted-400 dark:text-muted-500">
+            <td colspan="9" class="px-4 py-12 text-center text-sm text-muted-400 dark:text-muted-500">
               هنوز اطلاعات تحصیلی ثبت نشده است. برای افزودن، از دکمه «افزودن اطلاعات تحصیلی» استفاده کنید.
             </td>
           </tr>
@@ -62,6 +65,9 @@ defineEmits<{
               {{ record.level }}
             </td>
             <td class="px-4 py-3 text-center text-sm text-muted-800 dark:text-muted-100">
+              {{ record.city }}
+            </td>
+            <td class="px-4 py-3 text-center text-sm text-muted-800 dark:text-muted-100">
               {{ record.field }}
             </td>
             <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-muted-800 dark:text-muted-100">
@@ -71,7 +77,8 @@ defineEmits<{
               {{ record.institution }}
             </td>
             <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-muted-800 dark:text-muted-100" dir="ltr">
-              {{ record.gpa }}
+              <span v-if="record.gpa">{{ record.gpa }}</span>
+              <span v-else class="text-muted-400 dark:text-muted-500">—</span>
             </td>
             <td class="px-4 py-3 text-center text-xs text-muted-600 dark:text-muted-300">
               <span

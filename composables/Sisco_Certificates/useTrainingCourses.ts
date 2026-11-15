@@ -62,6 +62,28 @@ export function toDurationHours(value: string): number {
 }
 
 /* -------------------------------------------------------------------------- */
+/* مقایسه‌ی تاریخ‌ها                                                           */
+/* -------------------------------------------------------------------------- */
+
+/** زمان ابتدای روز؛ ساعت بخشی از مقایسه‌ی تاریخ نیست */
+function startOfDayTime(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+}
+
+/** آیا تاریخ اول پیش از تاریخ دوم است؟ (بر اساس تاریخ‌های تجزیه‌شده، نه رشته) */
+export function isDateBefore(earlier: Date, later: Date): boolean {
+  return startOfDayTime(earlier) < startOfDayTime(later)
+}
+
+/**
+ * آیا تاریخ پایان دوره پیش از تاریخ شروع دوره است؟
+ * برابری تاریخ‌ها مجاز است و فقط پایانِ زودتر نامعتبر شمرده می‌شود.
+ */
+export function isEndDateBeforeStartDate(startDate: Date, endDate: Date): boolean {
+  return isDateBefore(endDate, startDate)
+}
+
+/* -------------------------------------------------------------------------- */
 /* پیوست گواهینامه                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -83,6 +105,9 @@ export const CERTIFICATE_ACCEPT = [
   'image/png',
   'image/jpeg',
 ].join(',')
+
+/** پیام خطای نبودِ فایل گواهینامه؛ این فایل الزامی است */
+export const REQUIRED_CERTIFICATE_MESSAGE = 'انتخاب فایل گواهینامه الزامی است.'
 
 /** پیام خطای اعتبارسنجی فایل یا null در صورت معتبر بودن */
 export function validateCertificateFile(file: File): string | null {

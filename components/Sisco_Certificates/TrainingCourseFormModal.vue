@@ -5,8 +5,10 @@ import 'v-calendars/dist/style.css'
 import FormFieldError from '~/components/Sisco_Certificates/FormFieldError.vue'
 import {
   CERTIFICATE_ACCEPT,
+  REQUIRED_CERTIFICATE_MESSAGE,
   TRAINING_MODES,
   createTrainingCourseId,
+  isEndDateBeforeStartDate,
   isValidDurationHours,
   toDurationHours,
   toLatinDigits,
@@ -74,7 +76,7 @@ const validationErrors = computed<Record<FieldKey, string>>(() => {
     mode: '',
     score: '',
     description: '',
-    certificate: certificateError.value,
+    certificate: certificateError.value || (certificate.value ? '' : REQUIRED_CERTIFICATE_MESSAGE),
   }
 
   if (!form.title.trim()) {
@@ -98,6 +100,10 @@ const validationErrors = computed<Record<FieldKey, string>>(() => {
 
   if (!form.endDate) {
     errors.endDate = 'تاریخ پایان دوره الزامی است.'
+  }
+  else if (form.startDate && isEndDateBeforeStartDate(form.startDate, form.endDate)) {
+    // برابری تاریخ شروع و پایان مجاز است؛ فقط پایانِ زودتر نامعتبر است.
+    errors.endDate = 'تاریخ پایان دوره نباید پیش از تاریخ شروع دوره باشد.'
   }
 
   if (!form.mode) {
@@ -599,12 +605,14 @@ onBeforeUnmount(() => {
               <!-- فایل گواهینامه -->
               <div class="md:col-span-2">
                 <label for="training-certificate" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
-                  فایل گواهینامه
+                  فایل گواهینامه <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
 
                 <div
-                  class="rounded-lg border border-dashed border-muted-300 p-4 dark:border-muted-700"
-                  :class="certificateError ? 'border-red-400 dark:border-red-500/70' : ''"
+                  class="rounded-lg border border-dashed p-4"
+                  :class="errorFor('certificate')
+                    ? 'border-red-400 dark:border-red-500/70'
+                    : 'border-muted-300 dark:border-muted-700'"
                 >
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <label
@@ -632,8 +640,8 @@ onBeforeUnmount(() => {
                       type="file"
                       class="sr-only"
                       :accept="CERTIFICATE_ACCEPT"
-                      :aria-invalid="Boolean(certificateError)"
-                      :aria-describedby="certificateError ? 'training-certificate-error' : undefined"
+                      :aria-invalid="Boolean(errorFor('certificate'))"
+                      :aria-describedby="errorFor('certificate') ? 'training-certificate-error' : undefined"
                       @change="onCertificateChange"
                     >
 
@@ -661,8 +669,8 @@ onBeforeUnmount(() => {
                   </div>
 
                   <p class="mt-2 text-xs leading-5 text-muted-500 dark:text-muted-400">
-                    تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب است. فایل فقط نامش در همین
-                    صفحه نمایش داده می‌شود و بارگذاری نخواهد شد.
+                    فایل گواهینامه الزامی است؛ تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب
+                    است. فایل فقط نامش در همین صفحه نمایش داده می‌شود و بارگذاری نخواهد شد.
                   </p>
                 </div>
 

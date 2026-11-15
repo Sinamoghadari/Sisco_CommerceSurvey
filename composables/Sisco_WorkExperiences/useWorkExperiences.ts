@@ -4,8 +4,8 @@
  *
  * مدل داده:
  *   سازمان (والد) ──► چند سابقه‌ی کاری (فرزند)
- *   فیلدهای سازمان (نام، اطلاعات تماس) در سطح سازمان نگهداری می‌شوند و
- *   در سوابق کاری تکرار نمی‌شوند.
+ *   فیلدهای سازمان (نام، اطلاعات تماس، فایل بیمه) در سطح سازمان نگهداری می‌شوند و
+ *   در سوابق کاری تکرار نمی‌شوند. هر سازمان دقیقاً یک فایل بیمه دارد.
  */
 
 /** یک سابقه‌ی کاری تکمیل‌شده که در فهرست صفحه نمایش داده می‌شود */
@@ -21,8 +21,6 @@ export interface WorkExperienceRecord {
   insuranceDays: number
   /** توضیحات */
   description: string
-  /** نام فایل بیمه؛ فایل بارگذاری نمی‌شود و فقط نام آن نمایش داده می‌شود */
-  insuranceFileName: string | null
 }
 
 /** سازمان به همراه سوابق کاری فرزند */
@@ -32,6 +30,11 @@ export interface OrganizationRecord {
   name: string
   /** اطلاعات تماس سازمان */
   contact: string
+  /**
+   * نام فایل بیمه‌ی سازمان (یک فایل برای همه‌ی سوابق کاری این سازمان).
+   * فایل بارگذاری نمی‌شود و فقط نام آن نمایش داده می‌شود.
+   */
+  insuranceFileName: string
   experiences: WorkExperienceRecord[]
 }
 
@@ -43,7 +46,6 @@ export interface WorkExperienceDraft {
   position: string
   insuranceDays: string
   description: string
-  insuranceFileName: string | null
 }
 
 /** خطاهای یک سابقه‌ی کاری در فرم */
@@ -74,7 +76,6 @@ export function createExperienceDraft(): WorkExperienceDraft {
     position: '',
     insuranceDays: '',
     description: '',
-    insuranceFileName: null,
   }
 }
 
@@ -161,7 +162,7 @@ export function validateExperienceDraft(draft: WorkExperienceDraft): WorkExperie
   return errors
 }
 
-/** آیا سابقه‌ی کاری خطایی دارد؟ (خطای فایل جداگانه بررسی می‌شود) */
+/** آیا سابقه‌ی کاری خطایی دارد؟ (فایل بیمه در سطح سازمان بررسی می‌شود) */
 export function hasExperienceError(draft: WorkExperienceDraft): boolean {
   return Object.values(validateExperienceDraft(draft)).some(Boolean)
 }
@@ -177,6 +178,9 @@ export const ALLOWED_INSURANCE_MIME_TYPES = [
   'image/png',
   'image/jpeg',
 ] as const
+
+/** پیام خطای نبودِ فایل بیمه؛ این فایل در سطح سازمان الزامی است */
+export const REQUIRED_INSURANCE_FILE_MESSAGE = 'انتخاب فایل بیمه الزامی است.'
 
 /** مقدار ویژگی accept برای input فایل بیمه */
 export const INSURANCE_FILE_ACCEPT = [

@@ -5,6 +5,7 @@ import 'v-calendars/dist/style.css'
 import FormFieldError from '~/components/Sisco_WorkExperiences/FormFieldError.vue'
 import {
   INSURANCE_FILE_ACCEPT,
+  REQUIRED_INSURANCE_FILE_MESSAGE,
   createEntityId,
   createExperienceDraft,
   hasExperienceError,
@@ -21,6 +22,7 @@ import {
 /**
  * مودال «افزودن سابقه کاری»
  * ساختار والد/فرزند: یک سازمان با چند سابقه‌ی کاری.
+ * فایل بیمه در سطح سازمان است و میان همه‌ی سوابق کاری همان سازمان مشترک است.
  * فقط فرم و اعتبارسنجی سمت کلاینت؛ هیچ فایلی بارگذاری و هیچ داده‌ای ارسال نمی‌شود.
  */
 const emit = defineEmits<{
@@ -28,7 +30,8 @@ const emit = defineEmits<{
   (e: 'submit', record: OrganizationRecord): void
 }>()
 
-type DraftFieldKey = 'fromDate' | 'toDate' | 'position' | 'insuranceDays' | 'insuranceFile'
+type DraftFieldKey = 'fromDate' | 'toDate' | 'position' | 'insuranceDays'
+type OrganizationFieldKey = 'name' | 'insuranceFileName'
 
 /** الگوی تاریخ، هم‌سو با الگوی date-input موجود در پروژه */
 const datePickerMasks = { input: 'YYYY-MM-DD' }
@@ -36,13 +39,18 @@ const datePickerMasks = { input: 'YYYY-MM-DD' }
 const organization = reactive({
   name: '',
   contact: '',
+  /** یک فایل بیمه برای کل سازمان (همه‌ی سوابق کاری) */
+  insuranceFileName: null as string | null,
+})
+
+const insuranceFileError = ref('')
+const attempted = ref(false)
+const organizationTouched = reactive<Record<OrganizationFieldKey, boolean>>({
+  name: false,
+  insuranceFileName: false,
 })
 
 const experiences = ref<WorkExperienceDraft[]>([createExperienceDraft()])
-const fileErrors = reactive<Record<string, string>>({})
-const attempted = ref(false)
-const organizationTouched = reactive({ name: false })
-
 const touchedExperiences = reactive<Record<string, Partial<Record<DraftFieldKey, boolean>>>>({})
 
 function markTouched(id: string, key: DraftFieldKey) {
@@ -64,6 +72,7 @@ const nameError = computed(() => (organization.name.trim() ? '' : 'نام ساز
 const recordsError = computed(() => (experiences.value.length === 0
   ? 'حداقل یک سابقه کاری برای سازمان ثبت کنید.'
   : ''))
+const hasOrganizationFile = computed(() => Boolean(organization.insuranceFileName))
 
 function organizationNameError(): string {
   if (!attempted.value && !organizationTouched.name) {
@@ -72,12 +81,24 @@ function organizationNameError(): string {
   return nameError.value
 }
 
-/** پیام خطای هر فیلد از سابقه‌ی کاری؛ پس از لمس فیلد یا تلاش برای ثبت نمایش داده می‌شود */
-function experienceErrorFor(id: string, key: DraftFieldKey): string {
-  if (key === 'insuranceFile') {
-    return fileErrors[id] ?? ''
+/** پیام خطای فایل بیمه‌ی سازمان؛ پس از لمس فایل یا تلاش برای ثبت نمایش داده می‌شود */
+function organizationFileError(): string {
+  const message = insuranceFileError.value
+    || (hasOrganizationFile.value ? '' : REQUIRED_INSURANCE_FILE_MESSAGE)
+
+  if (!message) {
+    return ''
   }
 
+  if (!attempted.value && !organizationTouched.insuranceFileName && !insuranceFileError.value) {
+    return ''
+  }
+
+  return message
+}
+
+/** پیام خطای هر فیلد از سابقه‌ی کاری؛ پس از لمس فیلد یا تلاش برای ثبت نمایش داده می‌شود */
+function experienceErrorFor(id: string, key: DraftFieldKey): string {
   if (!attempted.value && !touchedExperiences[id]?.[key]) {
     return ''
   }
@@ -103,6 +124,7 @@ function fieldClass(hasError: boolean): string[] {
 
 const modalRef = ref<HTMLElement | null>(null)
 const organizationNameRef = ref<HTMLInputElement | null>(null)
+const insuranceFileInputRef = ref<HTMLInputElement | null>(null)
 
 /** افزودن یک سابقه‌ی کاری جدید؛ فیلدهای سازمان و سوابق قبلی دست‌نخورده می‌مانند */
 function addExperience() {
@@ -112,7 +134,6 @@ function addExperience() {
 /** حذف یک سابقه‌ی کاری؛ سازمان و بقیه‌ی سوابق حذف نمی‌شوند */
 function removeExperience(id: string) {
   experiences.value = experiences.value.filter(draft => draft.id !== id)
-  delete fileErrors[id]
   delete touchedExperiences[id]
 }
 
@@ -131,20 +152,21 @@ function onInsuranceDaysInput(draft: WorkExperienceDraft, event: Event) {
   }
 }
 
-function onInsuranceFileChange(draft: WorkExperienceDraft, event: Event) {
+/** انتخاب فایل بیمه‌ی سازمان؛ تنها یک فایل و فقط با فرمت‌های مجاز */
+function onInsuranceFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   const files = input.files
-  fileErrors[draft.id] = ''
-  markTouched(draft.id, 'insuranceFile')
+  insuranceFileError.value = ''
+  organizationTouched.insuranceFileName = true
 
   if (!files || files.length === 0) {
-    draft.insuranceFileName = null
+    organization.insuranceFileName = null
     return
   }
 
   if (files.length > 1) {
-    fileErrors[draft.id] = 'تنها یک فایل می‌توانید به عنوان فایل بیمه انتخاب کنید.'
-    draft.insuranceFileName = null
+    insuranceFileError.value = 'تنها یک فایل می‌توانید به عنوان فایل بیمه انتخاب کنید.'
+    organization.insuranceFileName = null
     input.value = ''
     return
   }
@@ -152,26 +174,24 @@ function onInsuranceFileChange(draft: WorkExperienceDraft, event: Event) {
   const file = files[0]
   const fileError = validateInsuranceFile(file)
   if (fileError) {
-    fileErrors[draft.id] = fileError
-    draft.insuranceFileName = null
+    insuranceFileError.value = fileError
+    organization.insuranceFileName = null
     input.value = ''
     return
   }
 
-  draft.insuranceFileName = file.name
+  organization.insuranceFileName = file.name
   input.value = ''
 }
 
-function clearInsuranceFile(draft: WorkExperienceDraft) {
-  draft.insuranceFileName = null
-  fileErrors[draft.id] = ''
-  markTouched(draft.id, 'insuranceFile')
+/** حذف فایل بیمه‌ی سازمان */
+function clearInsuranceFile() {
+  organization.insuranceFileName = null
+  insuranceFileError.value = ''
+  organizationTouched.insuranceFileName = true
 
-  const input = document.getElementById(
-    `experience-${draft.id}-insurance-file`,
-  ) as HTMLInputElement | null
-  if (input) {
-    input.value = ''
+  if (insuranceFileInputRef.value) {
+    insuranceFileInputRef.value.value = ''
   }
 }
 
@@ -188,11 +208,14 @@ async function focusFirstInvalid() {
 function handleSubmit() {
   attempted.value = true
 
-  const hasInvalidRecord = experiences.value.some(
-    draft => hasExperienceError(draft) || Boolean(fileErrors[draft.id]),
-  )
+  const hasInvalidRecord = experiences.value.some(draft => hasExperienceError(draft))
+  const isInsuranceFileInvalid = Boolean(insuranceFileError.value) || !hasOrganizationFile.value
+
   const isInvalid
-    = Boolean(nameError.value) || experiences.value.length === 0 || hasInvalidRecord
+    = Boolean(nameError.value)
+      || isInsuranceFileInvalid
+      || experiences.value.length === 0
+      || hasInvalidRecord
 
   if (isInvalid) {
     void focusFirstInvalid()
@@ -203,6 +226,7 @@ function handleSubmit() {
     id: createEntityId('org'),
     name: organization.name.trim(),
     contact: organization.contact.trim(),
+    insuranceFileName: organization.insuranceFileName as string,
     experiences: experiences.value.map(draft => ({
       id: createEntityId('exp'),
       fromDate: draft.fromDate as Date,
@@ -210,7 +234,6 @@ function handleSubmit() {
       position: draft.position.trim(),
       insuranceDays: toInsuranceDays(draft.insuranceDays),
       description: draft.description.trim(),
-      insuranceFileName: draft.insuranceFileName,
     })),
   }
 
@@ -221,13 +244,13 @@ function handleSubmit() {
 function resetForm() {
   organization.name = ''
   organization.contact = ''
+  organization.insuranceFileName = null
   organizationTouched.name = false
+  organizationTouched.insuranceFileName = false
+  insuranceFileError.value = ''
   experiences.value = [createExperienceDraft()]
   attempted.value = false
 
-  ;(Object.keys(fileErrors) as string[]).forEach((key) => {
-    delete fileErrors[key]
-  })
   ;(Object.keys(touchedExperiences) as string[]).forEach((key) => {
     delete touchedExperiences[key]
   })
@@ -335,11 +358,11 @@ onBeforeUnmount(() => {
           aria-modal="true"
           aria-labelledby="work-experience-modal-title"
           novalidate
-          class="flex w-full max-w-4xl flex-col rounded-2xl bg-white shadow-2xl dark:bg-muted-900"
+          class="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-muted-900 sm:max-h-[calc(100dvh-6rem)]"
           @submit.prevent="handleSubmit"
         >
-          <!-- سربرگ مودال -->
-          <div class="flex items-start justify-between gap-4 border-b border-muted-200 px-5 py-4 dark:border-muted-800 sm:px-6">
+          <!-- سربرگ مودال (ثابت) -->
+          <div class="flex flex-shrink-0 items-start justify-between gap-4 border-b border-muted-200 px-5 py-4 dark:border-muted-800 sm:px-6">
             <div>
               <h2 id="work-experience-modal-title" class="text-base font-bold text-muted-800 dark:text-white sm:text-lg">
                 افزودن سابقه کاری
@@ -372,12 +395,15 @@ onBeforeUnmount(() => {
             </button>
           </div>
 
-          <!-- بدنه‌ی فرم -->
-          <div class="space-y-6 px-5 py-5 sm:px-6">
-            <!-- بخش سازمان (والد) -->
-            <section class="rounded-xl border border-muted-200 p-4 dark:border-muted-800 sm:p-5">
-              <div class="mb-4 flex items-center gap-2">
-                <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+          <!-- ناحیه‌ی اسکرول‌شو: بخش سازمان چسبیده به بالای همین ناحیه می‌ماند -->
+          <div class="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-3 sm:px-6">
+            <!-- بخش سازمان (والد) — چسبیده به بالای ناحیه‌ی اسکرول -->
+            <section
+              aria-labelledby="organization-section-title"
+              class="sticky top-0 z-20 -mx-5 border-b border-muted-200 bg-white px-5 pb-4 pt-1 dark:border-muted-800 dark:bg-muted-900 sm:-mx-6 sm:px-6"
+            >
+              <div class="mb-3 flex items-center gap-2">
+                <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
                   <svg
                     aria-hidden="true"
                     viewBox="0 0 24 24"
@@ -392,15 +418,15 @@ onBeforeUnmount(() => {
                     <rect width="20" height="14" x="2" y="6" rx="2" />
                   </svg>
                 </span>
-                <h3 class="text-sm font-bold text-muted-800 dark:text-white sm:text-base">
+                <h3 id="organization-section-title" class="text-sm font-bold text-muted-800 dark:text-white sm:text-base">
                   اطلاعات سازمان
                 </h3>
               </div>
 
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 <!-- نام سازمان -->
                 <div>
-                  <label for="organization-name" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
+                  <label for="organization-name" class="mb-1.5 block text-xs font-bold text-muted-700 dark:text-muted-300 sm:text-sm">
                     نام سازمان <span class="text-red-500" aria-hidden="true">*</span>
                   </label>
                   <input
@@ -410,7 +436,7 @@ onBeforeUnmount(() => {
                     type="text"
                     autocomplete="off"
                     placeholder="نام سازمان را وارد کنید"
-                    :class="fieldClass(Boolean(organizationNameError()))"
+                    :class="[...fieldClass(Boolean(organizationNameError())), 'py-2']"
                     :aria-invalid="Boolean(organizationNameError())"
                     :aria-describedby="organizationNameError() ? 'organization-name-error' : undefined"
                     @blur="organizationTouched.name = true"
@@ -423,7 +449,7 @@ onBeforeUnmount(() => {
 
                 <!-- اطلاعات تماس سازمان -->
                 <div>
-                  <label for="organization-contact" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
+                  <label for="organization-contact" class="mb-1.5 block text-xs font-bold text-muted-700 dark:text-muted-300 sm:text-sm">
                     اطلاعات تماس سازمان
                   </label>
                   <input
@@ -432,17 +458,84 @@ onBeforeUnmount(() => {
                     type="text"
                     autocomplete="off"
                     placeholder="تلفن، نشانی یا هر راه تماس"
-                    :class="fieldClass(false)"
+                    :class="[...fieldClass(false), 'py-2']"
                   >
+                </div>
+
+                <!-- فایل بیمه‌ی سازمان -->
+                <div class="sm:col-span-2">
+                  <label for="organization-insurance-file" class="mb-1.5 block text-xs font-bold text-muted-700 dark:text-muted-300 sm:text-sm">
+                    فایل بیمه سازمان <span class="text-red-500" aria-hidden="true">*</span>
+                  </label>
+
+                  <div
+                    class="rounded-lg border border-dashed p-2.5 sm:p-3"
+                    :class="organizationFileError()
+                      ? 'border-red-400 dark:border-red-500/70'
+                      : 'border-muted-300 dark:border-muted-700'"
+                  >
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <label
+                        for="organization-insurance-file"
+                        class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-muted-300 bg-muted-50 px-3 py-1.5 text-xs font-medium text-muted-700 transition-colors hover:bg-muted-100 focus-within:ring-2 focus-within:ring-primary-500/40 dark:border-muted-700 dark:bg-muted-800 dark:text-muted-200 dark:hover:bg-muted-700 sm:text-sm"
+                      >
+                        انتخاب فایل
+                      </label>
+
+                      <input
+                        id="organization-insurance-file"
+                        ref="insuranceFileInputRef"
+                        type="file"
+                        class="sr-only"
+                        :accept="INSURANCE_FILE_ACCEPT"
+                        :aria-invalid="Boolean(organizationFileError())"
+                        :aria-describedby="organizationFileError() ? 'organization-insurance-file-error' : undefined"
+                        @change="onInsuranceFileChange"
+                      >
+
+                      <div class="flex min-w-0 flex-1 items-center gap-2 text-xs sm:text-sm">
+                        <span
+                          v-if="organization.insuranceFileName"
+                          class="truncate text-muted-700 dark:text-muted-200"
+                          :title="organization.insuranceFileName"
+                        >
+                          {{ organization.insuranceFileName }}
+                        </span>
+                        <span v-else class="text-muted-400 dark:text-muted-500">
+                          فایلی انتخاب نشده است
+                        </span>
+
+                        <button
+                          v-if="organization.insuranceFileName"
+                          type="button"
+                          class="flex-shrink-0 rounded px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                          @click="clearInsuranceFile"
+                        >
+                          حذف فایل
+                        </button>
+                      </div>
+                    </div>
+
+                    <p class="mt-2 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
+                      فایل بیمه الزامی است و به سازمان تعلق دارد؛ یک فایل برای همه‌ی سوابق کاری این
+                      سازمان کافی است. تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب است و
+                      فایل فقط نامش نمایش داده می‌شود (بارگذاری نمی‌شود).
+                    </p>
+                  </div>
+
+                  <FormFieldError
+                    error-id="organization-insurance-file-error"
+                    :message="organizationFileError()"
+                  />
                 </div>
               </div>
             </section>
 
             <!-- بخش سوابق کاری (فرزند) -->
-            <section>
+            <section class="mt-5" aria-labelledby="records-section-title">
               <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-bold text-muted-800 dark:text-white sm:text-base">
+                  <h3 id="records-section-title" class="text-sm font-bold text-muted-800 dark:text-white sm:text-base">
                     سوابق کاری در این سازمان
                   </h3>
                   <span class="rounded-full bg-muted-100 px-2 py-0.5 text-xs font-bold text-muted-600 dark:bg-muted-800 dark:text-muted-300">
@@ -650,77 +743,14 @@ onBeforeUnmount(() => {
                         :class="fieldClass(false)"
                       >
                     </div>
-
-                    <!-- فایل بیمه -->
-                    <div class="md:col-span-2">
-                      <label :for="`experience-${draft.id}-insurance-file`" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
-                        فایل بیمه
-                      </label>
-
-                      <div
-                        class="rounded-lg border border-dashed border-muted-300 p-3 dark:border-muted-700 sm:p-4"
-                        :class="fileErrors[draft.id] ? 'border-red-400 dark:border-red-500/70' : ''"
-                      >
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                          <label
-                            :for="`experience-${draft.id}-insurance-file`"
-                            class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-muted-300 bg-muted-50 px-4 py-2 text-sm font-medium text-muted-700 transition-colors hover:bg-muted-100 focus-within:ring-2 focus-within:ring-primary-500/40 dark:border-muted-700 dark:bg-muted-800 dark:text-muted-200 dark:hover:bg-muted-700"
-                          >
-                            انتخاب فایل
-                          </label>
-
-                          <input
-                            :id="`experience-${draft.id}-insurance-file`"
-                            type="file"
-                            class="sr-only"
-                            :accept="INSURANCE_FILE_ACCEPT"
-                            :aria-invalid="Boolean(fileErrors[draft.id])"
-                            :aria-describedby="fileErrors[draft.id] ? `experience-${draft.id}-insurance-file-error` : undefined"
-                            @change="onInsuranceFileChange(draft, $event)"
-                          >
-
-                          <div class="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                            <span
-                              v-if="draft.insuranceFileName"
-                              class="truncate text-muted-700 dark:text-muted-200"
-                              :title="draft.insuranceFileName"
-                            >
-                              {{ draft.insuranceFileName }}
-                            </span>
-                            <span v-else class="text-muted-400 dark:text-muted-500">
-                              فایلی انتخاب نشده است
-                            </span>
-
-                            <button
-                              v-if="draft.insuranceFileName"
-                              type="button"
-                              class="flex-shrink-0 rounded px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                              @click="clearInsuranceFile(draft)"
-                            >
-                              حذف فایل
-                            </button>
-                          </div>
-                        </div>
-
-                        <p class="mt-2 text-xs leading-5 text-muted-500 dark:text-muted-400">
-                          تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب است. فایل فقط نامش
-                          نمایش داده می‌شود و بارگذاری نخواهد شد.
-                        </p>
-                      </div>
-
-                      <FormFieldError
-                        :error-id="`experience-${draft.id}-insurance-file-error`"
-                        :message="experienceErrorFor(draft.id, 'insuranceFile')"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
             </section>
           </div>
 
-          <!-- پانویس مودال -->
-          <div class="flex flex-col-reverse gap-2 border-t border-muted-200 px-5 py-4 dark:border-muted-800 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+          <!-- پانویس مودال (ثابت) -->
+          <div class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-muted-200 px-5 py-4 dark:border-muted-800 sm:flex-row sm:items-center sm:justify-end sm:px-6">
             <button
               type="button"
               class="rounded-lg border border-muted-300 bg-white px-5 py-2 text-sm font-medium text-muted-700 transition-colors hover:bg-muted-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-muted-400/40 dark:border-muted-700 dark:bg-muted-900 dark:text-muted-200 dark:hover:bg-muted-800"

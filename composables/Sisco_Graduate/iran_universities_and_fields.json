@@ -1,0 +1,6273 @@
+{
+  "metadata": {
+    "title": "Iranian Universities and Academic Fields Seed Dataset",
+    "title_fa": "دیتاست مراکز دانشگاهی و رشته‌های تحصیلی ایران",
+    "version": "1.0.0",
+    "generated_at": "2026-11-15",
+    "language": "fa-IR",
+    "country": "ایران",
+    "country_code": "IR",
+    "description": "دیتاست پایه برای جستجو و انتخاب دانشگاه و رشته در اپلیکیشن. این فایل فهرست نهایی تمام واحدها و برنامه‌های مصوب نیست؛ وضعیت هر رکورد برای راستی‌آزمایی مشخص شده است.",
+    "normalization": [
+      "یکسان‌سازی ي/ی و ك/ک",
+      "حذف فاصله‌های تکراری",
+      "شناسه‌های پایدار داخلی"
+    ],
+    "coverage_note": "فهرست دانشگاه‌های دولتی بر اساس داده‌های فهرست‌شده وزارت علوم (۱۴۰۵) و تکمیل با نمونه‌ای از دانشگاه‌های علوم پزشکی است. واحدهای دانشگاه آزاد، پیام نور، علمی‌کاربردی و غیرانتفاعی به‌صورت کامل در این نسخه وارد نشده‌اند. فهرست رشته‌ها، فهرست پایه نام رشته‌هاست و جایگزین ۶٬۹۷۴ برنامه/گرایش مصوب نیست.",
+    "sources": [
+      {
+        "id": "ministry_higher_education_1405",
+        "name": "فهرست دانشگاه‌ها و مراکز آموزش عالی دولتی ایران‌گاه با ارجاع به درگاه ملی داده‌های باز و وزارت علوم",
+        "url": "https://irangaah.ir/academic/state",
+        "accessed": "2026-11-15"
+      },
+      {
+        "id": "curricula_catalog",
+        "name": "فهرست برنامه‌های درسی و رشته‌های دانشگاهی فعال و منسوخ",
+        "url": "https://irangaah.ir/academic/curricula",
+        "accessed": "2026-11-15"
+      },
+      {
+        "id": "medical_university_directory",
+        "name": "فهرست دانشگاه‌ها و دانشکده‌های علوم پزشکی ایران",
+        "url": "https://t.me/s/mededu_ir?before=1883",
+        "accessed": "2026-11-15"
+      },
+      {
+        "id": "sanjesh_1405",
+        "name": "جستجوی رشته‌محل‌های انتخاب رشته ۱۴۰۵",
+        "url": "https://konkoorone.ir/",
+        "accessed": "2026-11-15"
+      }
+    ]
+  },
+  "institution_types": [
+    {
+      "id": "public",
+      "name": "دانشگاه دولتی"
+    },
+    {
+      "id": "government",
+      "name": "دانشگاه وابسته به دستگاه اجرایی"
+    },
+    {
+      "id": "medical",
+      "name": "دانشگاه علوم پزشکی"
+    },
+    {
+      "id": "azad",
+      "name": "دانشگاه آزاد اسلامی"
+    },
+    {
+      "id": "payame_noor",
+      "name": "دانشگاه پیام نور"
+    },
+    {
+      "id": "nonprofit",
+      "name": "مؤسسه آموزش عالی غیردولتی-غیرانتفاعی"
+    },
+    {
+      "id": "elmi_karbordi",
+      "name": "دانشگاه جامع علمی‌کاربردی"
+    },
+    {
+      "id": "farhangian",
+      "name": "دانشگاه فرهنگیان"
+    },
+    {
+      "id": "technical_vocational",
+      "name": "دانشگاه ملی مهارت"
+    }
+  ],
+  "provinces": [
+    "آذربایجان شرقی",
+    "آذربایجان غربی",
+    "اردبیل",
+    "اصفهان",
+    "البرز",
+    "ایلام",
+    "بوشهر",
+    "تهران",
+    "چهارمحال و بختیاری",
+    "خراسان جنوبی",
+    "خراسان رضوی",
+    "خراسان شمالی",
+    "خوزستان",
+    "زنجان",
+    "سمنان",
+    "سیستان و بلوچستان",
+    "فارس",
+    "قزوین",
+    "قم",
+    "کردستان",
+    "کرمان",
+    "کرمانشاه",
+    "کهگیلویه و بویراحمد",
+    "گلستان",
+    "گیلان",
+    "لرستان",
+    "مازندران",
+    "مرکزی",
+    "هرمزگان",
+    "همدان",
+    "یزد"
+  ],
+  "degree_levels": [
+    {
+      "id": "associate",
+      "name": "کاردانی",
+      "level_order": 1
+    },
+    {
+      "id": "bachelor",
+      "name": "کارشناسی",
+      "level_order": 2
+    },
+    {
+      "id": "master",
+      "name": "کارشناسی ارشد",
+      "level_order": 3
+    },
+    {
+      "id": "professional_doctorate",
+      "name": "دکتری حرفه‌ای",
+      "level_order": 4
+    },
+    {
+      "id": "phd",
+      "name": "دکتری تخصصی",
+      "level_order": 5
+    },
+    {
+      "id": "postdoc_fellowship",
+      "name": "فوق‌تخصص / فلوشیپ",
+      "level_order": 6
+    }
+  ],
+  "field_categories": [
+    {
+      "id": "engineering",
+      "name": "فنی و مهندسی"
+    },
+    {
+      "id": "medical_sciences",
+      "name": "علوم پزشکی و سلامت"
+    },
+    {
+      "id": "basic_sciences",
+      "name": "علوم پایه"
+    },
+    {
+      "id": "humanities",
+      "name": "علوم انسانی"
+    },
+    {
+      "id": "social_sciences",
+      "name": "علوم اجتماعی"
+    },
+    {
+      "id": "management",
+      "name": "مدیریت و کسب‌وکار"
+    },
+    {
+      "id": "law",
+      "name": "حقوق"
+    },
+    {
+      "id": "agriculture",
+      "name": "کشاورزی و منابع طبیعی"
+    },
+    {
+      "id": "art",
+      "name": "هنر"
+    },
+    {
+      "id": "architecture",
+      "name": "معماری و شهرسازی"
+    },
+    {
+      "id": "languages",
+      "name": "زبان و ادبیات"
+    },
+    {
+      "id": "religious_studies",
+      "name": "الهیات و معارف اسلامی"
+    },
+    {
+      "id": "veterinary",
+      "name": "دامپزشکی"
+    }
+  ],
+  "fields_of_study": [
+    {
+      "id": "ir-field-0001",
+      "name": "مهندسی کامپیوتر",
+      "normalized_name": "مهندسی کامپیوتر",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0002",
+      "name": "مهندسی فناوری اطلاعات",
+      "normalized_name": "مهندسی فناوری اطلاعات",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0003",
+      "name": "علوم کامپیوتر",
+      "normalized_name": "علوم کامپیوتر",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0004",
+      "name": "مهندسی برق",
+      "normalized_name": "مهندسی برق",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0005",
+      "name": "مهندسی الکترونیک",
+      "normalized_name": "مهندسی الکترونیک",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0006",
+      "name": "مهندسی مخابرات",
+      "normalized_name": "مهندسی مخابرات",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0007",
+      "name": "مهندسی کنترل",
+      "normalized_name": "مهندسی کنترل",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0008",
+      "name": "مهندسی قدرت",
+      "normalized_name": "مهندسی قدرت",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0009",
+      "name": "مهندسی مکانیک",
+      "normalized_name": "مهندسی مکانیک",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0010",
+      "name": "مهندسی ساخت و تولید",
+      "normalized_name": "مهندسی ساخت و تولید",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0011",
+      "name": "مهندسی صنایع",
+      "normalized_name": "مهندسی صنایع",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0012",
+      "name": "مهندسی عمران",
+      "normalized_name": "مهندسی عمران",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0013",
+      "name": "مهندسی شیمی",
+      "normalized_name": "مهندسی شیمی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0014",
+      "name": "مهندسی نفت",
+      "normalized_name": "مهندسی نفت",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0015",
+      "name": "مهندسی گاز",
+      "normalized_name": "مهندسی گاز",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0016",
+      "name": "مهندسی معدن",
+      "normalized_name": "مهندسی معدن",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0017",
+      "name": "مهندسی مواد و متالورژی",
+      "normalized_name": "مهندسی مواد و متالورژی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0018",
+      "name": "مهندسی پلیمر",
+      "normalized_name": "مهندسی پلیمر",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0019",
+      "name": "مهندسی نساجی",
+      "normalized_name": "مهندسی نساجی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0020",
+      "name": "مهندسی هوافضا",
+      "normalized_name": "مهندسی هوافضا",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0021",
+      "name": "مهندسی پزشکی",
+      "normalized_name": "مهندسی پزشکی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0022",
+      "name": "مهندسی انرژی",
+      "normalized_name": "مهندسی انرژی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0023",
+      "name": "مهندسی محیط زیست",
+      "normalized_name": "مهندسی محیط زیست",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0024",
+      "name": "مهندسی نقشه‌برداری",
+      "normalized_name": "مهندسی نقشه‌برداری",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0025",
+      "name": "مهندسی راه‌آهن",
+      "normalized_name": "مهندسی راه‌آهن",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0026",
+      "name": "مهندسی ایمنی و بهداشت حرفه‌ای",
+      "normalized_name": "مهندسی ایمنی و بهداشت حرفه‌ای",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0027",
+      "name": "مهندسی دریا",
+      "normalized_name": "مهندسی دریا",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0028",
+      "name": "مهندسی خودرو",
+      "normalized_name": "مهندسی خودرو",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0029",
+      "name": "مهندسی معماری",
+      "normalized_name": "مهندسی معماری",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0030",
+      "name": "مهندسی شهرسازی",
+      "normalized_name": "مهندسی شهرسازی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0031",
+      "name": "مهندسی رباتیک",
+      "normalized_name": "مهندسی رباتیک",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0032",
+      "name": "مهندسی مکاترونیک",
+      "normalized_name": "مهندسی مکاترونیک",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0033",
+      "name": "مهندسی فناوری‌های نوین",
+      "normalized_name": "مهندسی فناوری‌های نوین",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0034",
+      "name": "مهندسی هسته‌ای",
+      "normalized_name": "مهندسی هسته‌ای",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0035",
+      "name": "مهندسی معدن - استخراج",
+      "normalized_name": "مهندسی معدن - استخراج",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0036",
+      "name": "مهندسی معدن - اکتشاف",
+      "normalized_name": "مهندسی معدن - اکتشاف",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0037",
+      "name": "مهندسی معدن - فرآوری مواد معدنی",
+      "normalized_name": "مهندسی معدن - فرآوری مواد معدنی",
+      "category_id": "engineering",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0038",
+      "name": "پزشکی",
+      "normalized_name": "پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0039",
+      "name": "دندانپزشکی",
+      "normalized_name": "دندانپزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0040",
+      "name": "داروسازی",
+      "normalized_name": "داروسازی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0041",
+      "name": "پرستاری",
+      "normalized_name": "پرستاری",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0042",
+      "name": "مامایی",
+      "normalized_name": "مامایی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0043",
+      "name": "علوم آزمایشگاهی",
+      "normalized_name": "علوم آزمایشگاهی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0044",
+      "name": "فیزیوتراپی",
+      "normalized_name": "فیزیوتراپی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0045",
+      "name": "کاردرمانی",
+      "normalized_name": "کاردرمانی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0046",
+      "name": "گفتاردرمانی",
+      "normalized_name": "گفتاردرمانی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0047",
+      "name": "شنوایی‌شناسی",
+      "normalized_name": "شنوایی‌شناسی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0048",
+      "name": "بینایی‌سنجی",
+      "normalized_name": "بینایی‌سنجی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0049",
+      "name": "هوشبری",
+      "normalized_name": "هوشبری",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0050",
+      "name": "اتاق عمل",
+      "normalized_name": "اتاق عمل",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0051",
+      "name": "فوریت‌های پزشکی",
+      "normalized_name": "فوریت‌های پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0052",
+      "name": "رادیولوژی",
+      "normalized_name": "رادیولوژی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0053",
+      "name": "فناوری تصویربرداری پزشکی",
+      "normalized_name": "فناوری تصویربرداری پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0054",
+      "name": "پرتودرمانی",
+      "normalized_name": "پرتودرمانی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0055",
+      "name": "پزشکی هسته‌ای",
+      "normalized_name": "پزشکی هسته‌ای",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0056",
+      "name": "علوم تغذیه",
+      "normalized_name": "علوم تغذیه",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0057",
+      "name": "بهداشت عمومی",
+      "normalized_name": "بهداشت عمومی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0058",
+      "name": "بهداشت محیط",
+      "normalized_name": "بهداشت محیط",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0059",
+      "name": "بهداشت حرفه‌ای",
+      "normalized_name": "بهداشت حرفه‌ای",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0060",
+      "name": "مدیریت خدمات بهداشتی درمانی",
+      "normalized_name": "مدیریت خدمات بهداشتی درمانی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0061",
+      "name": "اپیدمیولوژی",
+      "normalized_name": "اپیدمیولوژی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0062",
+      "name": "آموزش بهداشت",
+      "normalized_name": "آموزش بهداشت",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0063",
+      "name": "فناوری اطلاعات سلامت",
+      "normalized_name": "فناوری اطلاعات سلامت",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0064",
+      "name": "مدارک پزشکی",
+      "normalized_name": "مدارک پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0065",
+      "name": "ژنتیک پزشکی",
+      "normalized_name": "ژنتیک پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0066",
+      "name": "ایمنی‌شناسی پزشکی",
+      "normalized_name": "ایمنی‌شناسی پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0067",
+      "name": "باکتری‌شناسی پزشکی",
+      "normalized_name": "باکتری‌شناسی پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0068",
+      "name": "ویروس‌شناسی پزشکی",
+      "normalized_name": "ویروس‌شناسی پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0069",
+      "name": "هماتولوژی آزمایشگاهی",
+      "normalized_name": "هماتولوژی آزمایشگاهی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0070",
+      "name": "علوم تشریحی",
+      "normalized_name": "علوم تشریحی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0071",
+      "name": "فیزیولوژی",
+      "normalized_name": "فیزیولوژی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0072",
+      "name": "بیوشیمی بالینی",
+      "normalized_name": "بیوشیمی بالینی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0073",
+      "name": "سم‌شناسی",
+      "normalized_name": "سم‌شناسی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0074",
+      "name": "علوم دارویی",
+      "normalized_name": "علوم دارویی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0075",
+      "name": "تاریخ علوم پزشکی",
+      "normalized_name": "تاریخ علوم پزشکی",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0076",
+      "name": "سلامت در بلایا و فوریت‌ها",
+      "normalized_name": "سلامت در بلایا و فوریت‌ها",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0077",
+      "name": "مدیریت پرستاری",
+      "normalized_name": "مدیریت پرستاری",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0078",
+      "name": "پرستاری مراقبت‌های ویژه",
+      "normalized_name": "پرستاری مراقبت‌های ویژه",
+      "category_id": "medical_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0079",
+      "name": "ریاضیات و کاربردها",
+      "normalized_name": "ریاضیات و کاربردها",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0080",
+      "name": "ریاضی محض",
+      "normalized_name": "ریاضی محض",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0081",
+      "name": "ریاضی کاربردی",
+      "normalized_name": "ریاضی کاربردی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0082",
+      "name": "آمار",
+      "normalized_name": "آمار",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0083",
+      "name": "فیزیک",
+      "normalized_name": "فیزیک",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0084",
+      "name": "فیزیک مهندسی",
+      "normalized_name": "فیزیک مهندسی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0085",
+      "name": "شیمی محض",
+      "normalized_name": "شیمی محض",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0086",
+      "name": "شیمی کاربردی",
+      "normalized_name": "شیمی کاربردی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0087",
+      "name": "زیست‌شناسی",
+      "normalized_name": "زیست‌شناسی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0088",
+      "name": "زیست‌شناسی سلولی و مولکولی",
+      "normalized_name": "زیست‌شناسی سلولی و مولکولی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0089",
+      "name": "میکروبیولوژی",
+      "normalized_name": "میکروبیولوژی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0090",
+      "name": "زیست‌فناوری",
+      "normalized_name": "زیست‌فناوری",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0091",
+      "name": "ژنتیک",
+      "normalized_name": "ژنتیک",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0092",
+      "name": "بیوشیمی",
+      "normalized_name": "بیوشیمی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0093",
+      "name": "علوم زمین",
+      "normalized_name": "علوم زمین",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0094",
+      "name": "زمین‌شناسی",
+      "normalized_name": "زمین‌شناسی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0095",
+      "name": "ژئوفیزیک",
+      "normalized_name": "ژئوفیزیک",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0096",
+      "name": "اقیانوس‌شناسی",
+      "normalized_name": "اقیانوس‌شناسی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0097",
+      "name": "علوم شناختی",
+      "normalized_name": "علوم شناختی",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0098",
+      "name": "نانوفناوری",
+      "normalized_name": "نانوفناوری",
+      "category_id": "basic_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0099",
+      "name": "روانشناسی",
+      "normalized_name": "روانشناسی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0100",
+      "name": "علوم تربیتی",
+      "normalized_name": "علوم تربیتی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0101",
+      "name": "مشاوره",
+      "normalized_name": "مشاوره",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0102",
+      "name": "فلسفه",
+      "normalized_name": "فلسفه",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0103",
+      "name": "تاریخ",
+      "normalized_name": "تاریخ",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0104",
+      "name": "جغرافیا",
+      "normalized_name": "جغرافیا",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0105",
+      "name": "علوم قرآن و حدیث",
+      "normalized_name": "علوم قرآن و حدیث",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0106",
+      "name": "فقه و مبانی حقوق اسلامی",
+      "normalized_name": "فقه و مبانی حقوق اسلامی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0107",
+      "name": "الهیات و معارف اسلامی",
+      "normalized_name": "الهیات و معارف اسلامی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0108",
+      "name": "علم اطلاعات و دانش‌شناسی",
+      "normalized_name": "علم اطلاعات و دانش‌شناسی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0109",
+      "name": "علوم ورزشی",
+      "normalized_name": "علوم ورزشی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0110",
+      "name": "تربیت بدنی و علوم ورزشی",
+      "normalized_name": "تربیت بدنی و علوم ورزشی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0111",
+      "name": "برنامه‌ریزی درسی",
+      "normalized_name": "برنامه‌ریزی درسی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0112",
+      "name": "مدیریت آموزشی",
+      "normalized_name": "مدیریت آموزشی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0113",
+      "name": "آموزش ابتدایی",
+      "normalized_name": "آموزش ابتدایی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0114",
+      "name": "آموزش کودکان استثنایی",
+      "normalized_name": "آموزش کودکان استثنایی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0115",
+      "name": "مطالعات خانواده",
+      "normalized_name": "مطالعات خانواده",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0116",
+      "name": "مددکاری اجتماعی",
+      "normalized_name": "مددکاری اجتماعی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0117",
+      "name": "علوم ارتباطات اجتماعی",
+      "normalized_name": "علوم ارتباطات اجتماعی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0118",
+      "name": "روزنامه‌نگاری",
+      "normalized_name": "روزنامه‌نگاری",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0119",
+      "name": "روابط عمومی",
+      "normalized_name": "روابط عمومی",
+      "category_id": "humanities",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0120",
+      "name": "جامعه‌شناسی",
+      "normalized_name": "جامعه‌شناسی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0121",
+      "name": "علوم سیاسی",
+      "normalized_name": "علوم سیاسی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0122",
+      "name": "روابط بین‌الملل",
+      "normalized_name": "روابط بین‌الملل",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0123",
+      "name": "مطالعات منطقه‌ای",
+      "normalized_name": "مطالعات منطقه‌ای",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0124",
+      "name": "جمعیت‌شناسی",
+      "normalized_name": "جمعیت‌شناسی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0125",
+      "name": "مردم‌شناسی",
+      "normalized_name": "مردم‌شناسی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0126",
+      "name": "برنامه‌ریزی اجتماعی",
+      "normalized_name": "برنامه‌ریزی اجتماعی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0127",
+      "name": "مطالعات فرهنگی",
+      "normalized_name": "مطالعات فرهنگی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0128",
+      "name": "مطالعات زنان",
+      "normalized_name": "مطالعات زنان",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0129",
+      "name": "علوم اجتماعی",
+      "normalized_name": "علوم اجتماعی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0130",
+      "name": "سیاست‌گذاری اجتماعی",
+      "normalized_name": "سیاست‌گذاری اجتماعی",
+      "category_id": "social_sciences",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0131",
+      "name": "حسابداری",
+      "normalized_name": "حسابداری",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0132",
+      "name": "مدیریت بازرگانی",
+      "normalized_name": "مدیریت بازرگانی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0133",
+      "name": "مدیریت صنعتی",
+      "normalized_name": "مدیریت صنعتی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0134",
+      "name": "مدیریت دولتی",
+      "normalized_name": "مدیریت دولتی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0135",
+      "name": "مدیریت مالی",
+      "normalized_name": "مدیریت مالی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0136",
+      "name": "مدیریت منابع انسانی",
+      "normalized_name": "مدیریت منابع انسانی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0137",
+      "name": "مدیریت فناوری اطلاعات",
+      "normalized_name": "مدیریت فناوری اطلاعات",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0138",
+      "name": "مدیریت کسب‌وکار",
+      "normalized_name": "مدیریت کسب‌وکار",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0139",
+      "name": "مدیریت اجرایی",
+      "normalized_name": "مدیریت اجرایی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0140",
+      "name": "مدیریت پروژه",
+      "normalized_name": "مدیریت پروژه",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0141",
+      "name": "مدیریت استراتژیک",
+      "normalized_name": "مدیریت استراتژیک",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0142",
+      "name": "مدیریت بیمه",
+      "normalized_name": "مدیریت بیمه",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0143",
+      "name": "مدیریت گردشگری",
+      "normalized_name": "مدیریت گردشگری",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0144",
+      "name": "مدیریت هتلداری",
+      "normalized_name": "مدیریت هتلداری",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0145",
+      "name": "مدیریت کارآفرینی",
+      "normalized_name": "مدیریت کارآفرینی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0146",
+      "name": "اقتصاد",
+      "normalized_name": "اقتصاد",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0147",
+      "name": "اقتصاد بازرگانی",
+      "normalized_name": "اقتصاد بازرگانی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0148",
+      "name": "اقتصاد نظری",
+      "normalized_name": "اقتصاد نظری",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0149",
+      "name": "اقتصاد پولی و بانکی",
+      "normalized_name": "اقتصاد پولی و بانکی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0150",
+      "name": "مدیریت زنجیره تأمین",
+      "normalized_name": "مدیریت زنجیره تأمین",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0151",
+      "name": "مدیریت صنعتی - تولید و عملیات",
+      "normalized_name": "مدیریت صنعتی - تولید و عملیات",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0152",
+      "name": "مدیریت بازاریابی",
+      "normalized_name": "مدیریت بازاریابی",
+      "category_id": "management",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0153",
+      "name": "حقوق",
+      "normalized_name": "حقوق",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0154",
+      "name": "حقوق خصوصی",
+      "normalized_name": "حقوق خصوصی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0155",
+      "name": "حقوق عمومی",
+      "normalized_name": "حقوق عمومی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0156",
+      "name": "حقوق جزا و جرم‌شناسی",
+      "normalized_name": "حقوق جزا و جرم‌شناسی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0157",
+      "name": "حقوق بین‌الملل",
+      "normalized_name": "حقوق بین‌الملل",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0158",
+      "name": "حقوق تجارت بین‌الملل",
+      "normalized_name": "حقوق تجارت بین‌الملل",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0159",
+      "name": "حقوق اقتصادی",
+      "normalized_name": "حقوق اقتصادی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0160",
+      "name": "حقوق خانواده",
+      "normalized_name": "حقوق خانواده",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0161",
+      "name": "حقوق مالکیت فکری",
+      "normalized_name": "حقوق مالکیت فکری",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0162",
+      "name": "فقه و حقوق اسلامی",
+      "normalized_name": "فقه و حقوق اسلامی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0163",
+      "name": "علوم قضایی",
+      "normalized_name": "علوم قضایی",
+      "category_id": "law",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0164",
+      "name": "مهندسی کشاورزی",
+      "normalized_name": "مهندسی کشاورزی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0165",
+      "name": "علوم و مهندسی زراعت",
+      "normalized_name": "علوم و مهندسی زراعت",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0166",
+      "name": "علوم و مهندسی باغبانی",
+      "normalized_name": "علوم و مهندسی باغبانی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0167",
+      "name": "علوم دامی",
+      "normalized_name": "علوم دامی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0168",
+      "name": "مهندسی تولید و ژنتیک گیاهی",
+      "normalized_name": "مهندسی تولید و ژنتیک گیاهی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0169",
+      "name": "علوم و مهندسی خاک",
+      "normalized_name": "علوم و مهندسی خاک",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0170",
+      "name": "مهندسی آب",
+      "normalized_name": "مهندسی آب",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0171",
+      "name": "مهندسی آبیاری و زهکشی",
+      "normalized_name": "مهندسی آبیاری و زهکشی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0172",
+      "name": "مهندسی مکانیزاسیون کشاورزی",
+      "normalized_name": "مهندسی مکانیزاسیون کشاورزی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0173",
+      "name": "گیاه‌پزشکی",
+      "normalized_name": "گیاه‌پزشکی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0174",
+      "name": "علوم و مهندسی شیلات",
+      "normalized_name": "علوم و مهندسی شیلات",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0175",
+      "name": "علوم و مهندسی جنگل",
+      "normalized_name": "علوم و مهندسی جنگل",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0176",
+      "name": "مرتعداری",
+      "normalized_name": "مرتعداری",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0177",
+      "name": "آبخیزداری",
+      "normalized_name": "آبخیزداری",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0178",
+      "name": "صنایع غذایی",
+      "normalized_name": "صنایع غذایی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0179",
+      "name": "گیاهان دارویی",
+      "normalized_name": "گیاهان دارویی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0180",
+      "name": "ترویج و آموزش کشاورزی",
+      "normalized_name": "ترویج و آموزش کشاورزی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0181",
+      "name": "اقتصاد کشاورزی",
+      "normalized_name": "اقتصاد کشاورزی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0182",
+      "name": "علوم و مهندسی محیط زیست",
+      "normalized_name": "علوم و مهندسی محیط زیست",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0183",
+      "name": "علوم و مهندسی صنایع غذایی",
+      "normalized_name": "علوم و مهندسی صنایع غذایی",
+      "category_id": "agriculture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0184",
+      "name": "نقاشی",
+      "normalized_name": "نقاشی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0185",
+      "name": "گرافیک",
+      "normalized_name": "گرافیک",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0186",
+      "name": "ارتباط تصویری",
+      "normalized_name": "ارتباط تصویری",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0187",
+      "name": "عکاسی",
+      "normalized_name": "عکاسی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0188",
+      "name": "طراحی صنعتی",
+      "normalized_name": "طراحی صنعتی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0189",
+      "name": "طراحی لباس",
+      "normalized_name": "طراحی لباس",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0190",
+      "name": "طراحی پارچه",
+      "normalized_name": "طراحی پارچه",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0191",
+      "name": "مجسمه‌سازی",
+      "normalized_name": "مجسمه‌سازی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0192",
+      "name": "سینما",
+      "normalized_name": "سینما",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0193",
+      "name": "کارگردانی",
+      "normalized_name": "کارگردانی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0194",
+      "name": "بازیگری",
+      "normalized_name": "بازیگری",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0195",
+      "name": "موسیقی",
+      "normalized_name": "موسیقی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0196",
+      "name": "آهنگسازی",
+      "normalized_name": "آهنگسازی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0197",
+      "name": "صنایع دستی",
+      "normalized_name": "صنایع دستی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0198",
+      "name": "طراحی صحنه",
+      "normalized_name": "طراحی صحنه",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0199",
+      "name": "انیمیشن",
+      "normalized_name": "انیمیشن",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0200",
+      "name": "هنرهای دیجیتال",
+      "normalized_name": "هنرهای دیجیتال",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0201",
+      "name": "مرمت آثار تاریخی",
+      "normalized_name": "مرمت آثار تاریخی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0202",
+      "name": "ادبیات نمایشی",
+      "normalized_name": "ادبیات نمایشی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0203",
+      "name": "پژوهش هنر",
+      "normalized_name": "پژوهش هنر",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0204",
+      "name": "فرش",
+      "normalized_name": "فرش",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0205",
+      "name": "هنر اسلامی",
+      "normalized_name": "هنر اسلامی",
+      "category_id": "art",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0206",
+      "name": "معماری",
+      "normalized_name": "معماری",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0207",
+      "name": "معماری داخلی",
+      "normalized_name": "معماری داخلی",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0208",
+      "name": "شهرسازی",
+      "normalized_name": "شهرسازی",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0209",
+      "name": "طراحی شهری",
+      "normalized_name": "طراحی شهری",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0210",
+      "name": "برنامه‌ریزی شهری",
+      "normalized_name": "برنامه‌ریزی شهری",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0211",
+      "name": "برنامه‌ریزی منطقه‌ای",
+      "normalized_name": "برنامه‌ریزی منطقه‌ای",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0212",
+      "name": "مرمت و احیای بناهای تاریخی",
+      "normalized_name": "مرمت و احیای بناهای تاریخی",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0213",
+      "name": "مدیریت پروژه و ساخت",
+      "normalized_name": "مدیریت پروژه و ساخت",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0214",
+      "name": "مهندسی معماری منظر",
+      "normalized_name": "مهندسی معماری منظر",
+      "category_id": "architecture",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0215",
+      "name": "زبان و ادبیات فارسی",
+      "normalized_name": "زبان و ادبیات فارسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0216",
+      "name": "زبان و ادبیات انگلیسی",
+      "normalized_name": "زبان و ادبیات انگلیسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0217",
+      "name": "مترجمی زبان انگلیسی",
+      "normalized_name": "مترجمی زبان انگلیسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0218",
+      "name": "آموزش زبان انگلیسی",
+      "normalized_name": "آموزش زبان انگلیسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0219",
+      "name": "زبان و ادبیات فرانسه",
+      "normalized_name": "زبان و ادبیات فرانسه",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0220",
+      "name": "زبان و ادبیات آلمانی",
+      "normalized_name": "زبان و ادبیات آلمانی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0221",
+      "name": "زبان و ادبیات عربی",
+      "normalized_name": "زبان و ادبیات عربی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0222",
+      "name": "زبان و ادبیات روسی",
+      "normalized_name": "زبان و ادبیات روسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0223",
+      "name": "زبان و ادبیات اسپانیایی",
+      "normalized_name": "زبان و ادبیات اسپانیایی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0224",
+      "name": "زبان و ادبیات ترکی",
+      "normalized_name": "زبان و ادبیات ترکی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0225",
+      "name": "زبان‌شناسی",
+      "normalized_name": "زبان‌شناسی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0226",
+      "name": "مترجمی زبان عربی",
+      "normalized_name": "مترجمی زبان عربی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0227",
+      "name": "آموزش زبان فارسی به غیرفارسی‌زبانان",
+      "normalized_name": "آموزش زبان فارسی به غیرفارسی‌زبانان",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0228",
+      "name": "زبان و ادبیات ایتالیایی",
+      "normalized_name": "زبان و ادبیات ایتالیایی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0229",
+      "name": "زبان و ادبیات چینی",
+      "normalized_name": "زبان و ادبیات چینی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0230",
+      "name": "زبان و ادبیات ژاپنی",
+      "normalized_name": "زبان و ادبیات ژاپنی",
+      "category_id": "languages",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0231",
+      "name": "علوم و معارف قرآن",
+      "normalized_name": "علوم و معارف قرآن",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0232",
+      "name": "فقه و حقوق جزا",
+      "normalized_name": "فقه و حقوق جزا",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0233",
+      "name": "فقه و حقوق خصوصی",
+      "normalized_name": "فقه و حقوق خصوصی",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0234",
+      "name": "فلسفه و کلام اسلامی",
+      "normalized_name": "فلسفه و کلام اسلامی",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0235",
+      "name": "ادیان و عرفان",
+      "normalized_name": "ادیان و عرفان",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0236",
+      "name": "تاریخ فرهنگ و تمدن اسلامی",
+      "normalized_name": "تاریخ فرهنگ و تمدن اسلامی",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0237",
+      "name": "مدرسی معارف اسلامی",
+      "normalized_name": "مدرسی معارف اسلامی",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0238",
+      "name": "تفسیر و علوم قرآن",
+      "normalized_name": "تفسیر و علوم قرآن",
+      "category_id": "religious_studies",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0239",
+      "name": "دکترای حرفه‌ای دامپزشکی",
+      "normalized_name": "دکترای حرفه‌ای دامپزشکی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0240",
+      "name": "علوم آزمایشگاهی دامپزشکی",
+      "normalized_name": "علوم آزمایشگاهی دامپزشکی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0241",
+      "name": "بهداشت و بیماری‌های آبزیان",
+      "normalized_name": "بهداشت و بیماری‌های آبزیان",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0242",
+      "name": "بهداشت مواد غذایی",
+      "normalized_name": "بهداشت مواد غذایی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0243",
+      "name": "بافت‌شناسی دامپزشکی",
+      "normalized_name": "بافت‌شناسی دامپزشکی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0244",
+      "name": "پاتوبیولوژی دامپزشکی",
+      "normalized_name": "پاتوبیولوژی دامپزشکی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0245",
+      "name": "جراحی دامپزشکی",
+      "normalized_name": "جراحی دامپزشکی",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0246",
+      "name": "بیماری‌های داخلی دام‌های بزرگ",
+      "normalized_name": "بیماری‌های داخلی دام‌های بزرگ",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    },
+    {
+      "id": "ir-field-0247",
+      "name": "بیماری‌های طیور",
+      "normalized_name": "بیماری‌های طیور",
+      "category_id": "veterinary",
+      "degree_levels": [
+        "associate",
+        "bachelor",
+        "master",
+        "professional_doctorate",
+        "phd"
+      ],
+      "status": "catalog_seed",
+      "official_program_verified": false
+    }
+  ],
+  "educational_institutions": [
+    {
+      "id": "ir-inst-0001",
+      "name": "دانشگاه اراک",
+      "normalized_name": "دانشگاه اراک",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مرکزی",
+      "city": "اراک",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0002",
+      "name": "دانشگاه اردکان",
+      "normalized_name": "دانشگاه اردکان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "یزد",
+      "city": "اردکان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0003",
+      "name": "دانشگاه ارومیه",
+      "normalized_name": "دانشگاه ارومیه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان غربی",
+      "city": "ارومیه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0004",
+      "name": "دانشگاه اصفهان",
+      "normalized_name": "دانشگاه اصفهان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "اصفهان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0005",
+      "name": "دانشگاه الزهرا",
+      "normalized_name": "دانشگاه الزهرا",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0006",
+      "name": "دانشگاه ایلام",
+      "normalized_name": "دانشگاه ایلام",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "ایلام",
+      "city": "ایلام",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0007",
+      "name": "دانشگاه بجنورد",
+      "normalized_name": "دانشگاه بجنورد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان شمالی",
+      "city": "بجنورد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0008",
+      "name": "دانشگاه بزرگمهر قائنات",
+      "normalized_name": "دانشگاه بزرگمهر قائنات",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان جنوبی",
+      "city": "قائنات",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0009",
+      "name": "دانشگاه بناب",
+      "normalized_name": "دانشگاه بناب",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "بناب",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0010",
+      "name": "دانشگاه بوعلی سینا",
+      "normalized_name": "دانشگاه بوعلی سینا",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "همدان",
+      "city": "همدان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0011",
+      "name": "دانشگاه بیرجند",
+      "normalized_name": "دانشگاه بیرجند",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان جنوبی",
+      "city": "بیرجند",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0012",
+      "name": "دانشگاه بین‌المللی امام خمینی",
+      "normalized_name": "دانشگاه بین‌المللی امام خمینی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قزوین",
+      "city": "قزوین",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0013",
+      "name": "دانشگاه تبریز",
+      "normalized_name": "دانشگاه تبریز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "تبریز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0014",
+      "name": "دانشگاه تحصیلات تکمیلی صنعتی و فناوری پیشرفته",
+      "normalized_name": "دانشگاه تحصیلات تکمیلی صنعتی و فناوری پیشرفته",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "کرمان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0015",
+      "name": "دانشگاه تحصیلات تکمیلی علوم پایه زنجان",
+      "normalized_name": "دانشگاه تحصیلات تکمیلی علوم پایه زنجان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "زنجان",
+      "city": "زنجان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0016",
+      "name": "دانشگاه تخصصی فناوری‌های نوین آمل",
+      "normalized_name": "دانشگاه تخصصی فناوری‌های نوین آمل",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "آمل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0017",
+      "name": "دانشگاه تربت حیدریه",
+      "normalized_name": "دانشگاه تربت حیدریه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "تربت حیدریه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0018",
+      "name": "دانشگاه تربیت مدرس",
+      "normalized_name": "دانشگاه تربیت مدرس",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0019",
+      "name": "دانشگاه تفرش",
+      "normalized_name": "دانشگاه تفرش",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مرکزی",
+      "city": "تفرش",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0020",
+      "name": "دانشگاه تهران",
+      "normalized_name": "دانشگاه تهران",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0021",
+      "name": "دانشگاه جهرم",
+      "normalized_name": "دانشگاه جهرم",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "جهرم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0022",
+      "name": "دانشگاه جیرفت",
+      "normalized_name": "دانشگاه جیرفت",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "جیرفت",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0023",
+      "name": "دانشگاه حضرت معصومه",
+      "normalized_name": "دانشگاه حضرت معصومه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0024",
+      "name": "دانشگاه حکیم سبزواری",
+      "normalized_name": "دانشگاه حکیم سبزواری",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "سبزوار",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0025",
+      "name": "دانشگاه خلیج فارس",
+      "normalized_name": "دانشگاه خلیج فارس",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "بوشهر",
+      "city": "بوشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0026",
+      "name": "دانشگاه خوارزمی",
+      "normalized_name": "دانشگاه خوارزمی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "البرز",
+      "city": "کرج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0027",
+      "name": "دانشگاه دامغان",
+      "normalized_name": "دانشگاه دامغان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سمنان",
+      "city": "دامغان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0028",
+      "name": "دانشگاه دریانوردی و علوم دریایی چابهار",
+      "normalized_name": "دانشگاه دریانوردی و علوم دریایی چابهار",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "چابهار",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0029",
+      "name": "دانشگاه رازی",
+      "normalized_name": "دانشگاه رازی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمانشاه",
+      "city": "کرمانشاه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0030",
+      "name": "دانشگاه زابل",
+      "normalized_name": "دانشگاه زابل",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "زابل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0031",
+      "name": "دانشگاه زنجان",
+      "normalized_name": "دانشگاه زنجان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "زنجان",
+      "city": "زنجان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0032",
+      "name": "دانشگاه سراوان",
+      "normalized_name": "دانشگاه سراوان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "سراوان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0033",
+      "name": "دانشگاه سلمان فارسی کازرون",
+      "normalized_name": "دانشگاه سلمان فارسی کازرون",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "کازرون",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0034",
+      "name": "دانشگاه سمنان",
+      "normalized_name": "دانشگاه سمنان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سمنان",
+      "city": "سمنان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0035",
+      "name": "دانشگاه سید جمال‌الدین اسدآبادی",
+      "normalized_name": "دانشگاه سید جمال‌الدین اسدآبادی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "همدان",
+      "city": "اسدآباد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0036",
+      "name": "دانشگاه سیستان و بلوچستان",
+      "normalized_name": "دانشگاه سیستان و بلوچستان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "زاهدان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0037",
+      "name": "دانشگاه شهرکرد",
+      "normalized_name": "دانشگاه شهرکرد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "چهارمحال و بختیاری",
+      "city": "شهرکرد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0038",
+      "name": "دانشگاه شهید باهنر کرمان",
+      "normalized_name": "دانشگاه شهید باهنر کرمان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "کرمان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0039",
+      "name": "دانشگاه شهید بهشتی",
+      "normalized_name": "دانشگاه شهید بهشتی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0040",
+      "name": "دانشگاه شهید مدنی آذربایجان",
+      "normalized_name": "دانشگاه شهید مدنی آذربایجان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "تبریز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0041",
+      "name": "دانشگاه شهید چمران اهواز",
+      "normalized_name": "دانشگاه شهید چمران اهواز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "اهواز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0042",
+      "name": "دانشگاه شیراز",
+      "normalized_name": "دانشگاه شیراز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "شیراز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0043",
+      "name": "دانشگاه صنعتی اراک",
+      "normalized_name": "دانشگاه صنعتی اراک",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مرکزی",
+      "city": "اراک",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0044",
+      "name": "دانشگاه صنعتی ارومیه",
+      "normalized_name": "دانشگاه صنعتی ارومیه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان غربی",
+      "city": "ارومیه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0045",
+      "name": "دانشگاه صنعتی اصفهان",
+      "normalized_name": "دانشگاه صنعتی اصفهان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "اصفهان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0046",
+      "name": "دانشگاه صنعتی امیرکبیر",
+      "normalized_name": "دانشگاه صنعتی امیرکبیر",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0047",
+      "name": "دانشگاه صنعتی بیرجند",
+      "normalized_name": "دانشگاه صنعتی بیرجند",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان جنوبی",
+      "city": "بیرجند",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0048",
+      "name": "دانشگاه صنعتی جندی‌شاپور",
+      "normalized_name": "دانشگاه صنعتی جندی‌شاپور",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "دزفول",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0049",
+      "name": "دانشگاه صنعتی خاتم‌الانبیاء بهبهان",
+      "normalized_name": "دانشگاه صنعتی خاتم‌الانبیاء بهبهان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "بهبهان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0050",
+      "name": "دانشگاه صنعتی خواجه نصیرالدین طوسی",
+      "normalized_name": "دانشگاه صنعتی خواجه نصیرالدین طوسی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0051",
+      "name": "دانشگاه صنعتی سهند",
+      "normalized_name": "دانشگاه صنعتی سهند",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "اسکو",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0052",
+      "name": "دانشگاه صنعتی سیرجان",
+      "normalized_name": "دانشگاه صنعتی سیرجان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "سیرجان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0053",
+      "name": "دانشگاه صنعتی شاهرود",
+      "normalized_name": "دانشگاه صنعتی شاهرود",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سمنان",
+      "city": "شاهرود",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0054",
+      "name": "دانشگاه صنعتی شریف",
+      "normalized_name": "دانشگاه صنعتی شریف",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0055",
+      "name": "دانشگاه صنعتی شیراز",
+      "normalized_name": "دانشگاه صنعتی شیراز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "شیراز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0056",
+      "name": "دانشگاه صنعتی قم",
+      "normalized_name": "دانشگاه صنعتی قم",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0057",
+      "name": "دانشگاه صنعتی قوچان",
+      "normalized_name": "دانشگاه صنعتی قوچان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "قوچان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0058",
+      "name": "دانشگاه صنعتی کرمانشاه",
+      "normalized_name": "دانشگاه صنعتی کرمانشاه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمانشاه",
+      "city": "کرمانشاه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0059",
+      "name": "دانشگاه صنعتی نوشیروانی بابل",
+      "normalized_name": "دانشگاه صنعتی نوشیروانی بابل",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "بابل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0060",
+      "name": "دانشگاه صنعتی همدان",
+      "normalized_name": "دانشگاه صنعتی همدان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "همدان",
+      "city": "همدان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0061",
+      "name": "دانشگاه علامه طباطبایی",
+      "normalized_name": "دانشگاه علامه طباطبایی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0062",
+      "name": "دانشگاه علم و صنعت ایران",
+      "normalized_name": "دانشگاه علم و صنعت ایران",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0063",
+      "name": "دانشگاه علم و فناوری مازندران",
+      "normalized_name": "دانشگاه علم و فناوری مازندران",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "بهشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0064",
+      "name": "دانشگاه علوم کشاورزی و منابع طبیعی ساری",
+      "normalized_name": "دانشگاه علوم کشاورزی و منابع طبیعی ساری",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "ساری",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0065",
+      "name": "دانشگاه علوم کشاورزی و منابع طبیعی گرگان",
+      "normalized_name": "دانشگاه علوم کشاورزی و منابع طبیعی گرگان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گلستان",
+      "city": "گرگان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0066",
+      "name": "دانشگاه علوم و فنون دریایی خرمشهر",
+      "normalized_name": "دانشگاه علوم و فنون دریایی خرمشهر",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "خرمشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0067",
+      "name": "دانشگاه فردوسی مشهد",
+      "normalized_name": "دانشگاه فردوسی مشهد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "مشهد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0068",
+      "name": "دانشگاه فسا",
+      "normalized_name": "دانشگاه فسا",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "فسا",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0069",
+      "name": "دانشگاه قم",
+      "normalized_name": "دانشگاه قم",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0070",
+      "name": "دانشگاه کاشان",
+      "normalized_name": "دانشگاه کاشان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "کاشان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0071",
+      "name": "دانشگاه کردستان",
+      "normalized_name": "دانشگاه کردستان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کردستان",
+      "city": "سنندج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0072",
+      "name": "دانشگاه گلستان",
+      "normalized_name": "دانشگاه گلستان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گلستان",
+      "city": "گرگان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0073",
+      "name": "دانشگاه گنبد",
+      "normalized_name": "دانشگاه گنبد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گلستان",
+      "city": "گنبدکاووس",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0074",
+      "name": "دانشگاه گیلان",
+      "normalized_name": "دانشگاه گیلان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گیلان",
+      "city": "رشت",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0075",
+      "name": "دانشگاه لرستان",
+      "normalized_name": "دانشگاه لرستان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "لرستان",
+      "city": "خرم‌آباد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0076",
+      "name": "دانشگاه مازندران",
+      "normalized_name": "دانشگاه مازندران",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "بابلسر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0077",
+      "name": "دانشگاه محقق اردبیلی",
+      "normalized_name": "دانشگاه محقق اردبیلی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اردبیل",
+      "city": "اردبیل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0078",
+      "name": "دانشگاه مراغه",
+      "normalized_name": "دانشگاه مراغه",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "مراغه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0079",
+      "name": "دانشگاه ملایر",
+      "normalized_name": "دانشگاه ملایر",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "همدان",
+      "city": "ملایر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0080",
+      "name": "دانشگاه میبد",
+      "normalized_name": "دانشگاه میبد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "یزد",
+      "city": "میبد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0081",
+      "name": "دانشگاه نیشابور",
+      "normalized_name": "دانشگاه نیشابور",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "نیشابور",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0082",
+      "name": "دانشگاه هرمزگان",
+      "normalized_name": "دانشگاه هرمزگان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "هرمزگان",
+      "city": "بندرعباس",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0083",
+      "name": "دانشگاه هنر اسلامی تبریز",
+      "normalized_name": "دانشگاه هنر اسلامی تبریز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "تبریز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0084",
+      "name": "دانشگاه هنر اصفهان",
+      "normalized_name": "دانشگاه هنر اصفهان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "اصفهان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0085",
+      "name": "دانشگاه هنر ایران",
+      "normalized_name": "دانشگاه هنر ایران",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0086",
+      "name": "دانشگاه هنر شیراز",
+      "normalized_name": "دانشگاه هنر شیراز",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "شیراز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0087",
+      "name": "دانشگاه ولایت",
+      "normalized_name": "دانشگاه ولایت",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "ایرانشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0088",
+      "name": "دانشگاه ولی‌عصر رفسنجان",
+      "normalized_name": "دانشگاه ولی‌عصر رفسنجان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "رفسنجان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0089",
+      "name": "دانشگاه یاسوج",
+      "normalized_name": "دانشگاه یاسوج",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کهگیلویه و بویراحمد",
+      "city": "یاسوج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0090",
+      "name": "دانشگاه یزد",
+      "normalized_name": "دانشگاه یزد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "یزد",
+      "city": "یزد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0091",
+      "name": "مجتمع آموزش عالی فنی و مهندسی اسفراین",
+      "normalized_name": "مجتمع آموزش عالی فنی و مهندسی اسفراین",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان شمالی",
+      "city": "اسفراین",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0092",
+      "name": "مجتمع آموزش عالی گناباد",
+      "normalized_name": "مجتمع آموزش عالی گناباد",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "گناباد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0093",
+      "name": "مجتمع آموزش عالی بم",
+      "normalized_name": "مجتمع آموزش عالی بم",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "بم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0094",
+      "name": "مرکز آموزش عالی اقلید",
+      "normalized_name": "مرکز آموزش عالی اقلید",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "اقلید",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0095",
+      "name": "مرکز آموزش عالی شهید باکری میاندوآب",
+      "normalized_name": "مرکز آموزش عالی شهید باکری میاندوآب",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان غربی",
+      "city": "میاندوآب",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0096",
+      "name": "مرکز آموزش عالی کاشمر",
+      "normalized_name": "مرکز آموزش عالی کاشمر",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "کاشمر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0097",
+      "name": "مرکز آموزش عالی لار",
+      "normalized_name": "مرکز آموزش عالی لار",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "لار",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0098",
+      "name": "مرکز آموزش عالی محلات",
+      "normalized_name": "مرکز آموزش عالی محلات",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مرکزی",
+      "city": "محلات",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0099",
+      "name": "مرکز آموزش عالی فنی و مهندسی بوئین‌زهرا",
+      "normalized_name": "مرکز آموزش عالی فنی و مهندسی بوئین‌زهرا",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قزوین",
+      "city": "بوئین‌زهرا",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0100",
+      "name": "دانشگاه تربیت دبیر شهید رجایی",
+      "normalized_name": "دانشگاه تربیت دبیر شهید رجایی",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0101",
+      "name": "دانشگاه شاهد",
+      "normalized_name": "دانشگاه شاهد",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0102",
+      "name": "دانشگاه صنعت نفت",
+      "normalized_name": "دانشگاه صنعت نفت",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "اهواز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0103",
+      "name": "دانشگاه صدا و سیما",
+      "normalized_name": "دانشگاه صدا و سیما",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0104",
+      "name": "دانشگاه علوم قضایی و خدمات اداری",
+      "normalized_name": "دانشگاه علوم قضایی و خدمات اداری",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0105",
+      "name": "دانشگاه علوم و معارف قرآن کریم",
+      "normalized_name": "دانشگاه علوم و معارف قرآن کریم",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0106",
+      "name": "دانشگاه اطلاعات و امنیت ملی",
+      "normalized_name": "دانشگاه اطلاعات و امنیت ملی",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0107",
+      "name": "دانشگاه آیت‌الله العظمی بروجردی",
+      "normalized_name": "دانشگاه آیت‌الله العظمی بروجردی",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "لرستان",
+      "city": "بروجرد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0108",
+      "name": "دانشگاه کوثر",
+      "normalized_name": "دانشگاه کوثر",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان شمالی",
+      "city": "بجنورد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0109",
+      "name": "دانشگاه کشاورزی و منابع طبیعی خوزستان",
+      "normalized_name": "دانشگاه کشاورزی و منابع طبیعی خوزستان",
+      "institution_type": "public",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "ملاثانی",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0110",
+      "name": "دانشگاه معارف اسلامی",
+      "normalized_name": "دانشگاه معارف اسلامی",
+      "institution_type": "government",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "ministry_higher_education_1405"
+      ]
+    },
+    {
+      "id": "ir-inst-0111",
+      "name": "دانشگاه علوم پزشکی آبادان",
+      "normalized_name": "دانشگاه علوم پزشکی آبادان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "آبادان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0112",
+      "name": "دانشگاه علوم پزشکی اراک",
+      "normalized_name": "دانشگاه علوم پزشکی اراک",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مرکزی",
+      "city": "اراک",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0113",
+      "name": "دانشگاه علوم پزشکی اردبیل",
+      "normalized_name": "دانشگاه علوم پزشکی اردبیل",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اردبیل",
+      "city": "اردبیل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0114",
+      "name": "دانشگاه علوم پزشکی ارومیه",
+      "normalized_name": "دانشگاه علوم پزشکی ارومیه",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان غربی",
+      "city": "ارومیه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0115",
+      "name": "دانشگاه علوم پزشکی اصفهان",
+      "normalized_name": "دانشگاه علوم پزشکی اصفهان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "اصفهان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0116",
+      "name": "دانشگاه علوم پزشکی البرز",
+      "normalized_name": "دانشگاه علوم پزشکی البرز",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "البرز",
+      "city": "کرج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0117",
+      "name": "دانشگاه علوم پزشکی ایران",
+      "normalized_name": "دانشگاه علوم پزشکی ایران",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0118",
+      "name": "دانشگاه علوم پزشکی ایرانشهر",
+      "normalized_name": "دانشگاه علوم پزشکی ایرانشهر",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "ایرانشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0119",
+      "name": "دانشگاه علوم پزشکی ایلام",
+      "normalized_name": "دانشگاه علوم پزشکی ایلام",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "ایلام",
+      "city": "ایلام",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0120",
+      "name": "دانشگاه علوم پزشکی بابل",
+      "normalized_name": "دانشگاه علوم پزشکی بابل",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "بابل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0121",
+      "name": "دانشگاه علوم پزشکی بقیةالله",
+      "normalized_name": "دانشگاه علوم پزشکی بقیةالله",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0122",
+      "name": "دانشگاه علوم پزشکی بیرجند",
+      "normalized_name": "دانشگاه علوم پزشکی بیرجند",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان جنوبی",
+      "city": "بیرجند",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0123",
+      "name": "دانشگاه علوم پزشکی بوشهر",
+      "normalized_name": "دانشگاه علوم پزشکی بوشهر",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "بوشهر",
+      "city": "بوشهر",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0124",
+      "name": "دانشگاه علوم پزشکی تبریز",
+      "normalized_name": "دانشگاه علوم پزشکی تبریز",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "آذربایجان شرقی",
+      "city": "تبریز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0125",
+      "name": "دانشگاه علوم پزشکی تربت حیدریه",
+      "normalized_name": "دانشگاه علوم پزشکی تربت حیدریه",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "تربت حیدریه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0126",
+      "name": "دانشگاه علوم پزشکی جهرم",
+      "normalized_name": "دانشگاه علوم پزشکی جهرم",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "جهرم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0127",
+      "name": "دانشگاه علوم پزشکی جیرفت",
+      "normalized_name": "دانشگاه علوم پزشکی جیرفت",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "جیرفت",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0128",
+      "name": "دانشگاه علوم پزشکی دزفول",
+      "normalized_name": "دانشگاه علوم پزشکی دزفول",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خوزستان",
+      "city": "دزفول",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0129",
+      "name": "دانشگاه علوم پزشکی زابل",
+      "normalized_name": "دانشگاه علوم پزشکی زابل",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "زابل",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0130",
+      "name": "دانشگاه علوم پزشکی زاهدان",
+      "normalized_name": "دانشگاه علوم پزشکی زاهدان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سیستان و بلوچستان",
+      "city": "زاهدان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0131",
+      "name": "دانشگاه علوم پزشکی زنجان",
+      "normalized_name": "دانشگاه علوم پزشکی زنجان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "زنجان",
+      "city": "زنجان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0132",
+      "name": "دانشگاه علوم پزشکی سبزوار",
+      "normalized_name": "دانشگاه علوم پزشکی سبزوار",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "سبزوار",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0133",
+      "name": "دانشگاه علوم پزشکی سمنان",
+      "normalized_name": "دانشگاه علوم پزشکی سمنان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سمنان",
+      "city": "سمنان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0134",
+      "name": "دانشگاه علوم پزشکی شاهرود",
+      "normalized_name": "دانشگاه علوم پزشکی شاهرود",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "سمنان",
+      "city": "شاهرود",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0135",
+      "name": "دانشگاه علوم پزشکی شهرکرد",
+      "normalized_name": "دانشگاه علوم پزشکی شهرکرد",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "چهارمحال و بختیاری",
+      "city": "شهرکرد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0136",
+      "name": "دانشگاه علوم پزشکی شهید بهشتی",
+      "normalized_name": "دانشگاه علوم پزشکی شهید بهشتی",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0137",
+      "name": "دانشگاه علوم پزشکی شیراز",
+      "normalized_name": "دانشگاه علوم پزشکی شیراز",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "شیراز",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0138",
+      "name": "دانشگاه علوم پزشکی فسا",
+      "normalized_name": "دانشگاه علوم پزشکی فسا",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "فارس",
+      "city": "فسا",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0139",
+      "name": "دانشگاه علوم پزشکی قم",
+      "normalized_name": "دانشگاه علوم پزشکی قم",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "قم",
+      "city": "قم",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0140",
+      "name": "دانشگاه علوم پزشکی کاشان",
+      "normalized_name": "دانشگاه علوم پزشکی کاشان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "اصفهان",
+      "city": "کاشان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0141",
+      "name": "دانشگاه علوم پزشکی کردستان",
+      "normalized_name": "دانشگاه علوم پزشکی کردستان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کردستان",
+      "city": "سنندج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0142",
+      "name": "دانشگاه علوم پزشکی کرمان",
+      "normalized_name": "دانشگاه علوم پزشکی کرمان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمان",
+      "city": "کرمان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0143",
+      "name": "دانشگاه علوم پزشکی کرمانشاه",
+      "normalized_name": "دانشگاه علوم پزشکی کرمانشاه",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کرمانشاه",
+      "city": "کرمانشاه",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0144",
+      "name": "دانشگاه علوم پزشکی گناباد",
+      "normalized_name": "دانشگاه علوم پزشکی گناباد",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "گناباد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0145",
+      "name": "دانشگاه علوم پزشکی گیلان",
+      "normalized_name": "دانشگاه علوم پزشکی گیلان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گیلان",
+      "city": "رشت",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0146",
+      "name": "دانشگاه علوم پزشکی گلستان",
+      "normalized_name": "دانشگاه علوم پزشکی گلستان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "گلستان",
+      "city": "گرگان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0147",
+      "name": "دانشگاه علوم پزشکی لرستان",
+      "normalized_name": "دانشگاه علوم پزشکی لرستان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "لرستان",
+      "city": "خرم‌آباد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0148",
+      "name": "دانشگاه علوم پزشکی مازندران",
+      "normalized_name": "دانشگاه علوم پزشکی مازندران",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "مازندران",
+      "city": "ساری",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0149",
+      "name": "دانشگاه علوم پزشکی مشهد",
+      "normalized_name": "دانشگاه علوم پزشکی مشهد",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "خراسان رضوی",
+      "city": "مشهد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0150",
+      "name": "دانشگاه علوم پزشکی هرمزگان",
+      "normalized_name": "دانشگاه علوم پزشکی هرمزگان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "هرمزگان",
+      "city": "بندرعباس",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0151",
+      "name": "دانشگاه علوم پزشکی همدان",
+      "normalized_name": "دانشگاه علوم پزشکی همدان",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "همدان",
+      "city": "همدان",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0152",
+      "name": "دانشگاه علوم پزشکی یاسوج",
+      "normalized_name": "دانشگاه علوم پزشکی یاسوج",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "کهگیلویه و بویراحمد",
+      "city": "یاسوج",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0153",
+      "name": "دانشگاه علوم پزشکی یزد",
+      "normalized_name": "دانشگاه علوم پزشکی یزد",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "یزد",
+      "city": "یزد",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0154",
+      "name": "دانشگاه علوم توانبخشی و سلامت اجتماعی",
+      "normalized_name": "دانشگاه علوم توانبخشی و سلامت اجتماعی",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0155",
+      "name": "دانشگاه علوم پزشکی ارتش",
+      "normalized_name": "دانشگاه علوم پزشکی ارتش",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    },
+    {
+      "id": "ir-inst-0156",
+      "name": "دانشگاه علوم پزشکی شاهد",
+      "normalized_name": "دانشگاه علوم پزشکی شاهد",
+      "institution_type": "medical",
+      "country_code": "IR",
+      "country": "ایران",
+      "province": "تهران",
+      "city": "تهران",
+      "website": null,
+      "status": "needs_verification",
+      "source_ids": [
+        "medical_university_directory"
+      ]
+    }
+  ],
+  "institution_fields": [],
+  "search_synonyms": [
+    {
+      "term": "کامپیوتر",
+      "field_id": "ir-field-0001"
+    },
+    {
+      "term": "IT",
+      "field_id": "ir-field-0002"
+    },
+    {
+      "term": "حساب داری",
+      "field_id": "ir-field-0131"
+    },
+    {
+      "term": "متالورژی",
+      "field_id": "ir-field-0017"
+    },
+    {
+      "term": "MBA",
+      "field_id": "ir-field-0138"
+    }
+  ]
+}

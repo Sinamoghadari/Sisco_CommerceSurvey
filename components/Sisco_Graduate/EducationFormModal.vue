@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { DatePicker } from 'v-calendars'
 import 'v-calendars/dist/style.css'
 import FormFieldError from '~/components/Sisco_Graduate/FormFieldError.vue'
+import SearchableSelect from '~/components/Sisco_Graduate/SearchableSelect.vue'
 import {
   ATTACHMENT_ACCEPT,
+  EDUCATION_CITY_OPTIONS,
   EDUCATION_LEVELS,
+  REQUIRED_ATTACHMENT_MESSAGE,
+  STUDY_FIELD_OPTIONS,
   createEducationRecordId,
+  isCustomOption,
   isValidGpa,
   isValidPersianParagraph,
   isValidPersianText,
   normalizePersianText,
+  resolveOptionValue,
   sanitizeGpaInput,
   validateAttachmentFile,
   type EducationLevel,
@@ -26,14 +32,29 @@ const emit = defineEmits<{
   (e: 'submit', record: EducationRecord): void
 }>()
 
-type FieldKey = 'level' | 'field' | 'graduationDate' | 'institution' | 'gpa' | 'description' | 'attachment'
+type FieldKey
+  = 'city'
+    | 'cityCustom'
+    | 'level'
+    | 'field'
+    | 'fieldCustom'
+    | 'graduationDate'
+    | 'institution'
+    | 'gpa'
+    | 'description'
+    | 'attachment'
 
 /** الگوی تاریخ، هم‌سو با الگوی date-picker موجود در پروژه */
 const datePickerMasks = { input: 'YYYY-MM-DD' }
 
 const form = reactive({
+  /** شهر تحصیل؛ یا یکی از شهرهای دیتاست یا گزینه‌ی «سایر» */
+  city: '',
+  cityCustom: '',
   level: '' as EducationLevel | '',
+  /** رشته تحصیلی؛ یا یکی از رشته‌های دیتاست یا گزینه‌ی «سایر» */
   field: '',
+  fieldCustom: '',
   graduationDate: null as Date | null,
   institution: '',
   gpa: '',
@@ -44,8 +65,11 @@ const attachment = ref<File | null>(null)
 const attachmentError = ref('')
 const attempted = ref(false)
 const touched = reactive<Record<FieldKey, boolean>>({
+  city: false,
+  cityCustom: false,
   level: false,
   field: false,
+  fieldCustom: false,
   graduationDate: false,
   institution: false,
   gpa: false,
@@ -53,27 +77,50 @@ const touched = reactive<Record<FieldKey, boolean>>({
   attachment: false,
 })
 
+const PERSIAN_ONLY_MESSAGE = 'باید فقط با حروف فارسی، فاصله و نیم‌فاصله نوشته شود؛ حروف لاتین و اعداد مجاز نیستند.'
+
 const validationErrors = computed<Record<FieldKey, string>>(() => {
   const errors: Record<FieldKey, string> = {
+    city: '',
+    cityCustom: '',
     level: '',
     field: '',
+    fieldCustom: '',
     graduationDate: '',
     institution: '',
     gpa: '',
     description: '',
-    attachment: attachmentError.value,
+    attachment: attachmentError.value || (attachment.value ? '' : REQUIRED_ATTACHMENT_MESSAGE),
+  }
+
+  if (!form.city) {
+    errors.city = 'انتخاب شهر تحصیل الزامی است.'
+  }
+  else if (isCustomOption(form.city)) {
+    const customCity = normalizePersianText(form.cityCustom)
+    if (!customCity) {
+      errors.cityCustom = 'نام شهر تحصیل را وارد کنید.'
+    }
+    else if (!isValidPersianText(customCity)) {
+      errors.cityCustom = `شهر تحصیل ${PERSIAN_ONLY_MESSAGE}`
+    }
   }
 
   if (!form.level) {
     errors.level = 'انتخاب مقطع تحصیلی الزامی است.'
   }
 
-  const fieldValue = form.field.trim()
-  if (!fieldValue) {
-    errors.field = 'رشته تحصیلی الزامی است.'
+  if (!form.field) {
+    errors.field = 'انتخاب رشته تحصیلی الزامی است.'
   }
-  else if (!isValidPersianText(fieldValue)) {
-    errors.field = 'رشته تحصیلی باید فقط با حروف فارسی، فاصله و نیم‌فاصله نوشته شود؛ حروف لاتین و اعداد مجاز نیستند.'
+  else if (isCustomOption(form.field)) {
+    const customField = normalizePersianText(form.fieldCustom)
+    if (!customField) {
+      errors.fieldCustom = 'نام رشته تحصیل را وارد کنید.'
+    }
+    else if (!isValidPersianText(customField)) {
+      errors.fieldCustom = `رشته تحصیل ${PERSIAN_ONLY_MESSAGE}`
+    }
   }
 
   if (!form.graduationDate) {
@@ -84,16 +131,14 @@ const validationErrors = computed<Record<FieldKey, string>>(() => {
     errors.institution = 'موسسه آموزشی الزامی است.'
   }
 
+  // معدل اختیاری است؛ فقط در صورت وارد شدن مقدار، قالب عددی بررسی می‌شود.
   const gpaValue = form.gpa.trim()
-  if (!gpaValue) {
-    errors.gpa = 'معدل الزامی است.'
-  }
-  else if (!isValidGpa(gpaValue)) {
+  if (gpaValue && !isValidGpa(gpaValue)) {
     errors.gpa = 'معدل باید عددی با حداکثر دو رقم اعشار باشد.'
   }
 
   if (form.description.trim() && !isValidPersianParagraph(form.description)) {
-    errors.description = 'توضیحات باید فقط با حروف فارسی، فاصله و نیم‌فاصله نوشته شود؛ حروف لاتین و اعداد مجاز نیستند.'
+    errors.description = `توضیحات ${PERSIAN_ONLY_MESSAGE}`
   }
 
   return errors
@@ -124,23 +169,59 @@ function fieldClass(hasError: boolean): string[] {
 /* -------------------------------------------------------------------------- */
 
 const modalRef = ref<HTMLElement | null>(null)
+const citySelectRef = ref<{ focus: () => void } | null>(null)
+const cityCustomRef = ref<HTMLInputElement | null>(null)
 const levelSelectRef = ref<HTMLSelectElement | null>(null)
-const fieldInputRef = ref<HTMLInputElement | null>(null)
+const fieldSelectRef = ref<{ focus: () => void } | null>(null)
+const fieldCustomRef = ref<HTMLInputElement | null>(null)
 const dateInputRef = ref<HTMLInputElement | null>(null)
 const institutionInputRef = ref<HTMLInputElement | null>(null)
 const gpaInputRef = ref<HTMLInputElement | null>(null)
 const descriptionRef = ref<HTMLTextAreaElement | null>(null)
 const attachmentInputRef = ref<HTMLInputElement | null>(null)
 
-const focusTargets: Array<[FieldKey, () => HTMLElement | null]> = [
-  ['level', () => levelSelectRef.value],
-  ['field', () => fieldInputRef.value],
-  ['graduationDate', () => dateInputRef.value],
-  ['institution', () => institutionInputRef.value],
-  ['gpa', () => gpaInputRef.value],
-  ['description', () => descriptionRef.value],
-  ['attachment', () => attachmentInputRef.value],
+const focusTargets: Array<[FieldKey, () => void]> = [
+  ['city', () => citySelectRef.value?.focus()],
+  ['cityCustom', () => cityCustomRef.value?.focus()],
+  ['level', () => levelSelectRef.value?.focus()],
+  ['field', () => fieldSelectRef.value?.focus()],
+  ['fieldCustom', () => fieldCustomRef.value?.focus()],
+  ['graduationDate', () => dateInputRef.value?.focus()],
+  ['institution', () => institutionInputRef.value?.focus()],
+  ['gpa', () => gpaInputRef.value?.focus()],
+  ['description', () => descriptionRef.value?.focus()],
+  ['attachment', () => attachmentInputRef.value?.focus()],
 ]
+
+/** با هر انتخاب، فیلد لمس‌شده در نظر گرفته می‌شود تا خطای آن به‌موقع نمایش داده شود */
+watch(() => form.city, value => {
+  if (value) {
+    touched.city = true
+  }
+})
+
+watch(() => form.field, value => {
+  if (value) {
+    touched.field = true
+  }
+})
+
+/** با انتخاب «سایر»، فوکوس به فیلد متنی همان بخش منتقل می‌شود */
+watch(() => form.city, async (value) => {
+  if (!isCustomOption(value)) {
+    return
+  }
+  await nextTick()
+  cityCustomRef.value?.focus()
+})
+
+watch(() => form.field, async (value) => {
+  if (!isCustomOption(value)) {
+    return
+  }
+  await nextTick()
+  fieldCustomRef.value?.focus()
+})
 
 /* -------------------------------------------------------------------------- */
 /* رویدادهای فرم                                                              */
@@ -160,7 +241,7 @@ function onGpaBlur() {
   touched.gpa = true
 }
 
-function onPersianBlur(key: 'field' | 'description') {
+function onPersianBlur(key: 'cityCustom' | 'fieldCustom' | 'description') {
   form[key] = normalizePersianText(form[key])
   touched[key] = true
 }
@@ -199,7 +280,7 @@ function onAttachmentChange(event: Event) {
 function clearAttachment() {
   attachment.value = null
   attachmentError.value = ''
-  touched.attachment = false
+  touched.attachment = true
   if (attachmentInputRef.value) {
     attachmentInputRef.value.value = ''
   }
@@ -207,28 +288,26 @@ function clearAttachment() {
 
 function focusFirstInvalid() {
   const target = focusTargets.find(([key]) => validationErrors.value[key])
-  const element = target?.[1]()
-  element?.focus()
+  target?.[1]()
 }
 
 function handleSubmit() {
   attempted.value = true
 
-  const hasFieldError = (Object.keys(validationErrors.value) as FieldKey[]).some(
-    key => key !== 'attachment' && Boolean(validationErrors.value[key]),
+  const hasError = (Object.keys(validationErrors.value) as FieldKey[]).some(
+    key => Boolean(validationErrors.value[key]),
   )
 
-  if (hasFieldError || validationErrors.value.attachment) {
-    if (hasFieldError) {
-      focusFirstInvalid()
-    }
+  if (hasError) {
+    focusFirstInvalid()
     return
   }
 
   const record: EducationRecord = {
     id: createEducationRecordId(),
     level: form.level as EducationLevel,
-    field: normalizePersianText(form.field),
+    city: resolveOptionValue(form.city, form.cityCustom),
+    field: resolveOptionValue(form.field, form.fieldCustom),
     graduationDate: form.graduationDate as Date,
     institution: form.institution.trim(),
     gpa: form.gpa.trim(),
@@ -241,8 +320,11 @@ function handleSubmit() {
 }
 
 function resetForm() {
+  form.city = ''
+  form.cityCustom = ''
   form.level = ''
   form.field = ''
+  form.fieldCustom = ''
   form.graduationDate = null
   form.institution = ''
   form.gpa = ''
@@ -283,6 +365,12 @@ function isElementVisible(element: HTMLElement): boolean {
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
+    // اگر فهرست یکی از فیلدهای جستجوپذیر باز است، همان فیلد با Escape بسته می‌شود
+    const active = document.activeElement as HTMLElement | null
+    if (active?.getAttribute('role') === 'combobox' && active.getAttribute('aria-expanded') === 'true') {
+      return
+    }
+
     event.preventDefault()
     requestClose()
     return
@@ -332,7 +420,7 @@ onMounted(async () => {
   document.addEventListener('keydown', onKeydown, true)
 
   await nextTick()
-  levelSelectRef.value?.focus()
+  citySelectRef.value?.focus()
 })
 
 onBeforeUnmount(() => {
@@ -396,6 +484,49 @@ onBeforeUnmount(() => {
           <!-- بدنه‌ی فرم -->
           <div class="px-5 py-5 sm:px-6">
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <!-- شهر تحصیل -->
+              <div>
+                <label for="education-city" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
+                  شهر تحصیل <span class="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <SearchableSelect
+                  id="education-city"
+                  ref="citySelectRef"
+                  v-model="form.city"
+                  :options="EDUCATION_CITY_OPTIONS"
+                  :input-class="fieldClass(Boolean(errorFor('city')))"
+                  :has-error="Boolean(errorFor('city'))"
+                  error-id="education-city-error"
+                  placeholder="جستجوی شهر…"
+                />
+                <p class="mt-1 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
+                  با تایپ کردن جستجو می‌شود؛ اگر شهر موردنظر در فهرست نبود، «سایر» را انتخاب کنید.
+                </p>
+                <FormFieldError error-id="education-city-error" :message="errorFor('city')" />
+
+                <div v-if="isCustomOption(form.city)" class="mt-2">
+                  <label for="education-city-custom" class="mb-1.5 block text-xs font-bold text-muted-700 dark:text-muted-300">
+                    نام شهر تحصیل <span class="text-red-500" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="education-city-custom"
+                    ref="cityCustomRef"
+                    v-model="form.cityCustom"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="شهر تحصیل را وارد کنید"
+                    :class="fieldClass(Boolean(errorFor('cityCustom')))"
+                    :aria-invalid="Boolean(errorFor('cityCustom'))"
+                    :aria-describedby="errorFor('cityCustom') ? 'education-city-custom-error' : undefined"
+                    @blur="onPersianBlur('cityCustom')"
+                  >
+                  <FormFieldError
+                    error-id="education-city-custom-error"
+                    :message="errorFor('cityCustom')"
+                  />
+                </div>
+              </div>
+
               <!-- مقطع تحصیلی -->
               <div>
                 <label for="education-level" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
@@ -425,19 +556,42 @@ onBeforeUnmount(() => {
                 <label for="education-field" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
                   رشته تحصیلی <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
-                <input
+                <SearchableSelect
                   id="education-field"
-                  ref="fieldInputRef"
+                  ref="fieldSelectRef"
                   v-model="form.field"
-                  type="text"
-                  autocomplete="off"
-                  placeholder="مثلاً: مهندسی متالورژی"
-                  :class="fieldClass(Boolean(errorFor('field')))"
-                  :aria-invalid="Boolean(errorFor('field'))"
-                  :aria-describedby="errorFor('field') ? 'education-field-error' : undefined"
-                  @blur="onPersianBlur('field')"
-                >
+                  :options="STUDY_FIELD_OPTIONS"
+                  :input-class="fieldClass(Boolean(errorFor('field')))"
+                  :has-error="Boolean(errorFor('field'))"
+                  error-id="education-field-error"
+                  placeholder="جستجوی رشته تحصیلی…"
+                />
+                <p class="mt-1 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
+                  با تایپ کردن جستجو می‌شود؛ اگر رشته موردنظر در فهرست نبود، «سایر» را انتخاب کنید.
+                </p>
                 <FormFieldError error-id="education-field-error" :message="errorFor('field')" />
+
+                <div v-if="isCustomOption(form.field)" class="mt-2">
+                  <label for="education-field-custom" class="mb-1.5 block text-xs font-bold text-muted-700 dark:text-muted-300">
+                    نام رشته تحصیل <span class="text-red-500" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="education-field-custom"
+                    ref="fieldCustomRef"
+                    v-model="form.fieldCustom"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="رشته تحصیل را وارد کنید"
+                    :class="fieldClass(Boolean(errorFor('fieldCustom')))"
+                    :aria-invalid="Boolean(errorFor('fieldCustom'))"
+                    :aria-describedby="errorFor('fieldCustom') ? 'education-field-custom-error' : undefined"
+                    @blur="onPersianBlur('fieldCustom')"
+                  >
+                  <FormFieldError
+                    error-id="education-field-custom-error"
+                    :message="errorFor('fieldCustom')"
+                  />
+                </div>
               </div>
 
               <!-- تاریخ پایان تحصیلی -->
@@ -493,10 +647,10 @@ onBeforeUnmount(() => {
                 <FormFieldError error-id="education-institution-error" :message="errorFor('institution')" />
               </div>
 
-              <!-- معدل -->
+              <!-- معدل (اختیاری) -->
               <div>
                 <label for="education-gpa" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
-                  معدل <span class="text-red-500" aria-hidden="true">*</span>
+                  معدل
                 </label>
                 <input
                   id="education-gpa"
@@ -513,6 +667,9 @@ onBeforeUnmount(() => {
                   @input="onGpaInput"
                   @blur="onGpaBlur"
                 >
+                <p class="mt-1 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
+                  اختیاری؛ در صورت وارد کردن، عددی با حداکثر دو رقم اعشار باشد.
+                </p>
                 <FormFieldError error-id="education-gpa-error" :message="errorFor('gpa')" />
               </div>
 
@@ -541,12 +698,14 @@ onBeforeUnmount(() => {
               <!-- پیوست -->
               <div class="md:col-span-2">
                 <label for="education-attachment" class="mb-1.5 block text-sm font-bold text-muted-700 dark:text-muted-300">
-                  پیوست
+                  پیوست <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
 
                 <div
-                  class="rounded-lg border border-dashed border-muted-300 p-4 dark:border-muted-700"
-                  :class="attachmentError ? 'border-red-400 dark:border-red-500/70' : ''"
+                  class="rounded-lg border border-dashed p-4"
+                  :class="errorFor('attachment')
+                    ? 'border-red-400 dark:border-red-500/70'
+                    : 'border-muted-300 dark:border-muted-700'"
                 >
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <label
@@ -574,8 +733,8 @@ onBeforeUnmount(() => {
                       type="file"
                       class="sr-only"
                       :accept="ATTACHMENT_ACCEPT"
-                      :aria-invalid="Boolean(attachmentError)"
-                      :aria-describedby="attachmentError ? 'education-attachment-error' : undefined"
+                      :aria-invalid="Boolean(errorFor('attachment'))"
+                      :aria-describedby="errorFor('attachment') ? 'education-attachment-error' : undefined"
                       @change="onAttachmentChange"
                     >
 
@@ -603,8 +762,8 @@ onBeforeUnmount(() => {
                   </div>
 
                   <p class="mt-2 text-xs leading-5 text-muted-500 dark:text-muted-400">
-                    تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب است. فایل فقط نامش در همین
-                    صفحه نمایش داده می‌شود و بارگذاری نخواهد شد.
+                    پیوست الزامی است؛ تنها یک فایل با فرمت PDF، PNG یا JPG/JPEG قابل انتخاب است.
+                    فایل فقط نامش در همین صفحه نمایش داده می‌شود و بارگذاری نخواهد شد.
                   </p>
                 </div>
 
