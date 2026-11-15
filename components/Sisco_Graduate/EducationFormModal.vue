@@ -498,6 +498,7 @@ onBeforeUnmount(() => {
                   :has-error="Boolean(errorFor('city'))"
                   error-id="education-city-error"
                   placeholder="جستجوی شهر…"
+                  :open-on-focus="false"
                 />
                 <p class="mt-1 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
                   با تایپ کردن جستجو می‌شود؛ اگر شهر موردنظر در فهرست نبود، «سایر» را انتخاب کنید.
@@ -565,6 +566,7 @@ onBeforeUnmount(() => {
                   :has-error="Boolean(errorFor('field'))"
                   error-id="education-field-error"
                   placeholder="جستجوی رشته تحصیلی…"
+                  :open-on-focus="false"
                 />
                 <p class="mt-1 text-[11px] leading-5 text-muted-500 dark:text-muted-400">
                   با تایپ کردن جستجو می‌شود؛ اگر رشته موردنظر در فهرست نبود، «سایر» را انتخاب کنید.

@@ -28,11 +28,14 @@ const props = withDefaults(defineProps<{
   hasError?: boolean
   /** شناسه‌ی متن خطا برای aria-describedby */
   errorId?: string
+  /** باز شدن فهرست به‌محض فوکوس (برای فوکوس برنامه‌ای می‌توان خاموش کرد) */
+  openOnFocus?: boolean
 }>(), {
   inputClass: '',
   placeholder: 'جستجو کنید…',
   hasError: false,
   errorId: undefined,
+  openOnFocus: true,
 })
 
 const emit = defineEmits<{
@@ -84,6 +87,12 @@ function closeList() {
   isOpen.value = false
   query.value = ''
   activeIndex.value = -1
+}
+
+function onFocus() {
+  if (props.openOnFocus) {
+    openList()
+  }
 }
 
 function onInput(event: Event) {
@@ -203,7 +212,7 @@ defineExpose({
       :aria-activedescendant="activeDescendant"
       :aria-invalid="hasError"
       :aria-describedby="hasError ? errorId : undefined"
-      @focus="openList"
+      @focus="onFocus"
       @click="openList"
       @input="onInput"
       @keydown="onKeydown"
